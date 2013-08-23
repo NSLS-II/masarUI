@@ -13,8 +13,9 @@ import sys
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush)
-from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush, QTabWidget)
+from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread)
+#import PyQt4.QTest as QTest
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -31,6 +32,7 @@ else:
 import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
+from qtabwidgetext import QTabWidgetExt
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -50,6 +52,7 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
 # import this last to avoid import error on some platform and with different versions. 
 import cothread.catools as cav3
 
+#class masarUI(QMainWindow, ui_masar.Ui_masar, QTabWidgetExt):
 class masarUI(QMainWindow, ui_masar.Ui_masar):
     severityDict= {0: 'NO_ALARM',
                    1: 'MINOR_ALARM',
@@ -105,11 +108,18 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.previewId = None
         self.previewConfName = None
-        self.isPreviewSaved = True
-
-        # set bad pv row to grey
+        self.isPreviewSaved = False
+        
+        #automatically fetch all configs at startup. This action should be quick
+        self.fetchConfigAction()
+        
+        # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
+        #self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
+        # set currently disconnected pv row to pink
+        self.brushdisconnectedpv = QBrush(QColor(255, 0, 255))
+        self.brushdisconnectedpv.setStyle(Qt.SolidPattern)
         # DBR_TYPE definition
         #define DBF_STRING  0
         #define DBF_INT     1
@@ -157,28 +167,43 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def __getComment(self):
         cdlg = commentdlg.CommentDlg()
         cdlg.exec_()
+        #cdlg.show()
+        #cdlg.raise_()
+        #cdlg.activateWindow()
         if cdlg.isAccepted:
             return (cdlg.result())
         else:
             return None
     
-    def saveMachinePreviewAction(self):
-        if self.isPreviewSaved:
-            QMessageBox.warning(self,
-                "Warning",
-                "Preview (id: %s) for config (%s) has been save already." %(self.previewId, self.previewConfName))
-            return
-        elif self.previewId == None or self.previewConfName == None:
-            QMessageBox.warning(self,
-                "Warning",
-                "No preview to save.")
-        reply = QMessageBox.question(self, 'Message',
-                             "Do you want to flag this preview as a good snapshot?",                                          
-                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            comment = self.__getComment()
+    def closeTab(self):
+        index = self.snapshotTabWidget.currentIndex()
+        if index != 0:
+            self.snapshotTabWidget.removeTab(index)
+            #print("the selected tab is closed")
         else:
+            QMessageBox.warning(self, "Waring", "Please don't close this page since it has all instructions")
+        
+    #tried to just use one button called 'Save a snapshot ...', but no success
+    def saveMachineSnapshot(self):
+        #self.getMachinePreviewAction()
+        self.saveMachinePreviewAction()
+    
+    def saveMachinePreviewAction(self):
+        if self.previewId == None or self.previewConfName == None:
+            QMessageBox.warning(self, "Warning",'No preview to save. Please click "Preview Machine" first')
             return
+        elif self.isPreviewSaved:
+            QMessageBox.warning(self, "Warning",
+                "Preview (id: %s) for config (%s) has been saved already." %(self.previewId, self.previewConfName))
+            return
+
+        #reply = QMessageBox.question(self, 'Message',
+                             #"Do you want to flag this preview as a good snapshot?",                                          
+                             #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        #if reply == QMessageBox.Yes:
+        comment = self.__getComment()
+        #else:
+            #return
         # comment result always returns a tuple
         # it return like (user, comment note)
         if comment and isinstance(comment, tuple):
@@ -190,9 +215,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     "Either user name or comment is empty.")
                 return
         else:
-            QMessageBox.warning(self,
-                "Warning",
-                "Comment is cancelled.")
+            #QMessageBox.warning(self,
+                #"Warning",
+                #"Comment is cancelled.")
             return
         self.isPreviewSaved = True
 
@@ -202,7 +227,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if lc != 1:
             QMessageBox.warning(self,
                 "Warning",
-                "Please select one configuration, and one only.")
+                "Please select one configuration from the left-top Config Table, and one only.")
             return
 
         self.previewId = None
@@ -227,15 +252,29 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             
             self.setSnapshotTable(data, tabWidget, eid)
             tabWidget.resizeColumnsToContents()
+            #sort the table by "Connection"
+            tabWidget.sortByColumn(1,1)
             label = QString.fromUtf8((cname+': Preview'))
             self.snapshotTabWidget.addTab(tabWidget, label)
     
-            self.snapshotTabWidget.setTabText(index, label)        
+            self.snapshotTabWidget.setTabText(index, label)  
+            #seems to need setCurrentWidget to make preview tab as the current tab    
             self.snapshotTabWidget.setCurrentIndex(index)
-            
+            self.snapshotTabWidget.setCurrentWidget(tabWidget)
+            #self.snapshotTabWidget.setTabBar.setTabTextColor(index, Qt.red)
+            #tabBar = self.snapshotTabWidget.setTabBar(self.snapshotTabWidget.tabBar())
+            #tabBar.setTabTextColor(index, Qt.red)
+            #curTab = self.snapshotTabWidget.cur
+            #tabWidgetExt = QTabWidgetExt()
+            #tabWidgetExt.setTextColor(index,Qt.red)
+            #QObject.connect(self.snapshotTabWidget, SIGNAL(self.snapshotTabWidget.tabCloseRequested(int)), tabWidgetExt.closeTab(int)) 
             self.previewId = eid
             self.previewConfName = cname
             self.isPreviewSaved = False
+            QMessageBox.information(self, "Congratulation", 
+                                    'Great: Succeed to Get Machine Preview Data. \nRemember to click "Save Preview as a Snapshot ... " if you are satisfied with the preview data')
+        else:
+            QMessageBox.warning(self, "Waring", "Can't get machine preview data")
         
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
@@ -244,14 +283,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def restoreSnapshotAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
-            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
+            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet. Please refer Welcome to MASAR for help')
             return
         
         eid = self.__find_key(self.tabWindowDict, curWidget)
         if eid == 'comment' or eid == 'preview':
-            QMessageBox.warning(self, 'Warning', 'No restore, preview is selected.')
+            QMessageBox.warning(self, 'Warning', 'No restore, preview tab is selected. Please select other Non-preview Tab')
             return
         selectedNoRestorePv = {}
+
         # get table rows
         rowCount = curWidget.rowCount()
         #Qt.Unchecked           0    The item is unchecked.
@@ -260,7 +300,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #                            but not all, of their children are checked.
         #Qt.Checked             2    The item is checked.
         for row in range(rowCount):
-            selectedNoRestorePv[str(curWidget.item(row, 0).text())] = bool(curWidget.item(row, 8).checkState())
+            #selectedNoRestorePv[str(curWidget.item(row, 0).text())] = bool(curWidget.item(row, 8).checkState())
+            selectedNoRestorePv[str(curWidget.item(row, 0).text())] = bool(curWidget.item(row, 2).checkState())
         pvlist = list(self.pv4cDict[str(eid)])
         data = self.data4eid[str(eid)]
         s_val = data['S_value']
@@ -271,6 +312,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         # is_connected = data['isConnected']
         # data['PV Name']
         array_value = data['arrayValue']
+        
+        liveData = self.getLiveMachineData(pvlist)
+        disConnectedPVs = liveData[8]
         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
@@ -346,6 +390,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #        elif ignoreallconnection:
         #            no_restorepvs.append(problempv.name)
         #if ignoreall or ignoreallconnection:
+        
+        #merge the disconnected PVs to no_restorepvs, but no duplicated PVs in no_restorepvs
+        #no_restorepvs.append(disConnectedPVs)
+        #no_restorepvs = no_restorepvs + disConnectedPVs
+        for i in range(len(disConnectedPVs)):
+            if disConnectedPVs[i] not in no_restorepvs:
+                no_restorepvs.append(disConnectedPVs[i])
+        #print(no_restorepvs)
+        
         if ignoreall:
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
@@ -355,9 +408,16 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
-            reply = QMessageBox.question(self, 'Message',
-                                 "Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
-                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            #reply = QMessageBox.question(self, 'Message',
+                                 #"Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
+                                 #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            msg = QMessageBox(self, windowTitle='Warning', 
+                              text='%s PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n It may take a while to restore the machine. Do you want to continue?' 
+                              %len(no_restorepvs))
+            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg.setDefaultButton(QMessageBox.No)
+            msg.setDetailedText(str_no_restore)
+            reply = msg.exec_()
             if reply == QMessageBox.No:
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\n========list end (not to restore pv)========")
@@ -377,7 +437,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     if not res.ok:
                         # try 3 times again to set value to each pv
                         # first try wait 1 second, second try wait 2 seconds, and last try wait 3 seconds.
-                        for j in range(1, 4):
+                        for j in range(1, 2):
                             ressub = cav3.caput(final_restorepv[i], final_restorepvval[i], wait=True, throw=False, timeout=j)
                             if ressub.ok:
                                 break
@@ -387,16 +447,27 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring snapshot to live machine.')
             return
-        
+        #bad_pvs == [ca_nothing(), ca_nothing() ...]
+        #bad_pvs = bad_pvs + no_restorepvs
+        #print(bad_pvs)
         if len(bad_pvs) > 0:
-            message = "Failed to restore some pvs. PLease check the terminal for a full list."
-            QMessageBox.warning(self, 'Warning', message)
+            #message = "Failed to restore some pvs. PLease check the terminal for a full list."
+            #QMessageBox.warning(self, 'Warning', message)
             output = ""
             for bad_pv in bad_pvs:
                 output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
-            print ("Failed to restore the following pvs which is caused by:"+output+"\n========list end (failed to restore pv)========")
+            for no_restorepv in no_restorepvs:
+                output += "\n  "+no_restorepv + ": Disconnected" 
+            print ("Failed to restore the following pvs which is caused by:"+output+"\n========list end (failed to restore pv)========")  
+            totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
+            msg = QMessageBox(self, windowTitle='Warning', 
+                              text='Not Very Successful: failed to restore %s PVs. Click Show Details... to see the failure details'
+                               %totalBadPVs)
+            #msg.setStandardButtons(QMessageBox.Ok)
+            msg.setDetailedText(output)
+            msg.exec_()
         else:
-            QMessageBox.information(self, "Success", "Successfully restore machine with selected snapshot.")
+            QMessageBox.information(self, "Congratulation", "Cheers: successfully restore machine with selected snapshot.")
         
     def __arrayTextFormat(self, arrayvalue):
         """
@@ -419,6 +490,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 eid = self.previewId # get event id for preview snapshot
             elif eid == 'comment':
                 return # nothing should do here
+            #catch KeyError: 'None'
             pvlist = self.pv4cDict[str(eid)]
             
             data = self.getLiveMachineData(pvlist)
@@ -431,9 +503,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 #                isConnected = data[5]
                 is_array = data[6]
                 array_value = data[7]
-
+                disConnectedPVs = data[8]
+            
                 dd = {}
                 noMatchedPv = []
+                #disConnectedPv = []
                 
                 # put channel name and its order into a dictionary
                 for i in range(len(channelName)):
@@ -444,47 +518,91 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 for i in range(rowCount):
                     try:
                         index = dd[str(curWidget.item(i, 0).text())]
+                        
+                        if dbrtype[index] in self.epicsNoAccess:
+                            self.__setTableItem(curWidget, i, 1, "Disconnected")                
+                            continue
+                        
+                        #reset the Connection status
+                        if str(curWidget.item(i, 1).text()) == "Disconnected":
+                            self.__setTableItem(curWidget, i, 1, "Reconnected")  
+                            #curWidget.item(i, 2).setCheckState(False)  
+                            #curWidget.item(i, 2).setSelected(False)                
                         if is_array[index]:
-                            self.__setTableItem(curWidget, i, 6, self.__arrayTextFormat(array_value[index]))
+                            #self.__setTableItem(curWidget, i, 6, self.__arrayTextFormat(array_value[index]))
+                            self.__setTableItem(curWidget, i, 4, self.__arrayTextFormat(array_value[index]))
                             self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
                         else:
                             if dbrtype[index] in self.epicsDouble:
-                                self.__setTableItem(curWidget, i, 6, str(d_value[index]))
+                                #self.__setTableItem(curWidget, i, 6, str(d_value[index]))
+                                self.__setTableItem(curWidget, i, 4, str(d_value[index]))
             
                                 try:
-                                    saved_val = float(str(curWidget.item(i, 5).text()))
+                                    #saved_val = float(str(curWidget.item(i, 5).text()))
+                                    saved_val = float(str(curWidget.item(i, 3).text()))
                                     if d_value[index] != None:
                                         delta = d_value[index] - saved_val
                                         if abs(delta) < 1.0e-6:
                                             delta = 0
                                     else:
                                         delta = None
+                                        #delta = 'N/A'
                                 except:
                                     delta='N/A'
-                                self.__setTableItem(curWidget, i, 7, str(delta))
+                                    #self.__setTableItem(curWidget, i, 1, "Disconnected")
+                                #self.__setTableItem(curWidget, i, 7, str(delta))
+                                self.__setTableItem(curWidget, i, 5, str(delta))
                             elif dbrtype[index] in self.epicsLong:
-                                self.__setTableItem(curWidget, i, 6, str(i_value[index]))
+                                #self.__setTableItem(curWidget, i, 6, str(i_value[index]))
+                                self.__setTableItem(curWidget, i, 4, str(i_value[index]))
             
                                 if dbrtype[index] in self.epicsNoAccess:
                                     pass
                                 else:
                                     try:
-                                        saved_val = int(float(str(curWidget.item(i, 5).text())))
+                                        #saved_val = int(float(str(curWidget.item(i, 5).text())))
+                                        saved_val = int(float(str(curWidget.item(i, 3).text())))
                                         if i_value[index] != None:
                                             delta = i_value[index] - saved_val
                                         else:
                                             delta = None
+                                            #delta='N/A'
+                                            #self.__setTableItem(curWidget, i, 1, "Disconnected")                                        
                                     except:
                                         delta='N/A'
-                                    self.__setTableItem(curWidget, i, 7, str(delta))
+                                    #self.__setTableItem(curWidget, i, 7, str(delta))
+                                    self.__setTableItem(curWidget, i, 5, str(delta))
                             elif dbrtype[index] in self.epicsString:
-                                self.__setTableItem(curWidget, i, 6, str(s_value[index]))
+                                #self.__setTableItem(curWidget, i, 6, str(s_value[index]))      
+                                self.__setTableItem(curWidget, i, 4, str(s_value[index]))
                     except:
                         noMatchedPv.append(str(curWidget.item(i, 0).text()))
+                #enf of for i in range(rowCount):
                 if len(noMatchedPv) > 0:
                     print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
+                
+                #Mark all disconnected PVs with pink color
+                for i in range(rowCount):
+                    if str(curWidget.item(i, 1).text()) == "Disconnected":                   
+                        self.__setTableItem(curWidget, i, 5, "N/A")   
+                        for item_idx in range(9):
+                            itemtmp = curWidget.item(i, item_idx)
+                            if not itemtmp:
+                                itemtmp = QTableWidgetItem()
+                                curWidget.setItem(i, item_idx, itemtmp)
+                            itemtmp.setBackground(self.brushdisconnectedpv)               
+                #sort by "Connection"  
+                curWidget.sortItems(1,0)
+                detailedText = ""
+                for i in range(len(disConnectedPVs)):
+                    detailedText += '\n' + disConnectedPVs[i] 
+                if len(disConnectedPVs) > 0:
+                    msg = QMessageBox(self,windowTitle="Be Aware!", 
+                                      text="There are %s PVs disconnected. Click Show Details ... below for more info \n Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
+                    msg.setDetailedText(detailedText)
+                    msg.exec_()
         else:
-            QMessageBox.warning(self, "Warning", "Not a snapshot.")
+            QMessageBox.warning(self, "Warning", "No snapshot is displayed. Please refer Welcome to MASAR for help")
             return
         
     def useTimeRange(self, state):
@@ -497,6 +615,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             
     def fetchEventAction(self):
         selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
+        if len(selectedConfigs) <= 0:
+            QMessageBox.warning(self,
+                            "Warning",
+                            "Please select at least one Config listed in the Config table above.")
+            return
+                
         configIds=[]
         configNames = []
         for idx in selectedConfigs: 
@@ -508,12 +632,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.setEventTable(data)
             self.eventTableWidget.resizeColumnsToContents()
     
+    #def retrieveSnapshot(self):
+        #self.retrieveSnapshot_()
+        #wait for seconds, then get the Live Machine data
+        #QTest.qWait(2000)
+        #QThread.sleep(2)
+        #QThread.wait(time = 2000)
+        #self.getLiveMachineAction()
+         
+    #def retrieveSnapshot_(self):
     def retrieveSnapshot(self):
         selectedItems = self.eventTableWidget.selectionModel().selectedRows()
         if len(selectedItems) <= 0:
             QMessageBox.warning(self,
                             "Warning",
-                            "Please select at least one event.")
+                            "Please select at least one Snapshot listed in the Event/Snapshot table above.")
             return
 
         eventTs=[]
@@ -524,13 +657,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))
             
-        self.snapshotTabWidget.setStatusTip("Snapshot data")
+        #self.snapshotTabWidget.setStatusTip("Snapshot data")
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+        #wait for seconds, then get the Live Machine data
+        #QThread.sleep(2)
+        #self.getLiveMachineAction()
         
     def setConfigTable(self):
         data = self.retrieveConfigData()
         if data:
             self.setTable(data, self.configTableWidget)
+            self.configTableWidget.sortByColumn(2)
+            QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.fetchEventAction)
+            QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellPressed (int,int)")),self.eventTableWidget.clearContents)
     
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
@@ -564,12 +703,23 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.snapshotTabWidget.addTab(tabWidget, label)
                 self.snapshotTabWidget.setTabText(i+1, label)
                 self.pv4cDict[str(eventIds[i])] = data['PV Name']
-                self.data4eid[str(eventIds[i])] = data
-            
+                self.data4eid[str(eventIds[i])] = data         
+                tabWidget.setStatusTip("Snapshot data of " + eventNames[i] + "saved at " + ts)
+         
+        #if self.snapshotTabWidget.currentIndex() != 0:
+        self.snapshotTabWidget.setToolTip("Ctrl + C to copy \n Double click to view waveform data")
+        #else:
+            #self.snapshotTabWidget.setToolTip("MASAR help, see Quick Start ...")
+             
         self.snapshotTabWidget.setCurrentIndex(1)
+
+        #tabWidgetExt = QTabWidgetExt()
+        #QObject.connect(self.snapshotTabWidget, SIGNAL("tabCloseRequested(int)"), tabWidgetExt.closeTab(int)) 
+        #QObject.connect(self.snapshotTabWidget, SIGNAL("tabCloseRequested(int)"),self.snapshotTabWidget.removeTab(int)) 
         
     def __showArrayData(self, row, column):
-        if column != 5 and column != 6: # display the array value only
+        #if column != 5 and column != 6: # display the array value only
+        if column != 3 and column != 4: # display the array value only
             return
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
@@ -597,9 +747,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         else:
             arrardlg = ShowArrayValueDlg(pvname, arraySaved)
         arrardlg.exec_()
+        #arrardlg.show()
+        #arrardlg.raise_()
+        #arrardlg.activateWindow()
     
     def setEventTable(self, data):
         self.setTable(data, self.eventTableWidget)
+        self.eventTableWidget.sortByColumn(3)
+        self.eventTableWidget.cellDoubleClicked.connect(self.retrieveSnapshot)
 
     def __setTableItem(self, table, row, col, text):
         item = table.item(row, col)
@@ -652,39 +807,49 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             is_array = data['isArray'] 
             array_value = data['arrayValue']
             
-            keys = ['Name', 'Status', 'Severity', 'Time Stamp', 'Connection', 'Saved Value', 'Live Value', 'Delta', 'Not Restore']
+            #keys = ['Name', 'Status', 'Severity', 'Time Stamp', 'Connection', 'Saved Value', 'Live Value', 'Delta', 'Not Restore']
+            keys = ['PV Name', 'Connection', 'Not Restore', 'Saved Value', 'Live Value', 'Delta', 'When value was saved', 'Alarm Status', 'Alarm Severity']
             table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
-                item = table.item(i, 8)
+                #item = table.item(i, 8)
+                item = table.item(i, 2)
                 if item:
                     item.setCheckState(False)
                 else:
                     item = QTableWidgetItem()
                     item.setFlags(Qt.ItemIsEnabled|Qt.ItemIsUserCheckable)
-                    table.setItem(i, 8, item)
+                    #table.setItem(i, 8, item)
+                    table.setItem(i, 2, item)
                     item.setCheckState(False)
 
                 if pvnames[i]:
                     self.__setTableItem(table, i, 0, pvnames[i])
                 if status[i]:
-                    self.__setTableItem(table, i, 1, str(status[i]))
+                    #self.__setTableItem(table, i, 1, str(status[i]))
+                    self.__setTableItem(table, i, 7, str(status[i]))
                 if severity[i]:
-                    self.__setTableItem(table, i, 2, str(severity[i]))
+                    #self.__setTableItem(table, i, 2, str(severity[i]))
+                    self.__setTableItem(table, i, 8, str(severity[i]))
                 if ts[i]:
                     dt = str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
-                    self.__setTableItem(table, i, 3, dt)
+                    #self.__setTableItem(table, i, 3, dt)
+                    self.__setTableItem(table, i, 6, dt)
                         
                 if is_array[i]:
-                    self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
+                    self.__setTableItem(table, i, 3, self.__arrayTextFormat(array_value[i]))
+                    #self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
                 else:
                     if dbrtype[i] in self.epicsDouble:
-                        self.__setTableItem(table, i, 5, str(d_value[i]))
+                        #self.__setTableItem(table, i, 5, str(d_value[i]))
+                        self.__setTableItem(table, i, 3, str(d_value[i]))
                     elif dbrtype[i] in self.epicsLong:
-                        self.__setTableItem(table, i, 5, str(i_value[i]))
+                        #self.__setTableItem(table, i, 5, str(i_value[i]))
+                        self.__setTableItem(table, i, 3, str(i_value[i]))
                     elif dbrtype[i] in self.epicsString:
-                        self.__setTableItem(table, i, 5, str(s_value[i]))
+                        #self.__setTableItem(table, i, 5, str(s_value[i]))
+                        self.__setTableItem(table, i, 3, str(s_value[i]))
                     elif dbrtype[i] in self.epicsNoAccess:
                         # channel are not connected.
                         pass
@@ -692,10 +857,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         print('invalid dbr type (code = %s)'%(dbrtype[i]))
                 
                 if isConnected[i]:
-                    self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
+                    #self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
+                    self.__setTableItem(table, i, 1, "Connected")
+                    #self.__setTableItem(table, i, 1, "Restorable")
                     item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 else:
-                    self.__setTableItem(table, i, 4, 'False')
+                    #self.__setTableItem(table, i, 4, 'False')
+                    self.__setTableItem(table, i, 1, 'Disconnected')
                     item.setCheckState(True)
                     item.setSelected(True)
                     # disable user checkable function
@@ -708,6 +876,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         itemtmp.setBackground(self.brushbadpv)
 
             table.setSortingEnabled(True)
+            #be careful of this sorting action 
+            #sort by "Connection"  
+            #table.sortItems(1,1)
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
 
@@ -941,7 +1112,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return False
         if result:
             QMessageBox.information(self,"Successful", 
-                                    " Succeed to save preview")
+                                    " Succeed to save the preview as a snapshot and update the event list")
         else:
             QMessageBox.information(self, "Failures",
                                     "Failed to save preview.")
@@ -1017,6 +1188,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             params[pv] = pv
         # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
         array_value = []
+        disConnectedPVs = []
         try:
             rpcResult = self.mc.getLiveMachine(params)
         except:
@@ -1025,6 +1197,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                 "Except happened during getting live machine.")
             return False
         if not rpcResult:
+            QMessageBox.warning(self,
+                                "Warning", 
+                                "Can't get any live data from the machine, please check network connection")
             return False
         channelName = rpcResult[0]
         stringValue = rpcResult[1]
@@ -1045,8 +1220,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             elif dbrtype[i] in self.epicsNoAccess:
                 # when the value is no_access, use the double value no matter what it is
                 array_value.append(raw_array_value[i][1])
+                
+        # if dbrtype is NoAccess, it means that the PV is disconnected at the moment       
+        for i in range(len(dbrtype)):
+            if dbrtype[i] in self.epicsNoAccess:    
+                disConnectedPVs.append(channelName[i])
         
-        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, array_value)
+        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array,array_value,disConnectedPVs)
 
     def saveDataFileAction(self):
         """
@@ -1054,12 +1234,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         """
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
-            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
+            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet. Please refer Welcome to MASAR for help')
             return
         eid = self.__find_key(self.tabWindowDict, curWidget)
-#        if eid == 'comment' or eid == 'preview':
-#            QMessageBox.warning(self, 'Warning', 'No restore, preview is selected.')
-#            return
+        if eid == 'comment' or eid == 'preview':
+            QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-preview tab.')
+            return
         data = self.data4eid[str(eid)]
         
         pvnames = data['PV Name']
@@ -1119,6 +1299,7 @@ def main(channelname = None):
     else:
         form = masarUI()
     form.show()
+    #form.showMaximized()
     app.exec_()
     
     import atexit

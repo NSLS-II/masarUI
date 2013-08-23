@@ -2,16 +2,117 @@
 <ui version="4.0">
  <class>masar</class>
  <widget class="QMainWindow" name="masar">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1215</width>
+    <width>1296</width>
     <height>919</height>
    </rect>
   </property>
+  <property name="palette">
+   <palette>
+    <active>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>224</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>224</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>224</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>224</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
+  </property>
+  <property name="focusPolicy">
+   <enum>Qt::ClickFocus</enum>
+  </property>
+  <property name="acceptDrops">
+   <bool>false</bool>
+  </property>
   <property name="windowTitle">
    <string>MASAR Viewer</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="masarRC.qrc">
+    <normaloff>:/icons/nsls2-logo.png</normaloff>:/icons/nsls2-logo.png</iconset>
+  </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
+  <property name="toolTip">
+   <string/>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="documentMode">
+   <bool>true</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks|QMainWindow::ForceTabbedDocks|QMainWindow::VerticalTabs</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
   </property>
   <widget class="QWidget" name="mainwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -31,7 +132,7 @@
         <enum>Qt::Vertical</enum>
        </property>
        <widget class="QWidget" name="layoutWidget">
-        <layout class="QVBoxLayout" name="configVerticalLayout">
+        <layout class="QVBoxLayout" name="configVerticalLayout" stretch="0">
          <item>
           <layout class="QGridLayout" name="configGridLayout">
            <item row="0" column="0">
@@ -43,6 +144,15 @@
            </item>
            <item row="0" column="1">
             <widget class="QComboBox" name="systemCombox">
+             <property name="cursor">
+              <cursorShape>SizeVerCursor</cursorShape>
+             </property>
+             <property name="mouseTracking">
+              <bool>true</bool>
+             </property>
+             <property name="toolTip">
+              <string>sub-system to which configs/PV list belong</string>
+             </property>
              <property name="currentIndex">
               <number>-1</number>
              </property>
@@ -57,20 +167,47 @@
            </item>
            <item row="1" column="1">
             <widget class="QLineEdit" name="configFilterLineEdit">
+             <property name="toolTip">
+              <string>using expression like *LN*</string>
+             </property>
              <property name="text">
-              <string>*</string>
+              <string extracomment="such as LN*">*</string>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
+             <property name="placeholderText" stdset="0">
+              <string/>
              </property>
             </widget>
            </item>
            <item row="2" column="0">
             <widget class="QPushButton" name="fetchConfigButton">
+             <property name="toolTip">
+              <string>search pre-defined configurations</string>
+             </property>
              <property name="text">
-              <string>Fetch Config(s)</string>
+              <string>Search Config(s)</string>
              </property>
             </widget>
            </item>
            <item row="3" column="0" colspan="2">
             <widget class="QTableWidget" name="configTableWidget">
+             <property name="focusPolicy">
+              <enum>Qt::WheelFocus</enum>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ConfigTable: a list of pre-defined configs&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on ONE row to fetch its list of snapshot(s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::WinPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Sunken</enum>
+             </property>
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::ExtendedSelection</enum>
              </property>
@@ -132,6 +269,9 @@
            </item>
            <item row="5" column="0" colspan="3">
             <widget class="QPushButton" name="fetchEventButton">
+             <property name="toolTip">
+              <string>get a list of snapshot(s) or event(s)</string>
+             </property>
              <property name="text">
               <string>Fetch Snapshot(s)</string>
              </property>
@@ -168,6 +308,9 @@
            </item>
            <item row="0" column="3">
             <widget class="QLineEdit" name="eventFilterLineEdit">
+             <property name="toolTip">
+              <string>using expression like *BPM*</string>
+             </property>
              <property name="text">
               <string>*</string>
              </property>
@@ -175,6 +318,9 @@
            </item>
            <item row="1" column="3">
             <widget class="QLineEdit" name="authorTextEdit">
+             <property name="toolTip">
+              <string>using expression like *mei*</string>
+             </property>
              <property name="text">
               <string>*</string>
              </property>
@@ -198,6 +344,21 @@
          </item>
          <item>
           <widget class="QTableWidget" name="eventTableWidget">
+           <property name="minimumSize">
+            <size>
+             <width>350</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="mouseTracking">
+            <bool>true</bool>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;eventTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
            </property>
@@ -213,8 +374,17 @@
           <layout class="QHBoxLayout" name="snapshotHorizontalLayout">
            <item>
             <widget class="QPushButton" name="fetchSnapshotButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>get PVs data</string>
+             </property>
              <property name="text">
-              <string>Display Snapshot</string>
+              <string>Display Snapshot(s)</string>
              </property>
             </widget>
            </item>
@@ -229,7 +399,7 @@
          <widget class="QTabWidget" name="snapshotTabWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>3</horstretch>
+            <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
@@ -239,12 +409,33 @@
             <height>0</height>
            </size>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::DefaultContextMenu</enum>
+          </property>
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
           <property name="currentIndex">
            <number>0</number>
           </property>
+          <property name="documentMode">
+           <bool>false</bool>
+          </property>
+          <property name="tabsClosable">
+           <bool>true</bool>
+          </property>
+          <property name="movable">
+           <bool>true</bool>
+          </property>
           <widget class="QWidget" name="commentTab">
            <attribute name="title">
-            <string>About MASAR</string>
+            <string>Welcome to MASAR</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>How to use MASAR</string>
            </attribute>
            <layout class="QVBoxLayout" name="commentTabWindowLayout">
             <item>
@@ -293,14 +484,50 @@
                <bool>true</bool>
               </property>
               <property name="plainText">
-               <string>MASAR is an EPICS V4 [1] service which does MAchine Snapshot, Archiving, and Retrieve. 
+               <string>
+MASAR is an EPICS V4 service which does MAchine Snapshot, Archiving, and Retrieve [1] [2]. This software was originally developed by National Synchrotron Light Source II at Brookhaven National Laboratory.
 
-More information can be found at [1] about the EPICS V4, and MASAR user manual can be fount a [2].
 
-This service was originally developed by National Synchrotron Light Source II at Brookhaven National Laboratory.
+Quick Start ...
 
-[1] http://epics-pvdata.sourceforge.net/
-[2] http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html</string>
+    1. To restore the machine to a particular state/snapshot: double click on one row in the left-top Config table --&gt; double click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
+    
+    2. To save a machine snapshot: click on one row in the left-top Config table --&gt; click the button &quot;Preview Machine&quot; --&gt; click &quot;Save Preview as a Snapshot ...&quot; --&gt; put a good comment such as: SBM EmitX and Y 69 nm. This is golden; 
+
+
+Tips ...
+    
+    1. Always put the mouse cursor over the things you don't know for 2 seconds, the GUI will show you what it is or how to do it;
+    
+    2. Always follow the instructions on the pop-up message which shows something is not working as expected and how to fix it; 
+  
+    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctr + c to copy one single cell ...  
+   
+    4. Re-launch masar if you tried many times, but still failed to do something;
+
+
+Terminology ...
+    
+    * machine: it can be accelerator, system, etc.: Linac, Booster, Storage Ring, BPM system, Magnet system ...
+    
+    * snapshot: a list of PVs associated with data (value, time stamp, alarm status ... ) saved at a particular time for a particular machine state.
+
+    * config table: pre-defined a list of configurations for different machines; it has a unique Name, Description, Date when it is created ...  
+
+    * event table: a list of saved events / snapshots for a particular config; it has Config which is listed in the config table, Description,  Author ...  
+
+    * snapshot tab: the data of one snapshot is presented in the form of table in a Tab window.
+
+
+More Info ...
+
+    please check out the links below:
+
+    [1] http://epics-pvdata.sourceforge.net/
+    [2] http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html</string>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
               </property>
               <property name="backgroundVisible">
                <bool>false</bool>
@@ -314,20 +541,6 @@ This service was originally developed by National Synchrotron Light Source II at
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QPushButton" name="machinePreviewButton">
-            <property name="text">
-             <string>Preview</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="saveCurrentPreviewButton">
-            <property name="text">
-             <string>Save Current Preview</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QLabel" name="label">
             <property name="text">
              <string/>
@@ -335,9 +548,29 @@ This service was originally developed by National Synchrotron Light Source II at
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="restoreMachineButton">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Restore Machine</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="getLiveMachineButton">
+            <property name="toolTip">
+             <string/>
+            </property>
             <property name="text">
              <string>Compare Live Machine</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="saveDataFileButton">
+            <property name="text">
+             <string>Export Snapshot to File ...</string>
             </property>
            </widget>
           </item>
@@ -349,16 +582,16 @@ This service was originally developed by National Synchrotron Light Source II at
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="saveDataFileButton">
+           <widget class="QPushButton" name="machinePreviewButton">
             <property name="text">
-             <string>Export Snapshot to CSV</string>
+             <string>Preview Machine</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="restoreMachineButton">
+           <widget class="QPushButton" name="saveCurrentPreviewButton">
             <property name="text">
-             <string>Restore Machine</string>
+             <string>Save Preview as a Snapshot ...</string>
             </property>
            </widget>
           </item>
@@ -375,63 +608,36 @@ This service was originally developed by National Synchrotron Light Source II at
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1215</width>
-     <height>22</height>
+     <width>1296</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <tabstops>
+  <tabstop>systemCombox</tabstop>
+  <tabstop>configFilterLineEdit</tabstop>
+  <tabstop>fetchConfigButton</tabstop>
+  <tabstop>configTableWidget</tabstop>
+  <tabstop>eventFilterLineEdit</tabstop>
+  <tabstop>authorTextEdit</tabstop>
+  <tabstop>timeRangeCheckBox</tabstop>
+  <tabstop>eventStartDateTime</tabstop>
+  <tabstop>eventEndDateTime</tabstop>
+  <tabstop>fetchEventButton</tabstop>
+  <tabstop>eventTableWidget</tabstop>
+  <tabstop>fetchSnapshotButton</tabstop>
+  <tabstop>saveDataFileButton</tabstop>
+  <tabstop>machinePreviewButton</tabstop>
+  <tabstop>saveCurrentPreviewButton</tabstop>
+  <tabstop>snapshotTabWidget</tabstop>
+  <tabstop>currentCommentText</tabstop>
+ </tabstops>
+ <resources>
+  <include location="masarRC.qrc"/>
+ </resources>
  <connections>
-  <connection>
-   <sender>systemCombox</sender>
-   <signal>currentIndexChanged(QString)</signal>
-   <receiver>masar</receiver>
-   <slot>systemComboxChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>configFilterLineEdit</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>masar</receiver>
-   <slot>configFilterChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>fetchConfigButton</sender>
-   <signal>clicked()</signal>
-   <receiver>masar</receiver>
-   <slot>fetchConfigAction()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>saveCurrentPreviewButton</sender>
    <signal>clicked()</signal>
@@ -439,8 +645,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>saveMachinePreviewAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>1284</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -455,8 +661,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>eventFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>143</x>
+     <y>410</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -471,8 +677,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>authorTextChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>143</x>
+     <y>442</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -487,8 +693,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>useTimeRange()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>42</x>
+     <y>469</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -503,8 +709,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>fetchEventAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>42</x>
+     <y>562</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -519,8 +725,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>retrieveSnapshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>53</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -535,8 +741,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>restoreSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>616</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -551,8 +757,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>getMachinePreviewAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>424</x>
-     <y>868</y>
+     <x>1111</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>603</x>
@@ -567,8 +773,8 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>getLiveMachineAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>424</x>
-     <y>868</y>
+     <x>754</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>603</x>
@@ -583,12 +789,76 @@ This service was originally developed by National Synchrotron Light Source II at
    <slot>saveDataFileAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>903</x>
+     <y>885</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
      <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>systemCombox</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>masar</receiver>
+   <slot>systemComboxChanged(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>136</x>
+     <y>55</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>configFilterLineEdit</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>masar</receiver>
+   <slot>configFilterChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>252</x>
+     <y>85</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>fetchConfigButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>fetchConfigAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>42</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>snapshotTabWidget</sender>
+   <signal>tabCloseRequested(int)</signal>
+   <receiver>masar</receiver>
+   <slot>closeTab()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>780</x>
+     <y>32</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>791</x>
+     <y>-14</y>
     </hint>
    </hints>
   </connection>
@@ -607,5 +877,8 @@ This service was originally developed by National Synchrotron Light Source II at
   <slot>getLiveMachineAction()</slot>
   <slot>authorTextChanged()</slot>
   <slot>saveDataFileAction()</slot>
+  <slot>saveMachineSnapshot()</slot>
+  <slot>closeTab()</slot>
+  <slot>configTab()</slot>
  </slots>
 </ui>

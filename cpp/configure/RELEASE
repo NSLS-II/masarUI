@@ -33,16 +33,16 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 #RELEASE.local must define variables like the following:
 
 
-#PYTHON=python2.7
-#PYTHON_BASE=/usr
-#$(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
+PYTHON=python2.7
+PYTHON_BASE=/usr
+$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
 
-#REPBASE=/home/mrk/hg
-#PVDATA=${REPBASE}/pvDataCPP
-#PVACCESS=${REPBASE}/pvAccessCPP
-#PVIOC=${REPBASE}/pvIOCCPP
-#NT=${REPBASE}/alphaCPP/normativeTypes
+REPBASE=/home/yhu/V4
+PVDATA=${REPBASE}/pvDataCPP
+PVACCESS=${REPBASE}/pvAccessCPP
+PVIOC=${REPBASE}/pvIOCCPP
+NT=${REPBASE}/normativeTypesCPP
 
-#EPICS_BASE=/home/install/epics/base
+EPICS_BASE=/usr/lib/epics
 
 -include $(TOP)/configure/RELEASE.local

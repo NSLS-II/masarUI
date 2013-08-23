@@ -175,19 +175,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         else:
             return None
     
-    def closeTab(self):
-        index = self.snapshotTabWidget.currentIndex()
-        if index != 0:
-            self.snapshotTabWidget.removeTab(index)
-            #print("the selected tab is closed")
-        else:
-            QMessageBox.warning(self, "Waring", "Please don't close this page since it has all instructions")
-        
-    #tried to just use one button called 'Save a snapshot ...', but no success
-    def saveMachineSnapshot(self):
-        #self.getMachinePreviewAction()
-        self.saveMachinePreviewAction()
-    
     def saveMachinePreviewAction(self):
         if self.previewId == None or self.previewConfName == None:
             QMessageBox.warning(self, "Warning",'No preview to save. Please click "Preview Machine" first')
@@ -705,9 +692,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.pv4cDict[str(eventIds[i])] = data['PV Name']
                 self.data4eid[str(eventIds[i])] = data         
                 tabWidget.setStatusTip("Snapshot data of " + eventNames[i] + "saved at " + ts)
+                tabWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n Double click to view waveform data")
          
         #if self.snapshotTabWidget.currentIndex() != 0:
-        self.snapshotTabWidget.setToolTip("Ctrl + C to copy \n Double click to view waveform data")
+        #self.snapshotTabWidget.setToolTip("Ctrl + C to copy \n Double click to view waveform data")
         #else:
             #self.snapshotTabWidget.setToolTip("MASAR help, see Quick Start ...")
              
@@ -1288,6 +1276,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             QMessageBox.warning(self,
                                 "Warning",
                                 "Cannot write to the file. Please check the writing permission.")
+    
+    def closeTab(self):
+        index = self.snapshotTabWidget.currentIndex()
+        if index != 0:
+            self.snapshotTabWidget.removeTab(index)
+            #print("the selected tab is closed")
+        else:
+            QMessageBox.warning(self, "Waring", "Please don't close this page since it has all instructions")
+        
+    #tried to just use one button called 'Save a snapshot ...', but no success
+    def saveMachineSnapshot(self):
+        #self.getMachinePreviewAction()
+        self.saveMachinePreviewAction()
 
 def main(channelname = None):
     app = QApplication(sys.argv)

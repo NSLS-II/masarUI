@@ -1289,6 +1289,22 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def saveMachineSnapshot(self):
         #self.getMachinePreviewAction()
         self.saveMachinePreviewAction()
+    
+    def configTab(self):
+        # this won't work: AttributeError: 'builtin_function_or_method' object has no attribute 'setTabTextColor'
+        #self.snapshotTabWidget.tabBar.setTabTextColor(0, Qt.blue)
+        
+        bar = self.snapshotTabWidget.tabBar()
+        #bar.setTabTextColor(0, Qt.blue) // for quick test
+        totalTabs = self.snapshotTabWidget.count()
+        curIndex = self.snapshotTabWidget.currentIndex()
+        for i in range(totalTabs):
+            if i == curIndex: 
+                bar.setTabTextColor(i, Qt.blue)
+            else:
+                bar.setTabTextColor(i, Qt.gray)
+        #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
+
 
 def main(channelname = None):
     app = QApplication(sys.argv)

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Fri Aug 23 14:04:07 2013
+# Created: Fri Aug 23 16:19:03 2013
 #      by: PyQt4 UI code generator 4.7.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -263,6 +263,7 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.configFilterLineEdit, QtCore.SIGNAL("textChanged(QString)"), masar.configFilterChanged)
         QtCore.QObject.connect(self.fetchConfigButton, QtCore.SIGNAL("clicked()"), masar.fetchConfigAction)
         QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL("tabCloseRequested(int)"), masar.closeTab)
+        QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL("currentChanged(int)"), masar.configTab)
         QtCore.QMetaObject.connectSlotsByName(masar)
         masar.setTabOrder(self.systemCombox, self.configFilterLineEdit)
         masar.setTabOrder(self.configFilterLineEdit, self.fetchConfigButton)

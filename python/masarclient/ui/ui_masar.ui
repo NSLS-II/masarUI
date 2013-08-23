@@ -862,6 +862,22 @@ More Info ...
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>snapshotTabWidget</sender>
+   <signal>currentChanged(int)</signal>
+   <receiver>masar</receiver>
+   <slot>configTab()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>674</x>
+     <y>31</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>682</x>
+     <y>-7</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>systemComboxChanged(QString)</slot>

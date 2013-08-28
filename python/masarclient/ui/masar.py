@@ -95,6 +95,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.pv4cDict = {} # pv name list for each selected configuration
         self.data4eid = {}
         self.arrayData = {} # store all array data
+        self.compareTableKeys = []
         
         self.__service = 'masar'
         self.mc = masarClient.client(channelname)
@@ -109,6 +110,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewId = None
         self.previewConfName = None
         self.isPreviewSaved = False
+        #self.beCompared = False
         
         #automatically fetch all configs at startup. This action should be quick
         self.fetchConfigAction()
@@ -274,8 +276,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return
         
         eid = self.__find_key(self.tabWindowDict, curWidget)
-        if eid == 'comment' or eid == 'preview':
-            QMessageBox.warning(self, 'Warning', 'No restore, preview tab is selected. Please select other Non-preview Tab')
+        if eid == 'comment' or eid == 'preview' or eid == 'compare':
+            QMessageBox.warning(self, 'Warning', 'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
             return
         selectedNoRestorePv = {}
 
@@ -477,6 +479,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 eid = self.previewId # get event id for preview snapshot
             elif eid == 'comment':
                 return # nothing should do here
+            elif eid == 'compare':
+                #self.beCompared = True
+                data_ = self.data4eid['compare']
+                pvlist_ = self.pv4cDict['compare']
+                #print(pvlist_)
+                self.setCompareSnapshotsTable(data_, curWidget, pvlist_)
+                #curWidget.setSortingEnabled(True) 
+                return
             #catch KeyError: 'None'
             pvlist = self.pv4cDict[str(eid)]
             
@@ -1225,8 +1235,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet. Please refer Welcome to MASAR for help')
             return
         eid = self.__find_key(self.tabWindowDict, curWidget)
-        if eid == 'comment' or eid == 'preview':
-            QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-preview tab.')
+        if eid == 'comment' or eid == 'preview' or eid=="compare":
+            QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-%s tab.'%eid)
             return
         data = self.data4eid[str(eid)]
         
@@ -1276,6 +1286,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             QMessageBox.warning(self,
                                 "Warning",
                                 "Cannot write to the file. Please check the writing permission.")
+  
     
     def closeTab(self):
         index = self.snapshotTabWidget.currentIndex()
@@ -1289,6 +1300,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def saveMachineSnapshot(self):
         #self.getMachinePreviewAction()
         self.saveMachinePreviewAction()
+   
     
     def configTab(self):
         # this won't work: AttributeError: 'builtin_function_or_method' object has no attribute 'setTabTextColor'
@@ -1306,6 +1318,189 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
 
 
+    def openMsgBox(self):   
+        selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
+        ln = len(selectedEvents) 
+        #print(selectedEvents)
+        #print("%s events selected" %ln)
+        if ln == 0:
+            msg = QMessageBox(self, windowTitle="Event Selection", 
+                          text="Please select events/snapshots (Ctrl key + mouse Click) from the left-bottom Event Table\n\n\
+If the event Table is empty, please double click on one row in the config Table \n\nThen click OK below")
+            msg.setAttribute(Qt.WA_DeleteOnClose)
+            msg.setModal(False)
+            msg.show()
+            #msg.open(self, SLOT(msgBoxClosed()))
+            #msg.open.connect(self.msgBoxClosed)
+            msg.buttonClicked.connect(self.compareSnapshots)    
+            #print("QMessageBox is closed")        
+        elif ln >=2 and ln <= 10:
+            self.compareSnapshots()
+        
+        else:
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 5 events for comparison") 
+            return       
+ 
+    
+    def compareSnapshots(self):
+        selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
+        ln = len(selectedEvents) 
+        #print(selectedEvents)
+        if ln < 2 or ln > 10:
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 10 events for comparison") 
+            return
+        #print("compare %d snapshots" %ln)
+        #eventTs=[]
+        eventNames=[]
+        eventIds = []
+        data = []
+        self.compareId = None
+        self.compareConfName =  None        
+        for idx in selectedEvents: 
+            eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
+            #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
+            eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))  
+        #print(eventNames)
+        #print(eventIds)    
+        #for eventId in eventIds:
+        for i in range(len(eventIds)):
+            result = self.retrieveMasarData(eventid = eventIds[i])
+            if result == None or not isinstance(result, odict) :
+                QMessageBox.warning(self,"Warning","Failed to retrieve snapshot data for event %d"%eventIds[i])
+                return
+            else:
+                data.append(result) 
+        #save data to dictionary for future retrieval (i.e. getLiveMachineAction()) 
+        self.data4eid['compare'] = data
+        #data is a list with odict elements; data[i] is an odict;
+        #data[i]['keyword'] is a tuple; data[i]['keyword'][index] is the element value in the tuple                   
+        #print (data)
+        #print(data[0]['PV Name'])
+        
+        try:
+            tabWidget = self.tabWindowDict['compare']
+            index = self.snapshotTabWidget.indexOf(tabWidget)
+        except:
+            tabWidget = QTableWidget()
+            index = self.snapshotTabWidget.count()
+            self.tabWindowDict['compare'] = tabWidget
+            QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
+        labelText = ""
+        for eventId in eventIds:
+            labelText += '_' + eventId
+        label = QString.fromUtf8("Compare Snapshots: eventIDs" + labelText)
+        self.snapshotTabWidget.addTab(tabWidget, label)
+        self.snapshotTabWidget.setTabText(index, label)
+        self.snapshotTabWidget.setCurrentWidget(tabWidget)
+        #assert(data != None and isinstance(tabWidget, QTableWidget))
+        #print("configure the table for comparing multiple snapshots")
+        #tabWidget.setSortingEnabled(False)
+        #tabWidget.clear()
+        keys = ['PV name']
+        #pvList = odict()
+        pvList = []
+        nEvents = len(data)
+        #print("compare %d event data"%nEvents)
+        for i in range(nEvents):
+            keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
+            keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
+            #use .extend instead of .append here
+            pvList.extend(list(data[i]['PV Name']))
+        keys.append('Live Value')
+        self.compareTableKeys  = keys
+        #print(keys)
+        #print("%d PVs after merging without removing duplicates"%len(pvList))
+        pvSet = set(pvList)
+        pvList = list(pvSet)
+        self.pv4cDict['compare'] = pvList
+        #print("%d PVs after removing duplicates"%len(pvList))
+        #print("data in compareSnapshots: ")
+        #print(data   
+        nRows = len(pvList)
+        nCols = len(keys) 
+        tabWidget.setRowCount(nRows)
+        tabWidget.setColumnCount(nCols)
+        #tabWidget.setHorizontalHeaderLabels(keys)  
+        #self.setCompareSnapshotsTable(data, tabWidget, eventNames[0])    
+        #self.setCompareSnapshotsTable(data, tabWidget, eventNames, eventIds)
+        self.setCompareSnapshotsTable(data, tabWidget, pvList)  
+        tabWidget.resizeColumnsToContents()  
+        #tabWidget.setSortingEnabled(True)   
+        #tabWidget.setColumnWidth(1, 80)
+        #tabWidget.resizeRowsToContents()  
+        #self.compareId = eid    
+        #self.compareConfName =  None
+
+
+    def setCompareSnapshotsTable(self, data, table, pvlist):
+        assert(data != None and isinstance(table, QTableWidget) and pvlist != None)
+        pvList = pvlist
+        #print("data in setCompareSnapshotsTable: ")
+        #print(data)
+        nRows = len(pvList)
+        nEvents = len(data) 
+        #must have the following two lines, otherwise the sorting will make data messed up
+        table.setSortingEnabled(False)
+        table.clear()
+        
+        keys = self.compareTableKeys
+        table.setHorizontalHeaderLabels(keys)  
+        liveData = self.getLiveMachineData(pvList)
+        if liveData:
+            #print(liveData)
+            channelName = liveData[0]
+            s_value = liveData[1]
+            d_value = liveData[2]
+            i_value = liveData[3]
+            dbrtype = liveData[4]
+#           isConnected = data[5]
+            is_array = liveData[6]
+            array_value = liveData[7]
+            #print(pvList)
+            #print(channelName)
+            
+        #for i,j in range(nRows), range(nEvents):
+        for i in range(nRows):
+            self.__setTableItem(table, i, 0, pvList[i])
+            #print(i,    pvList[i])
+            for j in range(nEvents):
+                if pvList[i] in data[j]['PV Name']:  
+                    pvIndex = data[j]['PV Name'].index(pvList[i])
+                    #if pvIndex: 
+                    #data is a list with odict elements; data[j] is an odict;
+                    #data[j]['keyword'] is a tuple; data[j]['keyword'][index] is a single item/value  
+                    if data[j]['Time stamp'][pvIndex]:
+                        dt = str(datetime.datetime.fromtimestamp(data[j]['Time stamp'][pvIndex] + \
+                                                                 data[j]['Time stamp (nano)'][pvIndex]*1.0e-9))
+                        self.__setTableItem(table, i, 2*(j+1), dt)
+                    if data[j]['isArray'][pvIndex]:
+                        self.__setTableItem(table, i, 2*j+1, self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))
+                        #self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i] 
+                    else:
+                        if data[j]['DBR'][pvIndex] in self.epicsDouble:
+                            self.__setTableItem(table, i, 2*j+1, str(data[j]['D_value'][pvIndex]))
+                        if data[j]['DBR'][pvIndex] in self.epicsLong:
+                            self.__setTableItem(table, i, 2*j+1, str(data[j]['I_value'][pvIndex]))
+                        if data[j]['DBR'][pvIndex] in self.epicsString:
+                            self.__setTableItem(table, i, 2*j+1, str(data[j]['S_value'][pvIndex]))
+                #print(pvIndex,data[j]['D_value'][pvIndex])
+            #print(channelName[i], pvList[i])
+            #assert(channelName[i] != pvList[i])
+            #print(table.columnCount())
+            if pvList[i] in channelName:
+                liveIndex = channelName.index(pvList[i])
+                if is_array[liveIndex]:
+                    self.__setTableItem(table, i, table.columnCount()-1, self.__arrayTextFormat(array_value[liveIndex]))
+                else:
+                    if dbrtype[liveIndex] in self.epicsDouble:
+                        self.__setTableItem(table, i, table.columnCount()-1, str(d_value[liveIndex]))
+                    if dbrtype[liveIndex] in self.epicsLong:
+                        self.__setTableItem(table, i, table.columnCount()-1, str(i_value[liveIndex]))
+                    if dbrtype[liveIndex] in self.epicsString:
+                        self.__setTableItem(table, i, table.columnCount()-1, str(s_value[liveIndex]))
+                               
+        table.setSortingEnabled(True)      
+        
 def main(channelname = None):
     app = QApplication(sys.argv)
     app.setOrganizationName("NSLS II")

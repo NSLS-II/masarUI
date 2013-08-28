@@ -541,13 +541,6 @@ More Info ...
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="restoreMachineButton">
             <property name="toolTip">
              <string/>
@@ -568,16 +561,16 @@ More Info ...
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="saveDataFileButton">
+           <widget class="QPushButton" name="compareSnapshotsButton">
             <property name="text">
-             <string>Export Snapshot to File ...</string>
+             <string>Compare Snapshots...</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
+           <widget class="QPushButton" name="saveDataFileButton">
             <property name="text">
-             <string/>
+             <string>Export Snapshot to File ...</string>
             </property>
            </widget>
           </item>
@@ -628,7 +621,6 @@ More Info ...
   <tabstop>fetchEventButton</tabstop>
   <tabstop>eventTableWidget</tabstop>
   <tabstop>fetchSnapshotButton</tabstop>
-  <tabstop>saveDataFileButton</tabstop>
   <tabstop>machinePreviewButton</tabstop>
   <tabstop>saveCurrentPreviewButton</tabstop>
   <tabstop>snapshotTabWidget</tabstop>
@@ -741,7 +733,7 @@ More Info ...
    <slot>restoreSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>616</x>
+     <x>516</x>
      <y>885</y>
     </hint>
     <hint type="destinationlabel">
@@ -773,7 +765,7 @@ More Info ...
    <slot>getLiveMachineAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>754</x>
+     <x>685</x>
      <y>885</y>
     </hint>
     <hint type="destinationlabel">
@@ -878,6 +870,22 @@ More Info ...
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>compareSnapshotsButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>openMsgBox()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>758</x>
+     <y>861</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>755</x>
+     <y>888</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>systemComboxChanged(QString)</slot>
@@ -896,5 +904,7 @@ More Info ...
   <slot>saveMachineSnapshot()</slot>
   <slot>closeTab()</slot>
   <slot>configTab()</slot>
+  <slot>compareSnapshots()</slot>
+  <slot>openMsgBox()</slot>
  </slots>
 </ui>

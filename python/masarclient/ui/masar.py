@@ -1400,11 +1400,11 @@ If the event Table is empty, please double click on one row in the config Table 
             #msg.open.connect(self.msgBoxClosed)
             msg.buttonClicked.connect(self.compareSnapshots)    
             #print("QMessageBox is closed")        
-        elif ln >=2 and ln <= 10:
+        elif ln >=2 and ln <= 9:
             self.compareSnapshots()
         
         else:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 5 events for comparison") 
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison") 
             return       
  
     
@@ -1412,8 +1412,8 @@ If the event Table is empty, please double click on one row in the config Table 
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
         #print(selectedEvents)
-        if ln < 2 or ln > 10:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 10 events for comparison") 
+        if ln < 2 or ln > 9:
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison") 
             return
         #print("compare %d snapshots" %ln)
         #eventTs=[]
@@ -1474,6 +1474,10 @@ If the event Table is empty, please double click on one row in the config Table 
             #use .extend instead of .append here
             pvList.extend(list(data[i]['PV Name']))
         keys.append('Live Value')
+        nDelta = nEvents - 1
+        for i in range(nDelta):
+            keys.append("Delta%s1"%str(i+2))      
+        keys.append('Delta01') 
         self.compareTableKeys  = keys
         #print(keys)
         #print("%d PVs after merging without removing duplicates"%len(pvList))
@@ -1560,11 +1564,11 @@ If the event Table is empty, please double click on one row in the config Table 
                     self.__setTableItem(table, i, table.columnCount()-1, self.__arrayTextFormat(array_value[liveIndex]))
                 else:
                     if dbrtype[liveIndex] in self.epicsDouble:
-                        self.__setTableItem(table, i, table.columnCount()-1, str(d_value[liveIndex]))
+                        self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
                     if dbrtype[liveIndex] in self.epicsLong:
-                        self.__setTableItem(table, i, table.columnCount()-1, str(i_value[liveIndex]))
+                        self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
                     if dbrtype[liveIndex] in self.epicsString:
-                        self.__setTableItem(table, i, table.columnCount()-1, str(s_value[liveIndex]))
+                        self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
                                
         table.setSortingEnabled(True)      
         

@@ -1469,8 +1469,10 @@ If the event Table is empty, please double click on one row in the config Table 
         nEvents = len(data)
         #print("compare %d event data"%nEvents)
         for i in range(nEvents):
-            keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
-            keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
+            #keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
+            #keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
+            keys.append("Saved Value"+"\n"+"(" + " in Event "+str(eventIds[i])+")")
+            keys.append("Timestamp in Event "+str(eventIds[i]))
             #use .extend instead of .append here
             pvList.extend(list(data[i]['PV Name']))
         keys.append('Live Value')

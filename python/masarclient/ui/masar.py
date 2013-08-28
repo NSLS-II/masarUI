@@ -225,6 +225,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
         result = self.getMachinePreviewData(cname)
         if result:
+            self.resizeSplitter(1)
             eid = result[0]
             data = result[1]
             self.pv4cDict[str(eid)] = data['PV Name']
@@ -540,10 +541,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                     if d_value[index] != None:
                                         delta = d_value[index] - saved_val
                                         if abs(delta) < 1.0e-6:
-                                            delta = 0
+                                            #delta = 0
+                                            delta = 'Equal'
+                                        else:
+                                            delta = 'NotEqual(%.6f)'%delta
                                     else:
-                                        delta = None
-                                        #delta = 'N/A'
+                                        #delta = None
+                                        delta = 'N/A'
                                 except:
                                     delta='N/A'
                                     #self.__setTableItem(curWidget, i, 1, "Disconnected")
@@ -561,20 +565,34 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                         saved_val = int(float(str(curWidget.item(i, 3).text())))
                                         if i_value[index] != None:
                                             delta = i_value[index] - saved_val
+                                            if delta == 0:
+                                                delta = 'Equal'
+                                            else:
+                                                delta = 'NotEqual(%d)'%delta
                                         else:
-                                            delta = None
-                                            #delta='N/A'
+                                            #delta = None
+                                            delta='N/A'
                                             #self.__setTableItem(curWidget, i, 1, "Disconnected")                                        
                                     except:
                                         delta='N/A'
                                     #self.__setTableItem(curWidget, i, 7, str(delta))
                                     self.__setTableItem(curWidget, i, 5, str(delta))
                             elif dbrtype[index] in self.epicsString:
-                                #self.__setTableItem(curWidget, i, 6, str(s_value[index]))      
+                                #self.__setTableItem(curWidget, i, 6, str(s_value[index]))   
+                                saved_val = str(curWidget.item(i, 3).text())
+                                #print(saved_val)  
                                 self.__setTableItem(curWidget, i, 4, str(s_value[index]))
+                                if s_value[index] != None:
+                                    if s_value[index] == saved_val:
+                                        delta = 'Equal'
+                                    else:
+                                        delta = 'NotEqual'
+                                else:
+                                    delta='N/A'
+                                self.__setTableItem(curWidget, i, 5, str(delta))
                     except:
                         noMatchedPv.append(str(curWidget.item(i, 0).text()))
-                #enf of for i in range(rowCount):
+                #end of for i in range(rowCount):
                 if len(noMatchedPv) > 0:
                     print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
                 
@@ -589,7 +607,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                 curWidget.setItem(i, item_idx, itemtmp)
                             itemtmp.setBackground(self.brushdisconnectedpv)               
                 #sort by "Connection"  
-                curWidget.sortItems(1,0)
+                #curWidget.sortItems(1,0)
+                #sort by "delta"  
+                curWidget.sortItems(5,1)
+                curWidget.resizeColumnsToContents() 
                 detailedText = ""
                 for i in range(len(disConnectedPVs)):
                     detailedText += '\n' + disConnectedPVs[i] 
@@ -598,7 +619,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                       text="There are %s PVs disconnected. Click Show Details ... below for more info \n Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                     msg.setDetailedText(detailedText)
                     msg.exec_()
-        else:
+                     
+        else:# end of if isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", "No snapshot is displayed. Please refer Welcome to MASAR for help")
             return
         
@@ -621,14 +643,26 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         configIds=[]
         configNames = []
         for idx in selectedConfigs: 
-            configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
+            #configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
+            configIds.append(str(self.configTableWidget.item(idx.row(), 1).text()))
             configNames.append(str(self.configTableWidget.item(idx.row(), 0).text()))
         
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
+        reorderedData = odict() 
         if data:
+            reorderedData['Config'] = data['Config']
+            reorderedData['Id'] = data['Id']
+            reorderedData['Description'] = data['Description']
+            reorderedData['Time stamp'] = data['Time stamp']
+            reorderedData['Author'] = data['Author']
+            #print(reorderedData)
+            data = reorderedData  
             self.setEventTable(data)
             self.eventTableWidget.resizeColumnsToContents()
-    
+        else:
+            QMessageBox.warning(self, "warning","Can't retrieve event list")
+            
+            
     #def retrieveSnapshot(self):
         #self.retrieveSnapshot_()
         #wait for seconds, then get the Live Machine data
@@ -651,8 +685,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         eventIds = []
         for idx in selectedItems: 
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
+            #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
+            #eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
-            eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))
+            eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             
         #self.snapshotTabWidget.setStatusTip("Snapshot data")
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
@@ -661,13 +697,26 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #self.getLiveMachineAction()
         
     def setConfigTable(self):
+        reorderedData = odict() 
         data = self.retrieveConfigData()
         if data:
+            reorderedData['Name'] = data['Name']
+            reorderedData['Id'] = data['Id']
+            reorderedData['Description'] = data['Description']
+            reorderedData['Date'] = data['Date']
+            reorderedData['Version'] = data['Version']
+            #print(reorderedData)
+            data = reorderedData
             self.setTable(data, self.configTableWidget)
-            self.configTableWidget.sortByColumn(2)
+            self.configTableWidget.sortByColumn(3)
             QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.fetchEventAction)
             QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellPressed (int,int)")),self.eventTableWidget.clearContents)
-    
+            #QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellPressed (int,int)")),self.eventTableWidget.resize(500,282))
+            QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellPressed (int,int)")),lambda: self.resizeSplitter(0))
+            QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),lambda: self.resizeSplitter(0))
+        else:
+            QMessageBox.warning(self, "Waring", "Can't get Configurations")    
+        
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
         isNew = True
@@ -703,9 +752,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.data4eid[str(eventIds[i])] = data         
                 tabWidget.setStatusTip("Snapshot data of " + eventNames[i] + "saved at " + ts)
                 tabWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n Double click to view waveform data")
-         
-        #if self.snapshotTabWidget.currentIndex() != 0:
-        #self.snapshotTabWidget.setToolTip("Ctrl + C to copy \n Double click to view waveform data")
+                self.resizeSplitter(1)
+            else:
+                QMessageBox.warning(self, "Warning", "Can't get snapshot data for eventId:%s"%eventIds[i])
         #else:
             #self.snapshotTabWidget.setToolTip("MASAR help, see Quick Start ...")
              
@@ -752,8 +801,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def setEventTable(self, data):
         self.setTable(data, self.eventTableWidget)
         self.eventTableWidget.sortByColumn(3)
+        #tableId = 1
         self.eventTableWidget.cellDoubleClicked.connect(self.retrieveSnapshot)
-
+        #self.eventTableWidget.cellDoubleClicked.connect(lambda: self.resizeSplitter(1))
+        #QObject.connect(self.eventTableWidget, SIGNAL(_fromUtf8("cellPressed (int,int)")),lambda: self.resizeSplitter(0))
+        #QObject.connect(self.configTableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.resizeConfigTable)
+ 
+    def resizeSplitter(self, tableID):
+        #h = int(self.eventTableWidget.height())
+        #self.fetchSnapshotButton.resize(700,282)
+        if tableID == 1:
+            self.splitter.setSizes([300,900])
+        if tableID == 0:
+            self.splitter.setSizes([500,600])
+    
+        
     def __setTableItem(self, table, row, col, text):
         item = table.item(row, col)
         if item:
@@ -880,12 +942,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
 
+
     def setTable(self, data, table):
         """
         Set data view.
         The data has to be an ordered dictionary, and table is a QtGui.QTableWidget
         Here is an example to construct an ordered dictionary.
         """
+        #print(data)
+        #reorderedData = odict()        
         if data:
             length = len(data.values()[0])
         else:
@@ -922,6 +987,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 n += 1
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
+
 
     def getSystemList(self):
         try:
@@ -1359,7 +1425,7 @@ If the event Table is empty, please double click on one row in the config Table 
         for idx in selectedEvents: 
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
             #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
-            eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))  
+            eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))  
         #print(eventNames)
         #print(eventIds)    
         #for eventId in eventIds:
@@ -1392,6 +1458,7 @@ If the event Table is empty, please double click on one row in the config Table 
         self.snapshotTabWidget.addTab(tabWidget, label)
         self.snapshotTabWidget.setTabText(index, label)
         self.snapshotTabWidget.setCurrentWidget(tabWidget)
+        self.resizeSplitter(1)
         #assert(data != None and isinstance(tabWidget, QTableWidget))
         #print("configure the table for comparing multiple snapshots")
         #tabWidget.setSortingEnabled(False)

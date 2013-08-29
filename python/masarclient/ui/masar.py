@@ -1471,11 +1471,11 @@ If the event Table is empty, please double click on one row in the config Table 
         for i in range(nEvents):
             #keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
             #keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
-            keys.append("Saved Value"+"\n"+"(" + " in Event "+str(eventIds[i])+")")
-            keys.append("Timestamp in Event "+str(eventIds[i]))
+            keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
+            keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
             #use .extend instead of .append here
             pvList.extend(list(data[i]['PV Name']))
-        keys.append('Live Value')
+        keys.append('Live Value 0')
         nDelta = nEvents - 1
         for i in range(nDelta):
             keys.append("Delta%s1"%str(i+2))      
@@ -1552,10 +1552,30 @@ If the event Table is empty, please double click on one row in the config Table 
                     else:
                         if data[j]['DBR'][pvIndex] in self.epicsDouble:
                             self.__setTableItem(table, i, 2*j+1, str(data[j]['D_value'][pvIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                delta = data[j]['D_value'][pvIndex] - float(str(table.item(i,1).text())) 
+                                if abs(delta) < 1.0e-6:
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual(%.6f)'%delta
+                                self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
                         if data[j]['DBR'][pvIndex] in self.epicsLong:
                             self.__setTableItem(table, i, 2*j+1, str(data[j]['I_value'][pvIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                delta = data[j]['I_value'][pvIndex] - int(str(table.item(i,1).text())) 
+                                if delta == 0:
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual(%d)'%delta
+                                self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
                         if data[j]['DBR'][pvIndex] in self.epicsString:
                             self.__setTableItem(table, i, 2*j+1, str(data[j]['S_value'][pvIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                if data[j]['S_value'][pvIndex] == str(table.item(i,1).text()):
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual'
+                                self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
                 #print(pvIndex,data[j]['D_value'][pvIndex])
             #print(channelName[i], pvList[i])
             #assert(channelName[i] != pvList[i])
@@ -1563,16 +1583,37 @@ If the event Table is empty, please double click on one row in the config Table 
             if pvList[i] in channelName:
                 liveIndex = channelName.index(pvList[i])
                 if is_array[liveIndex]:
-                    self.__setTableItem(table, i, table.columnCount()-1, self.__arrayTextFormat(array_value[liveIndex]))
+                    self.__setTableItem(table, i, 2*nEvents+1, self.__arrayTextFormat(array_value[liveIndex]))
                 else:
                     if dbrtype[liveIndex] in self.epicsDouble:
                         self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
+                        if j > 0 and table.item(i,1) != None:
+                            delta = d_value[liveIndex] - float(str(table.item(i,1).text())) 
+                            if abs(delta) < 1.0e-6:
+                                delta = 'Equal'
+                            else:
+                                delta = 'NotEqual(%.6f)'%delta    
+                            self.__setTableItem(table, i,3*nEvents+1,str(delta))                    
                     if dbrtype[liveIndex] in self.epicsLong:
                         self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
+                        if j > 0 and table.item(i,1) != None:
+                            delta = i_value[liveIndex] - int(str(table.item(i,1).text())) 
+                            if delta == 0:
+                                delta = 'Equal'
+                            else:
+                                delta = 'NotEqual(%d)'%delta    
+                            self.__setTableItem(table, i,3*nEvents+1,str(delta))  
                     if dbrtype[liveIndex] in self.epicsString:
                         self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
-                               
+                        if j > 0 and table.item(i,1) != None:
+                            if s_value[liveIndex]  == str(table.item(i,1).text()):
+                                delta = 'Equal'
+                            else:
+                                delta = 'NotEqual'  
+                            self.__setTableItem(table, i,3*nEvents+1,str(delta))      
+                                           
         table.setSortingEnabled(True)      
+        table.sortItems(3*nEvents+1, 1)
         
 def main(channelname = None):
     app = QApplication(sys.argv)

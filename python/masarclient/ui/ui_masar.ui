@@ -498,7 +498,7 @@ Quick Start ...
 
     1. To restore the machine to a particular state/snapshot: double click on one row in the left-top Config table --&gt; double click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
     
-    2. To save a machine snapshot: click on one row in the left-top Config table --&gt; click the button &quot;Preview Machine&quot; --&gt; click &quot;Save Preview as a Snapshot ...&quot; --&gt; put a good comment such as: SBM EmitX and Y 69 nm. This is golden; 
+    2. To save a machine snapshot: double click on one row in the left-top Config table  --&gt; click &quot;Save Machine Snapshot ...&quot; --&gt; put a concise comment (&lt;80 characters) such as: &quot;SBM EmitX and Y 69 nm. This is golden&quot;
 
 
 Tips ...

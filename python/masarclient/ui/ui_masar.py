@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Fri Aug 30 14:19:53 2013
+# Created: Fri Aug 30 18:00:54 2013
 #      by: PyQt4 UI code generator 4.7.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -310,7 +310,7 @@ class Ui_masar(object):
 "\n"
 "    1. To restore the machine to a particular state/snapshot: double click on one row in the left-top Config table --> double click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
 "    \n"
-"    2. To save a machine snapshot: click on one row in the left-top Config table --> click the button \"Preview Machine\" --> click \"Save Preview as a Snapshot ...\" --> put a good comment such as: SBM EmitX and Y 69 nm. This is golden; \n"
+"    2. To save a machine snapshot: double click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise comment (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\"\n"
 "\n"
 "\n"
 "Tips ...\n"

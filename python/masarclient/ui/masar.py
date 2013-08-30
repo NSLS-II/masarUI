@@ -1727,8 +1727,8 @@ def main(channelname = None):
         form = masarUI(channelname=channelname)
     else:
         form = masarUI()
-    form.show()
-    #form.showMaximized()
+    #form.show()
+    form.showMaximized()
     app.exec_()
     
     import atexit

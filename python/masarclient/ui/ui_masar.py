@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Fri Aug 23 18:03:46 2013
+# Created: Fri Aug 30 14:19:53 2013
 #      by: PyQt4 UI code generator 4.7.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -176,7 +176,7 @@ class Ui_masar(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.snapshotTabWidget.sizePolicy().hasHeightForWidth())
         self.snapshotTabWidget.setSizePolicy(sizePolicy)
-        self.snapshotTabWidget.setMinimumSize(QtCore.QSize(768, 0))
+        self.snapshotTabWidget.setMinimumSize(QtCore.QSize(500, 0))
         self.snapshotTabWidget.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
         self.snapshotTabWidget.setAcceptDrops(False)
         self.snapshotTabWidget.setToolTip("")
@@ -189,6 +189,7 @@ class Ui_masar(object):
         self.commentTabWindowLayout = QtGui.QVBoxLayout(self.commentTab)
         self.commentTabWindowLayout.setObjectName("commentTabWindowLayout")
         self.currentCommentText = QtGui.QPlainTextEdit(self.commentTab)
+        self.currentCommentText.setMinimumSize(QtCore.QSize(500, 0))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(231, 231, 231))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -218,18 +219,17 @@ class Ui_masar(object):
         self.getLiveMachineButton.setToolTip("")
         self.getLiveMachineButton.setObjectName("getLiveMachineButton")
         self.horizontalLayout.addWidget(self.getLiveMachineButton)
+        self.saveMachineSnapshotButton = QtGui.QPushButton(self.layoutWidget2)
+        self.saveMachineSnapshotButton.setObjectName("saveMachineSnapshotButton")
+        self.horizontalLayout.addWidget(self.saveMachineSnapshotButton)
+        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.compareSnapshotsButton = QtGui.QPushButton(self.layoutWidget2)
         self.compareSnapshotsButton.setObjectName("compareSnapshotsButton")
         self.horizontalLayout.addWidget(self.compareSnapshotsButton)
         self.saveDataFileButton = QtGui.QPushButton(self.layoutWidget2)
         self.saveDataFileButton.setObjectName("saveDataFileButton")
         self.horizontalLayout.addWidget(self.saveDataFileButton)
-        self.machinePreviewButton = QtGui.QPushButton(self.layoutWidget2)
-        self.machinePreviewButton.setObjectName("machinePreviewButton")
-        self.horizontalLayout.addWidget(self.machinePreviewButton)
-        self.saveCurrentPreviewButton = QtGui.QPushButton(self.layoutWidget2)
-        self.saveCurrentPreviewButton.setObjectName("saveCurrentPreviewButton")
-        self.horizontalLayout.addWidget(self.saveCurrentPreviewButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
@@ -244,14 +244,12 @@ class Ui_masar(object):
         self.retranslateUi(masar)
         self.systemCombox.setCurrentIndex(-1)
         self.snapshotTabWidget.setCurrentIndex(0)
-        QtCore.QObject.connect(self.saveCurrentPreviewButton, QtCore.SIGNAL("clicked()"), masar.saveMachinePreviewAction)
         QtCore.QObject.connect(self.eventFilterLineEdit, QtCore.SIGNAL("textChanged(QString)"), masar.eventFilterChanged)
         QtCore.QObject.connect(self.authorTextEdit, QtCore.SIGNAL("textChanged(QString)"), masar.authorTextChanged)
         QtCore.QObject.connect(self.timeRangeCheckBox, QtCore.SIGNAL("stateChanged(int)"), masar.useTimeRange)
         QtCore.QObject.connect(self.fetchEventButton, QtCore.SIGNAL("clicked(void)"), masar.fetchEventAction)
         QtCore.QObject.connect(self.fetchSnapshotButton, QtCore.SIGNAL("clicked(void)"), masar.retrieveSnapshot)
         QtCore.QObject.connect(self.restoreMachineButton, QtCore.SIGNAL("clicked(void)"), masar.restoreSnapshotAction)
-        QtCore.QObject.connect(self.machinePreviewButton, QtCore.SIGNAL("clicked()"), masar.getMachinePreviewAction)
         QtCore.QObject.connect(self.getLiveMachineButton, QtCore.SIGNAL("clicked()"), masar.getLiveMachineAction)
         QtCore.QObject.connect(self.saveDataFileButton, QtCore.SIGNAL("clicked()"), masar.saveDataFileAction)
         QtCore.QObject.connect(self.systemCombox, QtCore.SIGNAL("currentIndexChanged(QString)"), masar.systemComboxChanged)
@@ -260,6 +258,7 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL("tabCloseRequested(int)"), masar.closeTab)
         QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL("currentChanged(int)"), masar.configTab)
         QtCore.QObject.connect(self.compareSnapshotsButton, QtCore.SIGNAL("clicked()"), masar.openMsgBox)
+        QtCore.QObject.connect(self.saveMachineSnapshotButton, QtCore.SIGNAL("clicked()"), masar.saveMachineSnapshot)
         QtCore.QMetaObject.connectSlotsByName(masar)
         masar.setTabOrder(self.systemCombox, self.configFilterLineEdit)
         masar.setTabOrder(self.configFilterLineEdit, self.fetchConfigButton)
@@ -272,9 +271,7 @@ class Ui_masar(object):
         masar.setTabOrder(self.eventEndDateTime, self.fetchEventButton)
         masar.setTabOrder(self.fetchEventButton, self.eventTableWidget)
         masar.setTabOrder(self.eventTableWidget, self.fetchSnapshotButton)
-        masar.setTabOrder(self.fetchSnapshotButton, self.machinePreviewButton)
-        masar.setTabOrder(self.machinePreviewButton, self.saveCurrentPreviewButton)
-        masar.setTabOrder(self.saveCurrentPreviewButton, self.snapshotTabWidget)
+        masar.setTabOrder(self.fetchSnapshotButton, self.snapshotTabWidget)
         masar.setTabOrder(self.snapshotTabWidget, self.currentCommentText)
 
     def retranslateUi(self, masar):
@@ -350,9 +347,8 @@ class Ui_masar(object):
         self.snapshotTabWidget.setTabToolTip(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "How to use MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Compare Live Machine", None, QtGui.QApplication.UnicodeUTF8))
+        self.saveMachineSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Machine Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))
         self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
         self.saveDataFileButton.setText(QtGui.QApplication.translate("masar", "Export Snapshot to File ...", None, QtGui.QApplication.UnicodeUTF8))
-        self.machinePreviewButton.setText(QtGui.QApplication.translate("masar", "Preview Machine", None, QtGui.QApplication.UnicodeUTF8))
-        self.saveCurrentPreviewButton.setText(QtGui.QApplication.translate("masar", "Save Preview as a Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))
 
 import masarRC_rc

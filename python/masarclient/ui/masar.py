@@ -9,6 +9,7 @@ from __future__ import division
 from __future__ import print_function
 #from __future__ import unicode_literals
 
+import os
 import sys
 import time
 import datetime
@@ -169,34 +170,38 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def __getComment(self):
         cdlg = commentdlg.CommentDlg()
         cdlg.exec_()
-        #cdlg.show()
-        #cdlg.raise_()
-        #cdlg.activateWindow()
         if cdlg.isAccepted:
             return (cdlg.result())
         else:
             return None
+   
     
     def saveMachinePreviewAction(self):
-        if self.previewId == None or self.previewConfName == None:
+        #if self.previewId == None or self.previewConfName == None:
+        if self.previewConfName == None:
             QMessageBox.warning(self, "Warning",'No preview to save. Please click "Preview Machine" first')
             return
         elif self.isPreviewSaved:
             QMessageBox.warning(self, "Warning",
                 "Preview (id: %s) for config (%s) has been saved already." %(self.previewId, self.previewConfName))
             return
-
-        #reply = QMessageBox.question(self, 'Message',
-                             #"Do you want to flag this preview as a good snapshot?",                                          
-                             #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        #if reply == QMessageBox.Yes:
+        # who is int object
+        #who = str(os.system("whoami"))
+        #author = os.popen('whoami').read()
+        #print(author)
         comment = self.__getComment()
         #else:
             #return
         # comment result always returns a tuple
         # it return like (user, comment note)
         if comment and isinstance(comment, tuple):
-            if comment[0] and comment[1]:
+            if comment[0] and comment[1]: 
+                result = self.getMachinePreviewData(self.previewConfName)
+                if result == None:
+                    QMessageBox.warning(self,"Error","can't get machine preview data from MASAR server")
+                    return
+                self.previewId = result[0]
+                #print(self.previewId)
                 self.saveMachinePreviewData(self.previewId, self.previewConfName, comment)
             else:
                 QMessageBox.warning(self,
@@ -210,7 +215,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return
         self.isPreviewSaved = True
 
-    def getMachinePreviewAction(self):
+
+    def saveMachineSnapshot(self):
+        """
+        Purpose: implement one button 'Save Machine ...' to preview live data and then save the data.
+        Challenge: get the pv list for getLiveMachineData(pvList) from the 'config' table
+        Solution: get config name --> use retrieveEventData() to get at least one eventId 
+                    --> retrieveSnapshot() to get the pv list for that config
+        """
         selectedConfig = self.configTableWidget.selectionModel().selectedRows()
         lc = len(selectedConfig)
         if lc != 1:
@@ -222,49 +234,143 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewId = None
         self.previewConfName = None
         
+        eventIds = []
+        configIds = []
+        configNames = []
+        
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
-        result = self.getMachinePreviewData(cname)
-        if result:
-            self.resizeSplitter(1)
-            eid = result[0]
-            data = result[1]
-            self.pv4cDict[str(eid)] = data['PV Name']
-            self.data4eid[str(eid)] = data
-            
+        #result = self.getMachinePreviewData(cname)
+        
+        cid = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
+        configIds.append(cid)
+        configNames.append(cname)
+        #print(configIds)
+        #print(configNames)
+        #eventData = self.mc.retrieveServiceEvents(params)
+        eventData = self.retrieveEventData(configids=configIds, confignames=configNames)
+        if eventData == None:
+            params = {'configname': configNames,
+                      'servicename': 'masar'} 
             try:
-                tabWidget = self.tabWindowDict['preview']
-                index = self.snapshotTabWidget.indexOf(tabWidget)
+                rpcResult = self.mc.saveSnapshot(params)
             except:
-                tabWidget = QTableWidget()
-                index = self.snapshotTabWidget.count()
-                self.tabWindowDict['preview'] = tabWidget
-                QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
-            
-            self.setSnapshotTable(data, tabWidget, eid)
-            tabWidget.resizeColumnsToContents()
-            #sort the table by "Connection"
-            tabWidget.sortByColumn(1,1)
-            label = QString.fromUtf8((cname+': Preview'))
-            self.snapshotTabWidget.addTab(tabWidget, label)
-    
-            self.snapshotTabWidget.setTabText(index, label)  
-            #seems to need setCurrentWidget to make preview tab as the current tab    
-            self.snapshotTabWidget.setCurrentIndex(index)
-            self.snapshotTabWidget.setCurrentWidget(tabWidget)
-            #self.snapshotTabWidget.setTabBar.setTabTextColor(index, Qt.red)
-            #tabBar = self.snapshotTabWidget.setTabBar(self.snapshotTabWidget.tabBar())
-            #tabBar.setTabTextColor(index, Qt.red)
-            #curTab = self.snapshotTabWidget.cur
-            #tabWidgetExt = QTabWidgetExt()
-            #tabWidgetExt.setTextColor(index,Qt.red)
-            #QObject.connect(self.snapshotTabWidget, SIGNAL(self.snapshotTabWidget.tabCloseRequested(int)), tabWidgetExt.closeTab(int)) 
-            self.previewId = eid
-            self.previewConfName = cname
-            self.isPreviewSaved = False
-            QMessageBox.information(self, "Congratulation", 
-                                    'Great: Succeed to Get Machine Preview Data. \nRemember to click "Save Preview as a Snapshot ... " if you are satisfied with the preview data')
+                QMessageBox.warning(self,"Warning","Exception happened during getting machine preview.")
+                return False
+            if not rpcResult:
+                return False
+            #eventid = rpcResult[0]
+            #pvnames = rpcResult[1]
+            firstEventId = rpcResult[0]
+        else:          
+            #print(eventData['Id'])
+            firstEventId = eventData['Id'][0]
+        
+        eventIds.append(firstEventId)
+        #print(firstEventId) 
+        #print('eventIds:%s'%eventIds)
+        
+        #params = {'eventid': eventIds}
+        params = {'eventid': str(firstEventId)}
+        rpcResult = self.mc.retrieveSnapshot(params)
+        if rpcResult == None:
+            QMessageBox.warning(self,"Warning","Except happened when getting machine preview.")
+            return
         else:
-            QMessageBox.warning(self, "Waring", "Can't get machine preview data")
+            #print("self.mc.retrieveSnapshot:")
+            #print(rpcResult)
+            pvList = list(rpcResult[0])
+            #print(pvList)
+            result = self.getLiveMachineData(pvList)
+            #print("self.getLiveMachineData:")
+            #print(result)
+            if result == None:
+                QMessageBox.warning(self,"Warning", "can't get machine preview data")
+                return
+            else:
+                self.resizeSplitter(1)
+                #v3Result = []
+                #have to define the length of the list status[]
+                status = [""]*len(pvList)
+                severity = [""]*len(pvList)
+                timestamp = [0]*len(pvList)
+            
+                v3Results = cav3.caget(pvList, timeout=1,format=cav3.FORMAT_TIME, throw=False)
+                #print(len(v3Results))
+                #v3Result = cav3.caget('LTB-BI{VF:1}Go-Sel',format=cav3.FORMAT_TIME, timeout=1, throw=False)
+                #print(v3Result.status)
+                for v3Result in v3Results:
+                    if v3Result.name not in result[0]:
+                        QMessageBox.warning(self,"Waring","Exception happened when reading data by cav3.caget")
+                        return
+                    pvIndex = result[0].index(v3Result.name)
+                    if v3Result.ok == True:
+                        status[pvIndex] = self.alarmDict[v3Result.status]
+                        severity[pvIndex] = self.severityDict[v3Result.severity] 
+                        timestamp[pvIndex] = v3Result.timestamp  
+                    else:
+                        status[pvIndex] = 'UDF_ALARM'
+                        severity[pvIndex] = 'INVALID_ALARM'
+                        timestamp[pvIndex] = 0
+                #print(v3Result[0].value)
+                data = odict()
+                data['PV Name'] = result[0]
+                #data['Status'] = [""]*len(pvList)
+                data['Status'] = status
+                data['Severity'] = severity
+                data['Time stamp'] = timestamp
+                data['Time stamp (nano)'] = [0]*len(pvList)
+                data['DBR'] = result[4]
+                data['S_value'] = result[1]
+                data['I_value'] = result[3]
+                data['D_value'] = result[2]
+                data['isConnected'] = result[5]
+                data['isArray'] = result[6]
+                data['arrayValue'] = result[7]
+                eid = firstEventId
+                #eid = result[0]
+                #data = result[1]
+                #self.pv4cDict[str(eid)] = data['PV Name']
+                #self.data4eid[str(eid)] = data
+            
+                try:
+                    tabWidget = self.tabWindowDict['preview']
+                    index = self.snapshotTabWidget.indexOf(tabWidget)
+                except:
+                    tabWidget = QTableWidget()
+                    index = self.snapshotTabWidget.count()
+                    self.tabWindowDict['preview'] = tabWidget
+                    QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
+            
+                self.setSnapshotTable(data, tabWidget, eid)
+                tabWidget.resizeColumnsToContents()
+                #sort the table by "Connection"
+                tabWidget.sortByColumn(1,1)
+                label = QString.fromUtf8((cname+': Preview'))
+                self.snapshotTabWidget.addTab(tabWidget, label)
+                self.snapshotTabWidget.setTabText(index, label)  
+                #seems to need setCurrentWidget to make preview tab as the current tab    
+                self.snapshotTabWidget.setCurrentIndex(index)
+                self.snapshotTabWidget.setCurrentWidget(tabWidget) 
+                #set self.previewId in saveMachinePreviewAction instead of here
+                #self.previewId = eid
+                self.previewConfName = cname
+                self.isPreviewSaved = False
+                
+                msg = QMessageBox(self, windowTitle="Review Machine Snapshot", 
+                          text="Please review this snapshot before the data are permanently written in the MASAR database\n\n\
+ Click Continue... if you are satisfied with the snapshot, Otherwise click Ignore")
+                msg.setModal(False)
+                continueButton = msg.addButton("Continue...", QMessageBox.ActionRole)
+                quitButton = msg.addButton(QMessageBox.Ignore)
+                msg.setAttribute(Qt.WA_DeleteOnClose)
+                msg.show()
+                continueButton.clicked.connect(self.saveMachinePreviewAction) 
+                quitButton.clicked.connect(self.ignore) 
+
+    
+    def ignore(self):
+        pass
+
         
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
@@ -1361,12 +1467,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             #print("the selected tab is closed")
         else:
             QMessageBox.warning(self, "Waring", "Please don't close this page since it has all instructions")
-        
-    #tried to just use one button called 'Save a snapshot ...', but no success
-    def saveMachineSnapshot(self):
-        #self.getMachinePreviewAction()
-        self.saveMachinePreviewAction()
-   
     
     def configTab(self):
         # this won't work: AttributeError: 'builtin_function_or_method' object has no attribute 'setTabTextColor'
@@ -1440,7 +1540,7 @@ If the event Table is empty, please double click on one row in the config Table 
         self.data4eid['compare'] = data
         #data is a list with odict elements; data[i] is an odict;
         #data[i]['keyword'] is a tuple; data[i]['keyword'][index] is the element value in the tuple                   
-        #print (data)
+        print (data)
         #print(data[0]['PV Name'])
         
         try:
@@ -1498,6 +1598,9 @@ If the event Table is empty, please double click on one row in the config Table 
         #self.setCompareSnapshotsTable(data, tabWidget, eventNames, eventIds)
         self.setCompareSnapshotsTable(data, tabWidget, pvList)  
         tabWidget.resizeColumnsToContents()  
+        tabWidget.setStatusTip("compare %d snapshots with eventIds:%s"%(nEvents,eventIds))
+        tabWidget.setToolTip("delta21: value in 2nd snapshot - value in 1st snapshot\n\
+delta01: live value - value in 1st snapshot")
         #tabWidget.setSortingEnabled(True)   
         #tabWidget.setColumnWidth(1, 80)
         #tabWidget.resizeRowsToContents()  

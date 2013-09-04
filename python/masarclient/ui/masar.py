@@ -278,9 +278,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         else:
             #print("self.mc.retrieveSnapshot:")
             #print(rpcResult)
+            #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set
+            QThread.sleep(2)
             pvList = list(rpcResult[0])
             #print(pvList)
             result = self.getLiveMachineData(pvList)
+            #print(len(result[0]))
+            #print(result[8])
             #print("self.getLiveMachineData:")
             #print(result)
             if result == None:
@@ -288,13 +292,17 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 return
             else:
                 self.resizeSplitter(1)
+                connectedPVs = list(set(pvList) - set(result[8]))
+                disConnectedPVs = result[8]
+                #print("total PV:%d; disconnected: %d; connected: %d" %(len(pvList),len(result[8]),len(connectedPVs)))
                 #v3Result = []
                 #have to define the length of the list status[]
                 status = [""]*len(pvList)
                 severity = [""]*len(pvList)
                 timestamp = [0]*len(pvList)
             
-                v3Results = cav3.caget(pvList, timeout=1,format=cav3.FORMAT_TIME, throw=False)
+                #v3Results = cav3.caget(pvList, timeout=2,format=cav3.FORMAT_TIME, throw=False)
+                v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
                 #print(len(v3Results))
                 #v3Result = cav3.caget('LTB-BI{VF:1}Go-Sel',format=cav3.FORMAT_TIME, timeout=1, throw=False)
                 #print(v3Result.status)
@@ -356,9 +364,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.previewConfName = cname
                 self.isPreviewSaved = False
                 
-                msg = QMessageBox(self, windowTitle="Review Machine Snapshot", 
-                          text="Please review this snapshot before the data are permanently written in the MASAR database\n\n\
- Click Continue... if you are satisfied with the snapshot, Otherwise click Ignore")
+                if len(disConnectedPVs) > 0:
+                    detailedText = ""
+                    for i in range(len(disConnectedPVs)):
+                        detailedText += '\n' + disConnectedPVs[i]          
+                    #print(detailedText)
+                    msg = QMessageBox(self, windowTitle="Warning", 
+                                      text="%d PVs are disconnected, click Show Details ... below to see the PV list\n\n\
+ Click Continue... if you are satisfied with this snapshot, Otherwise click Ignore"%len(disConnectedPVs))
+                    msg.setDetailedText(detailedText)
+                else:
+                    msg = QMessageBox(self, windowTitle="Good Machine Snapshot", 
+                    text="Great! All PVs have valid data so it's a good snapshot\n\n\
+ Click Ignore if you don't want to save it to the MASAR database, Otherwise Click Continue...")             
                 msg.setModal(False)
                 continueButton = msg.addButton("Continue...", QMessageBox.ActionRole)
                 quitButton = msg.addButton(QMessageBox.Ignore)

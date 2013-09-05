@@ -774,8 +774,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
         reorderedData = odict() 
         if data:
-            reorderedData['Config'] = data['Config']
-            reorderedData['Id'] = data['Id']
+            reorderedData['Config Name'] = data['Config']
+            reorderedData['Event Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Time stamp'] = data['Time stamp']
             reorderedData['Author'] = data['Author']
@@ -825,7 +825,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data = self.retrieveConfigData()
         if data:
             reorderedData['Name'] = data['Name']
-            reorderedData['Id'] = data['Id']
+            reorderedData['Config Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Date'] = data['Date']
             reorderedData['Version'] = data['Version']
@@ -1565,7 +1565,7 @@ If the event Table is empty, please double click on one row in the config Table 
         self.data4eid['compare'] = data
         #data is a list with odict elements; data[i] is an odict;
         #data[i]['keyword'] is a tuple; data[i]['keyword'][index] is the element value in the tuple                   
-        print (data)
+        #print (data)
         #print(data[0]['PV Name'])
         
         try:

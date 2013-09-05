@@ -14,7 +14,7 @@ import sys
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush, QTabWidget)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush, QTabWidget, QDialog)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread)
 #import PyQt4.QTest as QTest
 
@@ -52,6 +52,7 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
 
 # import this last to avoid import error on some platform and with different versions. 
 import cothread.catools as cav3
+from cothread import Sleep
 
 #class masarUI(QMainWindow, ui_masar.Ui_masar, QTabWidgetExt):
 class masarUI(QMainWindow, ui_masar.Ui_masar):
@@ -111,7 +112,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewId = None
         self.previewConfName = None
         self.isPreviewSaved = False
-        #self.beCompared = False
+        self.compareLiveMachine = False
         
         #automatically fetch all configs at startup. This action should be quick
         self.fetchConfigAction()
@@ -609,6 +610,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 data_ = self.data4eid['compare']
                 pvlist_ = self.pv4cDict['compare']
                 #print(pvlist_)
+                self.compareLiveMachine = True
                 self.setCompareSnapshotsTable(data_, curWidget, pvlist_)
                 #curWidget.setSortingEnabled(True) 
                 return
@@ -741,8 +743,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if len(disConnectedPVs) > 0:
                     msg = QMessageBox(self,windowTitle="Be Aware!", 
                                       text="There are %s PVs disconnected. Click Show Details ... below for more info \n Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
+                    msg.setModal(False)
                     msg.setDetailedText(detailedText)
-                    msg.exec_()
+                    msg.show()
                      
         else:# end of if isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", "No snapshot is displayed. Please refer Welcome to MASAR for help")
@@ -1554,6 +1557,17 @@ If the event Table is empty, please double click on one row in the config Table 
         #print(eventNames)
         #print(eventIds)    
         #for eventId in eventIds:
+        msg = QMessageBox(self, windowTitle="Select one reference snapshot/event", 
+                          text="Snapshots comparison is made between the reference event and other events:\n\n\
+You have selected event %s as the reference, click OK if you want to keep it\n\n\
+Otherwise click Change the ref. snapshot ..."%eventIds[0])
+        msg.addButton("OK", QMessageBox.AcceptRole)
+        msg.addButton("Change the ref. snapshot ...", QMessageBox.RejectRole)
+        ret = msg.exec_()
+        #print(ret)
+        if ret == 1:
+            self.selectRefSnapshot(eventIds)
+            
         for i in range(len(eventIds)):
             result = self.retrieveMasarData(eventid = eventIds[i])
             if result == None or not isinstance(result, odict) :
@@ -1590,7 +1604,8 @@ If the event Table is empty, please double click on one row in the config Table 
         #tabWidget.clear()
         keys = ['PV name']
         #pvList = odict()
-        pvList = []
+        #pvList = []
+        pvList = list(data[0]['PV Name'])
         nEvents = len(data)
         #print("compare %d event data"%nEvents)
         for i in range(nEvents):
@@ -1599,7 +1614,7 @@ If the event Table is empty, please double click on one row in the config Table 
             keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
             keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
             #use .extend instead of .append here
-            pvList.extend(list(data[i]['PV Name']))
+            #pvList.extend(list(data[i]['PV Name']))
         keys.append('Live Value 0')
         nDelta = nEvents - 1
         for i in range(nDelta):
@@ -1608,8 +1623,8 @@ If the event Table is empty, please double click on one row in the config Table 
         self.compareTableKeys  = keys
         #print(keys)
         #print("%d PVs after merging without removing duplicates"%len(pvList))
-        pvSet = set(pvList)
-        pvList = list(pvSet)
+        #pvSet = set(pvList)
+        #pvList = list(pvSet)
         self.pv4cDict['compare'] = pvList
         #print("%d PVs after removing duplicates"%len(pvList))
         #print("data in compareSnapshots: ")
@@ -1633,6 +1648,12 @@ delta01: live value - value in 1st snapshot")
         #self.compareConfName =  None
 
 
+    def selectRefSnapshot(self, eventIDs):
+        print(eventIDs)
+        dlg = QDialog()
+        
+        dlg.exec_()
+
     def setCompareSnapshotsTable(self, data, table, pvlist):
         assert(data != None and isinstance(table, QTableWidget) and pvlist != None)
         pvList = pvlist
@@ -1645,20 +1666,25 @@ delta01: live value - value in 1st snapshot")
         table.clear()
         
         keys = self.compareTableKeys
-        table.setHorizontalHeaderLabels(keys)  
-        liveData = self.getLiveMachineData(pvList)
-        if liveData:
-            #print(liveData)
-            channelName = liveData[0]
-            s_value = liveData[1]
-            d_value = liveData[2]
-            i_value = liveData[3]
-            dbrtype = liveData[4]
-#           isConnected = data[5]
-            is_array = liveData[6]
-            array_value = liveData[7]
-            #print(pvList)
-            #print(channelName)
+        table.setHorizontalHeaderLabels(keys) 
+        #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set 
+        #QThread.sleep(2)
+        #QThread.usleep(10000)
+        #Sleep(1)
+        if self.compareLiveMachine:
+            liveData = self.getLiveMachineData(pvList)
+            if liveData:
+                #print(liveData)
+                channelName = liveData[0]
+                s_value = liveData[1]
+                d_value = liveData[2]
+                i_value = liveData[3]
+                dbrtype = liveData[4]
+    #           isConnected = data[5]
+                is_array = liveData[6]
+                array_value = liveData[7]
+                #print(pvList)
+                #print(channelName)
             
         #for i,j in range(nRows), range(nEvents):
         for i in range(nRows):
@@ -1708,38 +1734,40 @@ delta01: live value - value in 1st snapshot")
             #print(channelName[i], pvList[i])
             #assert(channelName[i] != pvList[i])
             #print(table.columnCount())
-            if pvList[i] in channelName:
-                liveIndex = channelName.index(pvList[i])
-                if is_array[liveIndex]:
-                    self.__setTableItem(table, i, 2*nEvents+1, self.__arrayTextFormat(array_value[liveIndex]))
-                else:
-                    if dbrtype[liveIndex] in self.epicsDouble:
-                        self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
-                        if j > 0 and table.item(i,1) != None:
-                            delta = d_value[liveIndex] - float(str(table.item(i,1).text())) 
-                            if abs(delta) < 1.0e-6:
-                                delta = 'Equal'
-                            else:
-                                delta = 'NotEqual(%.6f)'%delta    
-                            self.__setTableItem(table, i,3*nEvents+1,str(delta))                    
-                    if dbrtype[liveIndex] in self.epicsLong:
-                        self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
-                        if j > 0 and table.item(i,1) != None:
-                            delta = i_value[liveIndex] - int(str(table.item(i,1).text())) 
-                            if delta == 0:
-                                delta = 'Equal'
-                            else:
-                                delta = 'NotEqual(%d)'%delta    
-                            self.__setTableItem(table, i,3*nEvents+1,str(delta))  
-                    if dbrtype[liveIndex] in self.epicsString:
-                        self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
-                        if j > 0 and table.item(i,1) != None:
-                            if s_value[liveIndex]  == str(table.item(i,1).text()):
-                                delta = 'Equal'
-                            else:
-                                delta = 'NotEqual'  
-                            self.__setTableItem(table, i,3*nEvents+1,str(delta))      
-                                           
+            if self.compareLiveMachine:
+                if pvList[i] in channelName:
+                    liveIndex = channelName.index(pvList[i])
+                    if is_array[liveIndex]:
+                        self.__setTableItem(table, i, 2*nEvents+1, self.__arrayTextFormat(array_value[liveIndex]))
+                    else:
+                        if dbrtype[liveIndex] in self.epicsDouble:
+                            self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                delta = d_value[liveIndex] - float(str(table.item(i,1).text())) 
+                                if abs(delta) < 1.0e-6:
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual(%.6f)'%delta    
+                                self.__setTableItem(table, i,3*nEvents+1,str(delta))                    
+                        if dbrtype[liveIndex] in self.epicsLong:
+                            self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                delta = i_value[liveIndex] - int(str(table.item(i,1).text())) 
+                                if delta == 0:
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual(%d)'%delta    
+                                self.__setTableItem(table, i,3*nEvents+1,str(delta))  
+                        if dbrtype[liveIndex] in self.epicsString:
+                            self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
+                            if j > 0 and table.item(i,1) != None:
+                                if s_value[liveIndex]  == str(table.item(i,1).text()):
+                                    delta = 'Equal'
+                                else:
+                                    delta = 'NotEqual'  
+                                self.__setTableItem(table, i,3*nEvents+1,str(delta))      
+        
+        self.compareLiveMachine = False                                 
         table.setSortingEnabled(True)      
         table.sortItems(3*nEvents+1, 1)
         

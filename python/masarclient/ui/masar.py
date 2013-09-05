@@ -1509,29 +1509,36 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #print("%s events selected" %ln)
         if ln == 0:
             msg = QMessageBox(self, windowTitle="Event Selection", 
-                          text="Please select events/snapshots (Ctrl key + mouse Click) from the left-bottom Event Table\n\n\
-If the event Table is empty, please double click on one row in the config Table \n\nThen click OK below")
+                          text="Don't click OK until you have done the following:\n\n\
+Select 2 ~ 9 events/snapshots (Ctrl key + mouse Click) from the left-bottom Event Table\n\n\
+If the event Table is empty, please double click on one row in the config Table \n\nClick Ignore if you don't want to continue")
+            okButton = msg.addButton("OK", QMessageBox.ActionRole)
+            quitButton = msg.addButton(QMessageBox.Ignore)
             msg.setAttribute(Qt.WA_DeleteOnClose)
             msg.setModal(False)
             msg.show()
             #msg.open(self, SLOT(msgBoxClosed()))
             #msg.open.connect(self.msgBoxClosed)
-            msg.buttonClicked.connect(self.compareSnapshots)    
+            okButton.clicked.connect(self.compareSnapshots) 
+            quitButton.clicked.connect(self.ignore) 
+            #msg.buttonClicked.connect(self.compareSnapshots)    
             #print("QMessageBox is closed")        
         elif ln >=2 and ln <= 9:
             self.compareSnapshots()
         
-        else:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison") 
+        elif ln >0 and ln <2 or ln > 9:
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison, not %d events"%ln) 
             return       
  
     
     def compareSnapshots(self):
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
+        if ln == 0:
+            return
         #print(selectedEvents)
-        if ln < 2 or ln > 9:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison") 
+        elif ln < 2 or ln > 9:
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison, not %d events"%ln) 
             return
         #print("compare %d snapshots" %ln)
         #eventTs=[]

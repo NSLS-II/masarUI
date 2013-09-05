@@ -28,9 +28,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>224</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>237</red>
+        <green>236</green>
+        <blue>235</blue>
        </color>
       </brush>
      </colorrole>
@@ -48,9 +48,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>224</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>237</red>
+        <green>236</green>
+        <blue>235</blue>
        </color>
       </brush>
      </colorrole>
@@ -59,18 +59,18 @@
      <colorrole role="Base">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>224</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>237</red>
+        <green>236</green>
+        <blue>235</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>224</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>237</red>
+        <green>236</green>
+        <blue>235</blue>
        </color>
       </brush>
      </colorrole>
@@ -458,6 +458,15 @@
                    </color>
                   </brush>
                  </colorrole>
+                 <colorrole role="Window">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>237</red>
+                    <green>236</green>
+                    <blue>235</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
                 </active>
                 <inactive>
                  <colorrole role="Base">
@@ -469,14 +478,32 @@
                    </color>
                   </brush>
                  </colorrole>
+                 <colorrole role="Window">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>237</red>
+                    <green>236</green>
+                    <blue>235</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
                 </inactive>
                 <disabled>
                  <colorrole role="Base">
                   <brush brushstyle="SolidPattern">
                    <color alpha="255">
-                    <red>255</red>
-                    <green>255</green>
-                    <blue>255</blue>
+                    <red>237</red>
+                    <green>236</green>
+                    <blue>235</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                 <colorrole role="Window">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>237</red>
+                    <green>236</green>
+                    <blue>235</blue>
                    </color>
                   </brush>
                  </colorrole>

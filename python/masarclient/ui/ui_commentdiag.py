@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_commentdiag.ui'
 #
-# Created: Fri Aug 30 16:43:49 2013
+# Created: Thu Sep  5 15:39:48 2013
 #      by: PyQt4 UI code generator 4.7.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -56,5 +56,5 @@ class Ui_commentdlg(object):
     def retranslateUi(self, commentdlg):
         commentdlg.setWindowTitle(QtGui.QApplication.translate("commentdlg", "Comment", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("commentdlg", "Author:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("commentdlg", "Comment:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("commentdlg", "Comment (<80 characters):", None, QtGui.QApplication.UnicodeUTF8))
 

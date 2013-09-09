@@ -762,9 +762,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def fetchEventAction(self):
         selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
         if len(selectedConfigs) <= 0:
-            QMessageBox.warning(self,
-                            "Warning",
-                            "Please select at least one Config listed in the Config table above.")
+            #QMessageBox.warning(self,
+                            #"Warning",
+                            #"Please select at least one Config listed in the Config table above.")
             return
                 
         configIds=[]
@@ -1428,9 +1428,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet. Please refer Welcome to MASAR for help')
             return
         eid = self.__find_key(self.tabWindowDict, curWidget)
-        if eid == 'comment' or eid == 'preview' or eid=="compare":
-            QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-%s tab.'%eid)
-            return
+        #if eid == 'comment' or eid == 'preview' or eid=="compare":
+            #QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-%s tab.'%eid)
+            #return
         data = self.data4eid[str(eid)]
         
         pvnames = data['PV Name']
@@ -1559,7 +1559,7 @@ If the event Table is empty, please double click on one row in the config Table 
         #for eventId in eventIds:
         msg = QMessageBox(self, windowTitle="Select one reference snapshot/event", 
                           text="Snapshots comparison is made between the reference event and other events:\n\n\
-Event %s is selected as the reference because you clicked it first, click OK if you want to keep it as it\n\n\
+Event %s is selected as the reference because you clicked it first, click OK to keep it as it\n\n\
 Otherwise click Change the ref. snapshot ..."%eventIds[0])
         msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole)
         msg.addButton("OK", QMessageBox.RejectRole) 

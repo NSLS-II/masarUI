@@ -1555,22 +1555,22 @@ If the event Table is empty, please double click on one row in the config Table 
             #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))  
         #print(eventNames)
-        print(eventIds)    
+        #print(eventIds)    
         #for eventId in eventIds:
         msg = QMessageBox(self, windowTitle="Select one reference snapshot/event", 
                           text="Snapshots comparison is made between the reference event and other events:\n\n\
 Event %s is selected as the reference because you clicked it first, click OK if you want to keep it as it\n\n\
 Otherwise click Change the ref. snapshot ..."%eventIds[0])
-        msg.addButton("OK", QMessageBox.RejectRole)
-        msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole) 
+        msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole)
+        msg.addButton("OK", QMessageBox.RejectRole) 
         ret = msg.exec_()
         #print(ret)
         if ret == 0:
             reorderedIDs = self.selectRefSnapshot(eventIds)
-            print("reorderedIDs: %s"%reorderedIDs)
+            #print("reorderedIDs: %s"%reorderedIDs)
             if reorderedIDs:
                 eventIds = reorderedIDs
-        print("eventIds: %s"%eventIds)    
+        #print("eventIds: %s"%eventIds)    
         
         for i in range(len(eventIds)):
             result = self.retrieveMasarData(eventid = eventIds[i])
@@ -1659,7 +1659,7 @@ delta01: live value - value in 1st snapshot")
         dlg = ShowSelectRefDlg(eventIDs)
         dlg.exec_()
         if dlg.isAccepted:
-            print(dlg.result())
+            #print(dlg.result())
             return(dlg.result())
 
 

@@ -8,9 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from PyQt4.QtGui import (QDialog, QVBoxLayout, QGridLayout, QLabel, QGroupBox,
-                          QRadioButton, QPushButton,QDialogButtonBox)
-from PyQt4.QtCore import (QString, QObject, SIGNAL, QAbstractTableModel, QVariant, Qt)
+from PyQt4.QtGui import (QDialog, QVBoxLayout, QGridLayout, QLabel, QGroupBox,QRadioButton,QDialogButtonBox)
+from PyQt4.QtCore import (QString, QObject, SIGNAL,Qt)
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -61,12 +60,12 @@ Please select one as the reference snapshot\n\n"%(len(eventIDs),eventIDs))
         
     
     def reorderEventIDs(self):
-        print("re-order Event IDs")
+        #print("re-order Event IDs")
         for i in range(len(self.eventIDs)):
             #print(self.radio[i].isChecked)
             #use .isChecked() instead of .isChecked
             if self.radio[i].isChecked():
-                print("Event %s is checked"%self.eventIDs[i])
+                #print("Event %s is checked"%self.eventIDs[i])
                 self.refSnapshot = self.eventIDs[i]
         eventIDs = self.eventIDs
         idx = eventIDs.index(self.refSnapshot)

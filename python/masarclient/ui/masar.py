@@ -14,7 +14,7 @@ import sys
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush, QTabWidget, QDialog)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush, QTabWidget)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread)
 #import PyQt4.QTest as QTest
 
@@ -33,7 +33,7 @@ else:
 import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
-from qtabwidgetext import QTabWidgetExt
+from selectrefsnapshotdlg import ShowSelectRefDlg
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -872,7 +872,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 tabWidget.resizeColumnsToContents()
                 ts = eventTs[i].split('.')[0]
                 
-                label = QString.fromUtf8((eventNames[i]+': ' + ts))
+                label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))
                 self.snapshotTabWidget.addTab(tabWidget, label)
                 self.snapshotTabWidget.setTabText(i+1, label)
                 self.pv4cDict[str(eventIds[i])] = data['PV Name']
@@ -1555,23 +1555,27 @@ If the event Table is empty, please double click on one row in the config Table 
             #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))  
         #print(eventNames)
-        #print(eventIds)    
+        print(eventIds)    
         #for eventId in eventIds:
         msg = QMessageBox(self, windowTitle="Select one reference snapshot/event", 
                           text="Snapshots comparison is made between the reference event and other events:\n\n\
-You have selected event %s as the reference, click OK if you want to keep it as it\n\n\
+Event %s is selected as the reference because you clicked it first, click OK if you want to keep it as it\n\n\
 Otherwise click Change the ref. snapshot ..."%eventIds[0])
-        msg.addButton("OK", QMessageBox.AcceptRole)
-        msg.addButton("Change the ref. snapshot ...", QMessageBox.RejectRole)
+        msg.addButton("OK", QMessageBox.RejectRole)
+        msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole) 
         ret = msg.exec_()
         #print(ret)
-        if ret == 1:
-            self.selectRefSnapshot(eventIds)
-            
+        if ret == 0:
+            reorderedIDs = self.selectRefSnapshot(eventIds)
+            print("reorderedIDs: %s"%reorderedIDs)
+            if reorderedIDs:
+                eventIds = reorderedIDs
+        print("eventIds: %s"%eventIds)    
+        
         for i in range(len(eventIds)):
             result = self.retrieveMasarData(eventid = eventIds[i])
             if result == None or not isinstance(result, odict) :
-                QMessageBox.warning(self,"Warning","Failed to retrieve snapshot data for event %d"%eventIds[i])
+                QMessageBox.warning(self,"Warning","Failed to retrieve snapshot data for event %s"%eventIds[i])
                 return
             else:
                 data.append(result) 
@@ -1651,10 +1655,13 @@ delta01: live value - value in 1st snapshot")
 
 
     def selectRefSnapshot(self, eventIDs):
-        print(eventIDs)
-        dlg = QDialog()
-        
+        #print(eventIDs)
+        dlg = ShowSelectRefDlg(eventIDs)
         dlg.exec_()
+        if dlg.isAccepted:
+            print(dlg.result())
+            return(dlg.result())
+
 
     def setCompareSnapshotsTable(self, data, table, pvlist):
         assert(data != None and isinstance(table, QTableWidget) and pvlist != None)
@@ -1764,7 +1771,7 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i,2*nEvents+1,str(delta))                     
                         if dbrtype[liveIndex] in self.epicsLong:
                             #self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, str(d_value[liveIndex]))
+                            self.__setTableItem(table, i, nEvents+1, str(i_value[liveIndex]))
                             if j > 0 and table.item(i,1) != None:
                                 delta = i_value[liveIndex] - int(str(table.item(i,1).text())) 
                                 if delta == 0:
@@ -1775,7 +1782,7 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i,2*nEvents+1,str(delta)) 
                         if dbrtype[liveIndex] in self.epicsString:
                             #self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, str(d_value[liveIndex]))
+                            self.__setTableItem(table, i, nEvents+1, str(s_value[liveIndex]))
                             if j > 0 and table.item(i,1) != None:
                                 if s_value[liveIndex]  == str(table.item(i,1).text()):
                                     delta = 'Equal'
@@ -1788,6 +1795,7 @@ delta01: live value - value in 1st snapshot")
         table.setSortingEnabled(True)      
         #table.sortItems(3*nEvents+1, 1)
         table.sortItems(nEvents+2, 1)
+
         
 def main(channelname = None):
     app = QApplication(sys.argv)

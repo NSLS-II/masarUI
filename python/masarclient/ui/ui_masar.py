@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Thu Sep  5 14:50:24 2013
+# Created: Mon Sep  9 15:50:56 2013
 #      by: PyQt4 UI code generator 4.7.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -243,7 +243,7 @@ class Ui_masar(object):
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
         self.menubar = QtGui.QMenuBar(masar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1296, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1296, 23))
         self.menubar.setObjectName("menubar")
         masar.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(masar)
@@ -291,7 +291,7 @@ class Ui_masar(object):
         self.configFilterLineEdit.setToolTip(QtGui.QApplication.translate("masar", "using expression like *LN*", None, QtGui.QApplication.UnicodeUTF8))
         self.configFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchConfigButton.setToolTip(QtGui.QApplication.translate("masar", "search pre-defined configurations", None, QtGui.QApplication.UnicodeUTF8))
-        self.fetchConfigButton.setText(QtGui.QApplication.translate("masar", "Search Config(s)", None, QtGui.QApplication.UnicodeUTF8))
+        self.fetchConfigButton.setText(QtGui.QApplication.translate("masar", "Select Config(s)", None, QtGui.QApplication.UnicodeUTF8))
         self.configTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>ConfigTable: a list of pre-defined configs</p><p><span style=\" color:#00ff00;\">DOUBLE CLICK</span> on ONE row to fetch its list of snapshot(s)</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.configTableWidget.setSortingEnabled(True)
         self.timeRangeCheckBox.setText(QtGui.QApplication.translate("masar", "Use time range:", None, QtGui.QApplication.UnicodeUTF8))
@@ -299,7 +299,7 @@ class Ui_masar(object):
         self.eventStartDateTime.setDisplayFormat(QtGui.QApplication.translate("masar", "yyyy-MM-dd hh:mm:ss", None, QtGui.QApplication.UnicodeUTF8))
         self.eventEndLabel.setText(QtGui.QApplication.translate("masar", "To:", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchEventButton.setToolTip(QtGui.QApplication.translate("masar", "get a list of snapshot(s) or event(s)", None, QtGui.QApplication.UnicodeUTF8))
-        self.fetchEventButton.setText(QtGui.QApplication.translate("masar", "Fetch Snapshot(s)", None, QtGui.QApplication.UnicodeUTF8))
+        self.fetchEventButton.setText(QtGui.QApplication.translate("masar", "Select Snapshot(s)", None, QtGui.QApplication.UnicodeUTF8))
         self.eventEndDateTime.setDisplayFormat(QtGui.QApplication.translate("masar", "yyyy-MM-dd hh:mm:ss", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLineEdit.setToolTip(QtGui.QApplication.translate("masar", "using expression like *BPM*", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))

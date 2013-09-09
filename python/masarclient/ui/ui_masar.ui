@@ -187,7 +187,7 @@
               <string>search pre-defined configurations</string>
              </property>
              <property name="text">
-              <string>Search Config(s)</string>
+              <string>Select Config(s)</string>
              </property>
             </widget>
            </item>
@@ -273,7 +273,7 @@
               <string>get a list of snapshot(s) or event(s)</string>
              </property>
              <property name="text">
-              <string>Fetch Snapshot(s)</string>
+              <string>Select Snapshot(s)</string>
              </property>
             </widget>
            </item>
@@ -644,7 +644,7 @@ More Info ...
      <x>0</x>
      <y>0</y>
      <width>1296</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

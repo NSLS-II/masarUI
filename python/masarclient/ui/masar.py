@@ -398,12 +398,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def restoreSnapshotAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
-            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet. Please refer Welcome to MASAR for help')
+            QMessageBox.warning(self, 'Warning', 
+                        'No snapshot is selected yet. Please refer Welcome to MASAR for help')
             return
         
         eid = self.__find_key(self.tabWindowDict, curWidget)
         if eid == 'comment' or eid == 'preview' or eid == 'compare':
-            QMessageBox.warning(self, 'Warning', 'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
+            QMessageBox.warning(self, 'Warning', 
+                        'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
             return
         selectedNoRestorePv = {}
 
@@ -428,7 +430,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         # data['PV Name']
         array_value = data['arrayValue']
         
+        disConnectedPVs = []
         liveData = self.getLiveMachineData(pvlist)
+        if not liveData:
+            return
         disConnectedPVs = liveData[8]
         
         r_pvlist = [] # restore all pv value in this list
@@ -527,7 +532,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                  #"Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
                                  #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             msg = QMessageBox(self, windowTitle='Warning', 
-                              text='%s PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n It may take a while to restore the machine. Do you want to continue?' 
+                              text="%d PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n\
+It may take a while to restore the machine. Do you want to continue?" 
                               %len(no_restorepvs))
             msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg.setDefaultButton(QMessageBox.No)
@@ -573,16 +579,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
             for no_restorepv in no_restorepvs:
                 output += "\n  "+no_restorepv + ": Disconnected" 
-            print ("Failed to restore the following pvs which is caused by:"+output+"\n========list end (failed to restore pv)========")  
+            print ("Failed to restore the following pvs which is caused by:"+output+"\n\
+========list end (failed to restore pv)========")  
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
-                              text='Not Very Successful: failed to restore %s PVs. Click Show Details... to see the failure details'
+                              text="Not Very Successful: failed to restore %s PVs.\
+Click Show Details... to see the failure details"
                                %totalBadPVs)
             #msg.setStandardButtons(QMessageBox.Ok)
             msg.setDetailedText(output)
             msg.exec_()
         else:
-            QMessageBox.information(self, "Congratulation", "Cheers: successfully restore machine with selected snapshot.")
+            QMessageBox.information(self, "Congratulation", 
+                            "Cheers: successfully restore machine with selected snapshot.")
         
     def __arrayTextFormat(self, arrayvalue):
         """
@@ -596,6 +605,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return array_text
 
     def getLiveMachineAction(self):
+        """
+        See ui_masar.py:
+        QtCore.QObject.connect(self.getLiveMachineButton, ... , masar.getLiveMachineAction)
+        getLiveMachineData() returns live timestamp, live alarm via cav3.caget
+        """
         curWidget = self.snapshotTabWidget.currentWidget()
         if isinstance(curWidget, QTableWidget):
             # get event id
@@ -624,10 +638,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 d_value = data[2]
                 i_value = data[3]
                 dbrtype = data[4]
-#                isConnected = data[5]
+                #isConnected = data[5]
                 is_array = data[6]
                 array_value = data[7]
                 disConnectedPVs = data[8]
+                alarm_status = data[9]
+                alarm_severity = data[10]
+                timestamp = data[11]
             
                 dd = {}
                 noMatchedPv = []
@@ -639,19 +656,26 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 
                 # get table rows
                 rowCount = curWidget.rowCount()
+                colCount = curWidget.colCount()
                 for i in range(rowCount):
                     try:
                         index = dd[str(curWidget.item(i, 0).text())]
                         
                         if dbrtype[index] in self.epicsNoAccess:
-                            self.__setTableItem(curWidget, i, 1, "Disconnected")                
-                            continue
-                        
+                            self.__setTableItem(curWidget, i, 9, "Disconnected") 
+                        else:
+                            self.__setTableItem(curWidget, i, 9, "Connected")              
+                            #continue 
                         #reset the Connection status
-                        if str(curWidget.item(i, 1).text()) == "Disconnected":
-                            self.__setTableItem(curWidget, i, 1, "Reconnected")  
+                        #if str(curWidget.item(i, 1).text()) == "Disconnected":
+                            #self.__setTableItem(curWidget, i, 1, "Reconnected")  
                             #curWidget.item(i, 2).setCheckState(False)  
-                            #curWidget.item(i, 2).setSelected(False)                
+                            #curWidget.item(i, 2).setSelected(False)  
+                        #self.__setTableItem(curWidget, i, 9, str(d_value[index]))  
+                        self.__setTableItem(curWidget, i, 10, str(timestamp[index]))
+                        self.__setTableItem(curWidget, i, 11, str(alarm_status[index]))
+                        self.__setTableItem(curWidget, i, 12, str(alarm_severity[index]))
+                                    
                         if is_array[index]:
                             #self.__setTableItem(curWidget, i, 6, self.__arrayTextFormat(array_value[index]))
                             self.__setTableItem(curWidget, i, 4, self.__arrayTextFormat(array_value[index]))
@@ -666,16 +690,17 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                     saved_val = float(str(curWidget.item(i, 3).text()))
                                     if d_value[index] != None:
                                         delta = d_value[index] - saved_val
-                                        if abs(delta) < 1.0e-6:
+                                        if abs(delta) < 1.0e-9:
                                             #delta = 0
                                             delta = 'Equal'
-                                        else:
-                                            delta = 'NotEqual(%.6f)'%delta
+                                        #else:
+                                            #delta = 'NotEqual(%.6f)'%delta
                                     else:
-                                        #delta = None
-                                        delta = 'N/A'
+                                        delta = None
+                                        #delta = 'N/A'
                                 except:
-                                    delta='N/A'
+                                    #delta='N/A'
+                                    delta=None
                                     #self.__setTableItem(curWidget, i, 1, "Disconnected")
                                 #self.__setTableItem(curWidget, i, 7, str(delta))
                                 self.__setTableItem(curWidget, i, 5, str(delta))
@@ -693,14 +718,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                             delta = i_value[index] - saved_val
                                             if delta == 0:
                                                 delta = 'Equal'
-                                            else:
-                                                delta = 'NotEqual(%d)'%delta
+                                            #else:
+                                                #delta = 'NotEqual(%d)'%delta
                                         else:
-                                            #delta = None
-                                            delta='N/A'
+                                            delta = None
+                                            #delta='N/A'
                                             #self.__setTableItem(curWidget, i, 1, "Disconnected")                                        
                                     except:
-                                        delta='N/A'
+                                        delta = None
+                                        #delta='N/A'
                                     #self.__setTableItem(curWidget, i, 7, str(delta))
                                     self.__setTableItem(curWidget, i, 5, str(delta))
                             elif dbrtype[index] in self.epicsString:
@@ -720,13 +746,17 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         noMatchedPv.append(str(curWidget.item(i, 0).text()))
                 #end of for i in range(rowCount):
                 if len(noMatchedPv) > 0:
-                    print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
+                    print ("Can not find the following pvs for this snapshot: \n", noMatchedPv)
+                    QMessageBox.warning(self,"Warning",
+                            "Can not find the following pvs for this snapshot: %s"%noMatchedPv)
                 
                 #Mark all disconnected PVs with pink color
                 for i in range(rowCount):
-                    if str(curWidget.item(i, 1).text()) == "Disconnected":                   
-                        self.__setTableItem(curWidget, i, 5, "N/A")   
-                        for item_idx in range(9):
+                    if str(curWidget.item(i, 9).text()) == "Disconnected":                   
+                        #self.__setTableItem(curWidget, i, 5, "N/A")  
+                        self.__setTableItem(curWidget, i, 5, "")  
+                        #for item_idx in range(9):
+                        for item_idx in range(colCount):
                             itemtmp = curWidget.item(i, item_idx)
                             if not itemtmp:
                                 itemtmp = QTableWidgetItem()
@@ -742,7 +772,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     detailedText += '\n' + disConnectedPVs[i] 
                 if len(disConnectedPVs) > 0:
                     msg = QMessageBox(self,windowTitle="Be Aware!", 
-                                      text="There are %s PVs disconnected. Click Show Details ... below for more info \n Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
+                                      text="There are %s PVs disconnected. Click Show Details ... below for more info\n\
+Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                     msg.setModal(False)
                     msg.setDetailedText(detailedText)
                     msg.show()
@@ -978,10 +1009,16 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             # => (pv_name, status, severity, ioc_timestamp, saved value)
             # ncols = len(data) - 6
             # ncols = ncols + 3  # 2 columns for live data and (live data - saved data), selected restore pv
-            ncols = len(data) - 3
+            #keys = ['Name', 'Status', 'Severity', 'Time Stamp', 'Connection', 'Saved Value', 'Live Value', 'Delta', 'Not Restore']
+            keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 
+                    'Delta', 'Saved Timestamp', 'Saved Status', 'Saved Severity', 'Live Connection', 
+                    'Live Timestamp', 'Live Status', 'Live Severity']
+            #ncols = len(data) - 3
+            ncols = len(keys)
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
-            
+            table.setHorizontalHeaderLabels(keys)
+
             pvnames = data['PV Name']
             status = data['Status']
             severity = data['Severity']
@@ -994,10 +1031,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             isConnected = data['isConnected']
             is_array = data['isArray'] 
             array_value = data['arrayValue']
-            
-            #keys = ['Name', 'Status', 'Severity', 'Time Stamp', 'Connection', 'Saved Value', 'Live Value', 'Delta', 'Not Restore']
-            keys = ['PV Name', 'Connection', 'Not Restore', 'Saved Value', 'Live Value', 'Delta', 'When value was saved', 'Alarm Status', 'Alarm Severity']
-            table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
                 #item = table.item(i, 8)
@@ -1375,6 +1408,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return (eventid, data)
         
     def getLiveMachineData(self, pvlist):
+        """
+        self.mc.getLiveMachine(params) doesn't return live timestamp, live alarm
+        get these data via cav3.caget
+        """
         params = {}
         for pv in pvlist:
             params[pv] = pv
@@ -1391,7 +1428,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if not rpcResult:
             QMessageBox.warning(self,
                                 "Warning", 
-                                "Can't get any live data from the machine, please check network connection")
+            "Exception occurred, please check network connection or IOC status")
             return False
         channelName = rpcResult[0]
         stringValue = rpcResult[1]
@@ -1400,7 +1437,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         dbrtype = rpcResult[4]
         isConnected = rpcResult[5]
         is_array = rpcResult[6]
-        raw_array_value = rpcResult[7]
+        raw_array_value = rpcResult[7]  
+        status = [""]*len(channelName)
+        severity = [""]*len(channelName)
+        timestamp = [0]*len(channelName)
+        
         for i in range(len(is_array)):
             if dbrtype[i] in self.epicsLong:
                 array_value.append(raw_array_value[i][2])
@@ -1417,8 +1458,30 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         for i in range(len(dbrtype)):
             if dbrtype[i] in self.epicsNoAccess:    
                 disConnectedPVs.append(channelName[i])
-        
-        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array,array_value,disConnectedPVs)
+                status[i] = 'UDF_ALARM'
+                severity[i] = 'INVALID_ALARM'
+                timestamp[i] = 0
+                
+        connectedPVs = list(set(channelName)-set(disConnectedPVs))
+        v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
+        for v3Result in v3Results:
+            if v3Result.name not in channelName:
+                QMessageBox.warning(self,"Waring",
+                                    "Exception happened in getLiveMachineData() by cav3.caget")
+                return
+            pvIndex = channelName.index(v3Result.name)
+            if v3Result.ok == True:
+                status[pvIndex] = self.alarmDict[v3Result.status]
+                severity[pvIndex] = self.severityDict[v3Result.severity] 
+                timestamp[pvIndex] = v3Result.timestamp  
+            else:
+                status[pvIndex] = 'UDF_ALARM'
+                severity[pvIndex] = 'INVALID_ALARM'
+                timestamp[pvIndex] = 0
+
+
+        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array,
+                array_value,disConnectedPVs,status, severity, timestamp)
 
     def saveDataFileAction(self):
         """

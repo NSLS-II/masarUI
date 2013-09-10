@@ -778,7 +778,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         reorderedData = odict() 
         if data:
             reorderedData['Config Name'] = data['Config']
-            reorderedData['Event Id'] = data['Id']
+            #reorderedData['Event Id'] = data['Id']
+            reorderedData['Snapshot Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Time stamp'] = data['Time stamp']
             reorderedData['Author'] = data['Author']
@@ -827,7 +828,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         reorderedData = odict() 
         data = self.retrieveConfigData()
         if data:
-            reorderedData['Name'] = data['Name']
+            reorderedData['Config Name'] = data['Name']
             reorderedData['Config Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Date'] = data['Date']
@@ -1511,10 +1512,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #print(selectedEvents)
         #print("%s events selected" %ln)
         if ln == 0:
-            msg = QMessageBox(self, windowTitle="Event Selection", 
+            msg = QMessageBox(self, windowTitle="Snapshot Selection", 
                           text="Don't click OK until you have done the following:\n\n\
-Select 2 ~ 9 events/snapshots (Ctrl key + mouse Click) from the left-bottom Event Table\n\n\
-If the event Table is empty, please double click on one row in the config Table \n\nClick Ignore if you don't want to continue")
+Select 2 ~ 9 snapshots (Ctrl key + mouse Click) from the left-bottom Snapshot Table\n\n\
+If the Snapshot Table is empty, please double click on one row in the Config Table \n\nClick Ignore if you don't want to continue")
             okButton = msg.addButton("OK", QMessageBox.ActionRole)
             quitButton = msg.addButton(QMessageBox.Ignore)
             msg.setAttribute(Qt.WA_DeleteOnClose)
@@ -1530,7 +1531,7 @@ If the event Table is empty, please double click on one row in the config Table 
             self.compareSnapshots()
         
         elif ln >0 and ln <2 or ln > 9:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison, not %d events"%ln) 
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 snapshots for comparison, not %d snapshots"%ln) 
             return       
  
     
@@ -1541,7 +1542,7 @@ If the event Table is empty, please double click on one row in the config Table 
             return
         #print(selectedEvents)
         elif ln < 2 or ln > 9:
-            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 events for comparison, not %d events"%ln) 
+            QMessageBox.warning(self,"Waring", "Please select 2 ~ 9 snapshots for comparison, not %d snapshots"%ln) 
             return
         #print("compare %d snapshots" %ln)
         #eventTs=[]
@@ -1557,9 +1558,9 @@ If the event Table is empty, please double click on one row in the config Table 
         #print(eventNames)
         #print(eventIds)    
         #for eventId in eventIds:
-        msg = QMessageBox(self, windowTitle="Select one reference snapshot/event", 
-                          text="Snapshots comparison is made between the reference event and other events:\n\n\
-Event %s is selected as the reference because you clicked it first, click OK to keep it as it\n\n\
+        msg = QMessageBox(self, windowTitle="Select one reference snapshot", 
+                          text="Snapshots comparison is made between the reference snapshot and other snapshots:\n\n\
+Snapshot %s is the reference since you clicked it first, click OK to keep it as it\n\n\
 Otherwise click Change the ref. snapshot ..."%eventIds[0])
         msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole)
         msg.addButton("OK", QMessageBox.RejectRole) 
@@ -1575,7 +1576,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         for i in range(len(eventIds)):
             result = self.retrieveMasarData(eventid = eventIds[i])
             if result == None or not isinstance(result, odict) :
-                QMessageBox.warning(self,"Warning","Failed to retrieve snapshot data for event %s"%eventIds[i])
+                QMessageBox.warning(self,"Warning","Failed to retrieve data for snapshot %s"%eventIds[i])
                 return
             else:
                 data.append(result) 
@@ -1597,7 +1598,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         labelText = ""
         for eventId in eventIds:
             labelText += '_' + eventId
-        label = QString.fromUtf8("Compare Snapshots: eventIDs" + labelText)
+        label = QString.fromUtf8("Compare Snapshots: snapshotIDs" + labelText)
         self.snapshotTabWidget.addTab(tabWidget, label)
         self.snapshotTabWidget.setTabText(index, label)
         self.snapshotTabWidget.setCurrentWidget(tabWidget)
@@ -1615,7 +1616,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         for i in range(nEvents):
             #keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
             #keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
-            keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
+            keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in snapshot "+str(eventIds[i])+")")
             #keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
             #use .extend instead of .append here
             pvList.extend(list(data[i]['PV Name']))
@@ -1625,7 +1626,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
             keys.append("Delta%s1"%str(i+2))      
         keys.append('Delta01') 
         for i in range(nEvents):
-            keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
+            keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in snapshot "+str(eventIds[i])+")")
         self.compareTableKeys  = keys
         #print(keys)
         #print("%d PVs after merging without removing duplicates"%len(pvList))
@@ -1644,7 +1645,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         #self.setCompareSnapshotsTable(data, tabWidget, eventNames, eventIds)
         self.setCompareSnapshotsTable(data, tabWidget, pvList)  
         tabWidget.resizeColumnsToContents()  
-        tabWidget.setStatusTip("compare %d snapshots with eventIds:%s"%(nEvents,eventIds))
+        tabWidget.setStatusTip("compare %d snapshots with snapshotIds:%s"%(nEvents,eventIds))
         tabWidget.setToolTip("delta21: value in 2nd snapshot - value in 1st snapshot\n\
 delta01: live value - value in 1st snapshot")
         #tabWidget.setSortingEnabled(True)   

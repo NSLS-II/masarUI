@@ -25,14 +25,14 @@ class ShowSelectRefDlg(QDialog):
         #print(self.eventIDs)
         
         desc = QLabel()
-        desc.setText("%d snapshots with event IDs %s to be compared.\n\n\
+        desc.setText("%d snapshots with IDs %s to be compared.\n\n\
 Please select one as the reference snapshot\n\n"%(len(eventIDs),eventIDs))
         gBox = QGroupBox("Reference Snapshot Selection") 
         
         self.radio = [0]*len(eventIDs)
         vbox = QVBoxLayout()
         for i in range(len(eventIDs)):
-            self.radio[i] = QRadioButton("Event: %s"%eventIDs[i])   
+            self.radio[i] = QRadioButton("Snapshot ID: %s"%eventIDs[i])   
             self.radio[i].setChecked(False)    
             vbox.addWidget(self.radio[i])
             self.radio[i].clicked.connect(self.reorderEventIDs)

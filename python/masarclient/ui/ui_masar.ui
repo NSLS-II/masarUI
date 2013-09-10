@@ -176,7 +176,7 @@
              <property name="dragEnabled">
               <bool>true</bool>
              </property>
-             <property name="placeholderText" stdset="0">
+             <property name="placeholderText">
               <string/>
              </property>
             </widget>
@@ -329,7 +329,7 @@
            <item row="0" column="0">
             <widget class="QLabel" name="eventFilterLabel">
              <property name="text">
-              <string>Event Desc</string>
+              <string>Snapshot Desc</string>
              </property>
             </widget>
            </item>
@@ -357,7 +357,7 @@
             <enum>Qt::StrongFocus</enum>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;eventTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;snapshotTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -547,7 +547,7 @@ Terminology ...
 
     * config table: pre-defined a list of configurations for different machines; it has a unique Name, Description, Date when it is created ...  
 
-    * event table: a list of saved events / snapshots for a particular config; it has Config which is listed in the config table, Description,  Author ...  
+    * snapshot table: a list of saved snapshots for a particular config; it has Config Name which is listed in the config table, Description,  Author ...  
 
     * snapshot tab: the data of one snapshot is presented in the form of table in a Tab window.
 
@@ -644,7 +644,7 @@ More Info ...
      <x>0</x>
      <y>0</y>
      <width>1296</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

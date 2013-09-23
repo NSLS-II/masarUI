@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Tue Sep 10 10:17:55 2013
+# Created: Wed Sep 11 11:43:44 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -338,8 +338,6 @@ class Ui_masar(object):
 "  \n"
 "    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctr + c to copy one single cell ...  \n"
 "   \n"
-"    4. Re-launch masar if you tried many times, but still failed to do something;\n"
-"\n"
 "\n"
 "Terminology ...\n"
 "    \n"

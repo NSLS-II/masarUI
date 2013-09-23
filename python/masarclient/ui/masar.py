@@ -238,108 +238,118 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         eventIds = []
         configIds = []
         configNames = []
+        disConnectedPVs = []
         
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
-        #result = self.getMachinePreviewData(cname)
+        result = self.getMachinePreviewData(cname)
         
-        cid = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
-        configIds.append(cid)
-        configNames.append(cname)
-        #print(configIds)
-        #print(configNames)
-        #eventData = self.mc.retrieveServiceEvents(params)
-        eventData = self.retrieveEventData(configids=configIds, confignames=configNames)
-        if eventData == None:
-            params = {'configname': configNames,
-                      'servicename': 'masar'} 
-            try:
-                rpcResult = self.mc.saveSnapshot(params)
-            except:
-                QMessageBox.warning(self,"Warning","Exception happened during getting machine preview.")
-                return False
-            if not rpcResult:
-                return False
-            #eventid = rpcResult[0]
-            #pvnames = rpcResult[1]
-            firstEventId = rpcResult[0]
-        else:          
-            #print(eventData['Id'])
-            firstEventId = eventData['Id'][0]
-        
-        eventIds.append(firstEventId)
-        #print(firstEventId) 
-        #print('eventIds:%s'%eventIds)
-        
-        #params = {'eventid': eventIds}
-        params = {'eventid': str(firstEventId)}
-        rpcResult = self.mc.retrieveSnapshot(params)
-        if rpcResult == None:
-            QMessageBox.warning(self,"Warning","Except happened when getting machine preview.")
-            return
-        else:
-            #print("self.mc.retrieveSnapshot:")
-            #print(rpcResult)
-            #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set
-            QThread.sleep(2)
-            pvList = list(rpcResult[0])
-            #print(pvList)
-            result = self.getLiveMachineData(pvList)
-            #print(len(result[0]))
-            #print(result[8])
-            #print("self.getLiveMachineData:")
-            #print(result)
-            if result == None:
-                QMessageBox.warning(self,"Warning", "can't get machine preview data")
-                return
-            else:
-                self.resizeSplitter(1)
-                connectedPVs = list(set(pvList) - set(result[8]))
-                disConnectedPVs = result[8]
-                #print("total PV:%d; disconnected: %d; connected: %d" %(len(pvList),len(result[8]),len(connectedPVs)))
-                #v3Result = []
-                #have to define the length of the list status[]
-                status = [""]*len(pvList)
-                severity = [""]*len(pvList)
-                timestamp = [0]*len(pvList)
-            
-                #v3Results = cav3.caget(pvList, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-                v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-                #print(len(v3Results))
-                #v3Result = cav3.caget('LTB-BI{VF:1}Go-Sel',format=cav3.FORMAT_TIME, timeout=1, throw=False)
-                #print(v3Result.status)
-                for v3Result in v3Results:
-                    if v3Result.name not in result[0]:
-                        QMessageBox.warning(self,"Waring","Exception happened when reading data by cav3.caget")
-                        return
-                    pvIndex = result[0].index(v3Result.name)
-                    if v3Result.ok == True:
-                        status[pvIndex] = self.alarmDict[v3Result.status]
-                        severity[pvIndex] = self.severityDict[v3Result.severity] 
-                        timestamp[pvIndex] = v3Result.timestamp  
-                    else:
-                        status[pvIndex] = 'UDF_ALARM'
-                        severity[pvIndex] = 'INVALID_ALARM'
-                        timestamp[pvIndex] = 0
-                #print(v3Result[0].value)
-                data = odict()
-                data['PV Name'] = result[0]
-                #data['Status'] = [""]*len(pvList)
-                data['Status'] = status
-                data['Severity'] = severity
-                data['Time stamp'] = timestamp
-                data['Time stamp (nano)'] = [0]*len(pvList)
-                data['DBR'] = result[4]
-                data['S_value'] = result[1]
-                data['I_value'] = result[3]
-                data['D_value'] = result[2]
-                data['isConnected'] = result[5]
-                data['isArray'] = result[6]
-                data['arrayValue'] = result[7]
-                eid = firstEventId
-                #eid = result[0]
-                #data = result[1]
-                #self.pv4cDict[str(eid)] = data['PV Name']
-                #self.data4eid[str(eid)] = data
+        #=======================================================================
+        # cid = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
+        # configIds.append(cid)
+        # configNames.append(cname)
+        # print(configIds)
+        # print(configNames)
+        # #eventData = self.mc.retrieveServiceEvents(params)
+        # eventData = self.retrieveEventData(configids=configIds, confignames=configNames)
+        # print(eventData)
+        # print(eventData['Id'])
+        # #if eventData == None:
+        # if eventData['Id'] == []:
+        #     params = {'configname': configNames,
+        #               #'servicename': 'masarServiceDevelopment'}
+        #               'servicename': 'masar'} 
+        #     try:
+        #         rpcResult = self.mc.saveSnapshot(params)
+        #     except:
+        #         QMessageBox.warning(self,"Warning","Exception happened during getting machine preview.")
+        #         return False
+        #     if not rpcResult:
+        #         QMessageBox.warning(self,"Warning","can't save a snapshot.")
+        #         return False
+        #     #eventid = rpcResult[0]
+        #     #pvnames = rpcResult[1]
+        #     firstEventId = rpcResult[0]
+        # else:          
+        #     #print(eventData['Id'])
+        #     firstEventId = eventData['Id'][0]
+        # 
+        # eventIds.append(firstEventId)
+        # print(firstEventId) 
+        # #print('eventIds:%s'%eventIds)
+        # 
+        # #params = {'eventid': eventIds}
+        # params = {'eventid': str(firstEventId)}
+        # rpcResult = self.mc.retrieveSnapshot(params)
+        # if rpcResult == None:
+        #     QMessageBox.warning(self,"Warning","Except happened when getting machine preview.")
+        #     return
+        # else:
+        #     #print("self.mc.retrieveSnapshot:")
+        #     #print(rpcResult)
+        #     #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set
+        #     QThread.sleep(2)
+        #     pvList = list(rpcResult[0])
+        #     #print(pvList)
+        #     result = self.getLiveMachineData(pvList)
+        #     #print(len(result[0]))
+        #     #print(result[8])
+        #     #print("self.getLiveMachineData:")
+        #     #print(result)
+        #     if result == None:
+        #         QMessageBox.warning(self,"Warning", "can't get machine preview data")
+        #         return
+        #     else:
+        #         self.resizeSplitter(1)
+        #         connectedPVs = list(set(pvList) - set(result[8]))
+        #         disConnectedPVs = result[8]
+        #         #print("total PV:%d; disconnected: %d; connected: %d" %(len(pvList),len(result[8]),len(connectedPVs)))
+        #         #v3Result = []
+        #         #have to define the length of the list status[]
+        #         status = [""]*len(pvList)
+        #         severity = [""]*len(pvList)
+        #         timestamp = [0]*len(pvList)
+        #     
+        #         #v3Results = cav3.caget(pvList, timeout=2,format=cav3.FORMAT_TIME, throw=False)
+        #         v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
+        #         #print(len(v3Results))
+        #         #v3Result = cav3.caget('LTB-BI{VF:1}Go-Sel',format=cav3.FORMAT_TIME, timeout=1, throw=False)
+        #         #print(v3Result.status)
+        #         for v3Result in v3Results:
+        #             if v3Result.name not in result[0]:
+        #                 QMessageBox.warning(self,"Waring","Exception happened when reading data by cav3.caget")
+        #                 return
+        #             pvIndex = result[0].index(v3Result.name)
+        #             if v3Result.ok == True:
+        #                 status[pvIndex] = self.alarmDict[v3Result.status]
+        #                 severity[pvIndex] = self.severityDict[v3Result.severity] 
+        #                 timestamp[pvIndex] = v3Result.timestamp  
+        #             else:
+        #                 status[pvIndex] = 'UDF_ALARM'
+        #                 severity[pvIndex] = 'INVALID_ALARM'
+        #                 timestamp[pvIndex] = 0
+        #         #print(v3Result[0].value)
+        #         data = odict()
+        #         data['PV Name'] = result[0]
+        #         #data['Status'] = [""]*len(pvList)
+        #         data['Status'] = status
+        #         data['Severity'] = severity
+        #         data['Time stamp'] = timestamp
+        #         data['Time stamp (nano)'] = [0]*len(pvList)
+        #         data['DBR'] = result[4]
+        #         data['S_value'] = result[1]
+        #         data['I_value'] = result[3]
+        #         data['D_value'] = result[2]
+        #         data['isConnected'] = result[5]
+        #         data['isArray'] = result[6]
+        #         data['arrayValue'] = result[7]
+        #         eid = firstEventId
+        #=======================================================================
+        if result: 
+                self.resizeSplitter(1)      
+                eid = result[0]
+                data = result[1]
+                self.pv4cDict[str(eid)] = data['PV Name']
+                self.data4eid[str(eid)] = data
             
                 try:
                     tabWidget = self.tabWindowDict['preview']
@@ -656,7 +666,7 @@ Click Show Details... to see the failure details"
                 
                 # get table rows
                 rowCount = curWidget.rowCount()
-                colCount = curWidget.colCount()
+                colCount = curWidget.columnCount()
                 for i in range(rowCount):
                     try:
                         index = dd[str(curWidget.item(i, 0).text())]
@@ -765,7 +775,7 @@ Click Show Details... to see the failure details"
                 #sort by "Connection"  
                 #curWidget.sortItems(1,0)
                 #sort by "delta"  
-                curWidget.sortItems(5,1)
+                curWidget.sortItems(5,0)
                 curWidget.resizeColumnsToContents() 
                 detailedText = ""
                 for i in range(len(disConnectedPVs)):

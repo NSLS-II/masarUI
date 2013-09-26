@@ -1777,22 +1777,27 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         #print (data)
         #print(data[0]['PV Name'])
         
-        try:
-            tabWidget = self.tabWindowDict['compare']
-            index = self.snapshotTabWidget.indexOf(tabWidget)
-        except:
-            tabWidget = QTableWidget()
-            index = self.snapshotTabWidget.count()
-            self.tabWindowDict['compare'] = tabWidget
-            QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), 
+        #try:
+        if self.tabWindowDict.has_key('compare'):
+            tableWidget = self.tabWindowDict['compare']
+            #index = self.snapshotTabWidget.indexOf(tableWidget)  
+        #except:
+        else:
+            tableWidget = QTableWidget()
+            #index = self.snapshotTabWidget.count()
+            self.tabWindowDict['compare'] = tableWidget
+            QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), 
                             self.__showArrayData)
         labelText = ""
         for eventId in eventIds:
             labelText += '_' + eventId
-        label = QString.fromUtf8("Compare Snapshots: snapshotIDs" + labelText)
-        self.snapshotTabWidget.addTab(tabWidget, label)
-        self.snapshotTabWidget.setTabText(index, label)
-        self.snapshotTabWidget.setCurrentWidget(tabWidget)
+        label = QString.fromUtf8("Compare Snapshots: IDs" + labelText)
+        self.snapshotTabWidget.addTab(tableWidget, label)
+        #self.snapshotTabWidget.setTabText(index, label)
+        self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
+        self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
+        self.snapshotTabWidget.setCurrentWidget(tableWidget)
+        print("%d tabs when compareSnapshots"%self.snapshotTabWidget.count())
         self.resizeSplitter(1)
         #assert(data != None and isinstance(tabWidget, QTableWidget))
         #print("configure the table for comparing multiple snapshots")
@@ -1830,15 +1835,15 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         #print(data   
         nRows = len(pvList)
         nCols = len(keys) 
-        tabWidget.setRowCount(nRows)
-        tabWidget.setColumnCount(nCols)
+        tableWidget.setRowCount(nRows)
+        tableWidget.setColumnCount(nCols)
         #tabWidget.setHorizontalHeaderLabels(keys)  
         #self.setCompareSnapshotsTable(data, tabWidget, eventNames[0])    
         #self.setCompareSnapshotsTable(data, tabWidget, eventNames, eventIds)
-        self.setCompareSnapshotsTable(data, tabWidget, pvList)  
-        tabWidget.resizeColumnsToContents()  
-        tabWidget.setStatusTip("compare %d snapshots with snapshotIds:%s"%(nEvents,eventIds))
-        tabWidget.setToolTip("delta21: value in 2nd snapshot - value in 1st snapshot\n\
+        self.setCompareSnapshotsTable(data, tableWidget, pvList)  
+        tableWidget.resizeColumnsToContents()  
+        tableWidget.setStatusTip("compare %d snapshots with snapshotIds:%s"%(nEvents,eventIds))
+        tableWidget.setToolTip("delta21: value in 2nd snapshot - value in 1st snapshot\n\
 delta01: live value - value in 1st snapshot")
         #tabWidget.setSortingEnabled(True)   
         #tabWidget.setColumnWidth(1, 80)

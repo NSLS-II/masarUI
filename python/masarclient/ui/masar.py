@@ -1810,7 +1810,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
             keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in snapshot "+str(eventIds[i])+")")
             #keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
             #use .extend instead of .append here
-            pvList.extend(list(data[i]['PV Name']))
+            #pvList.extend(list(data[i]['PV Name']))
         keys.append('Live Value 0')
         nDelta = nEvents - 1
         for i in range(nDelta):
@@ -1821,8 +1821,9 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         self.compareSnapshotsTableKeys  = keys
         #print(keys)
         #print("%d PVs after merging without removing duplicates"%len(pvList))
-        pvSet = set(pvList)
-        pvList = list(pvSet)
+        #pvSet = set(pvList)
+        #pvList = list(pvSet)
+        pvList = list(data[0]['PV Name'])
         self.pv4cDict['compare'] = pvList
         #print("%d PVs after removing duplicates"%len(pvList))
         #print("data in compareSnapshots: ")

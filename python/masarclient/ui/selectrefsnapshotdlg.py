@@ -8,7 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from PyQt4.QtGui import (QDialog, QVBoxLayout, QGridLayout, QLabel, QGroupBox,QRadioButton,QDialogButtonBox)
+from PyQt4.QtGui import (QDialog, QVBoxLayout, QGridLayout, QLabel, QGroupBox,QRadioButton,
+                         QDialogButtonBox)
 from PyQt4.QtCore import (QString, QObject, SIGNAL,Qt)
 
 try:

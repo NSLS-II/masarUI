@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_masar.ui'
+# Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Wed Sep 11 11:43:44 2013
+# Created: Fri Sep 27 13:22:54 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,7 +18,7 @@ class Ui_masar(object):
     def setupUi(self, masar):
         masar.setObjectName(_fromUtf8("masar"))
         masar.setWindowModality(QtCore.Qt.WindowModal)
-        masar.resize(1296, 919)
+        masar.resize(1167, 979)
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -251,7 +251,7 @@ class Ui_masar(object):
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
         self.menubar = QtGui.QMenuBar(masar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1296, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1167, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         masar.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(masar)
@@ -298,9 +298,9 @@ class Ui_masar(object):
         self.configFilterLabel.setText(QtGui.QApplication.translate("masar", "Config Filter", None, QtGui.QApplication.UnicodeUTF8))
         self.configFilterLineEdit.setToolTip(QtGui.QApplication.translate("masar", "using expression like *LN*", None, QtGui.QApplication.UnicodeUTF8))
         self.configFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
-        self.fetchConfigButton.setToolTip(QtGui.QApplication.translate("masar", "search pre-defined configurations", None, QtGui.QApplication.UnicodeUTF8))
+        self.fetchConfigButton.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>get pre-defined configurations</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchConfigButton.setText(QtGui.QApplication.translate("masar", "Select Config(s)", None, QtGui.QApplication.UnicodeUTF8))
-        self.configTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>ConfigTable: a list of pre-defined configs</p><p><span style=\" color:#00ff00;\">DOUBLE CLICK</span> on ONE row to fetch its list of snapshot(s)</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.configTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>ConfigTable: a list of pre-defined configs</p><p><span style=\" color:#00ff00;\">CLICK</span> on ONE row to fetch its list of snapshot(s)</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.configTableWidget.setSortingEnabled(True)
         self.timeRangeCheckBox.setText(QtGui.QApplication.translate("masar", "Use time range:", None, QtGui.QApplication.UnicodeUTF8))
         self.eventStartLabel.setText(QtGui.QApplication.translate("masar", "From:", None, QtGui.QApplication.UnicodeUTF8))
@@ -315,7 +315,7 @@ class Ui_masar(object):
         self.authorTextEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Snapshot Desc", None, QtGui.QApplication.UnicodeUTF8))
         self.ByWho.setText(QtGui.QApplication.translate("masar", "Author", None, QtGui.QApplication.UnicodeUTF8))
-        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">DOUBLE CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.eventTableWidget.setSortingEnabled(True)
         self.fetchSnapshotButton.setToolTip(QtGui.QApplication.translate("masar", "get PVs data", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchSnapshotButton.setText(QtGui.QApplication.translate("masar", "Display Snapshot(s)", None, QtGui.QApplication.UnicodeUTF8))
@@ -325,9 +325,11 @@ class Ui_masar(object):
 "\n"
 "Quick Start ...\n"
 "\n"
-"    1. To restore the machine to a particular state/snapshot: double click on one row in the left-top Config table --> double click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
+"    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --> click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
 "    \n"
-"    2. To save a machine snapshot: double click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise comment (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\"\n"
+"    2. To save a machine snapshot: click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise description (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\";\n"
+"\n"
+"  3. To compare multiple saved snapshots: click on one row in the left-top Config table --> Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --> click \"Compare Snapshots...\"\n"
 "\n"
 "\n"
 "Tips ...\n"
@@ -336,7 +338,7 @@ class Ui_masar(object):
 "    \n"
 "    2. Always follow the instructions on the pop-up message which shows something is not working as expected and how to fix it; \n"
 "  \n"
-"    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctr + c to copy one single cell ...  \n"
+"    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctrl + c to copy one single cell ...  \n"
 "   \n"
 "\n"
 "Terminology ...\n"
@@ -347,9 +349,9 @@ class Ui_masar(object):
 "\n"
 "    * config table: pre-defined a list of configurations for different machines; it has a unique Name, Description, Date when it is created ...  \n"
 "\n"
-"    * snapshot table: a list of saved snapshots for a particular config; it has Config Name which is listed in the config table, Description,  Author ...  \n"
+"    * snapshot table: a list of saved snapshots (without EPICS data) for a particular config; it has Config Name which is listed in the config table, Description,  Author ...  \n"
 "\n"
-"    * snapshot tab: the data of one snapshot is presented in the form of table in a Tab window.\n"
+"    * snapshot tab: the EPICS data of one snapshot is presented in the form of table in a Tab window.\n"
 "\n"
 "\n"
 "More Info ...\n"

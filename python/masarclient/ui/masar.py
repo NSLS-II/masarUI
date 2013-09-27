@@ -691,7 +691,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             configIds.append(str(self.configTableWidget.item(idx.row(), 1).text()))
             configNames.append(str(self.configTableWidget.item(idx.row(), 0).text()))
         
-        print(configIds)
+        #print(configIds)
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
         reorderedData = odict() 
         if data:
@@ -808,7 +808,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             
-        print(eventNames)
+        #print(eventNames)
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
         #this doesn't work well: wait for seconds, then get the Live Machine data
         #QThread.sleep(2)
@@ -824,7 +824,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
         tableWidget = None
         isNew = True
         
-        print(eventIds)
+        #print(eventIds)
         for i in range(len(eventIds)):
             if self.tabWindowDict.has_key(eventIds[i]):
                 tableWidget = self.tabWindowDict[eventIds[i]]
@@ -852,7 +852,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
                 label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))
                 self.snapshotTabWidget.addTab(tableWidget, label)
                 #self.snapshotTabWidget.setTabText(i+1, label)
-                print("it has %d tabs now"%self.snapshotTabWidget.count())
+                #print("it has %d tabs now"%self.snapshotTabWidget.count())
                 self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
                 self.pv4cDict[str(eventIds[i])] = data['PV Name']
                 self.data4eid[str(eventIds[i])] = data         
@@ -865,7 +865,7 @@ Double click to view waveform data")
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
                           
         #self.snapshotTabWidget.setCurrentIndex(1)
-        print("total tabs:%d"%self.snapshotTabWidget.count())
+        #print("total tabs:%d"%self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentWidget(tableWidget)
 
@@ -2004,8 +2004,8 @@ def main(channelname = None):
         form = masarUI(channelname=channelname)
     else:
         form = masarUI()
-    #form.show()
-    form.showMaximized()
+    form.show()
+    #form.showMaximized()
     app.exec_()
     
     import atexit

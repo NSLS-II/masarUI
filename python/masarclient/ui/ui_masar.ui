@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1296</width>
-    <height>919</height>
+    <width>1167</width>
+    <height>979</height>
    </rect>
   </property>
   <property name="palette">
@@ -184,7 +184,7 @@
            <item row="2" column="0">
             <widget class="QPushButton" name="fetchConfigButton">
              <property name="toolTip">
-              <string>search pre-defined configurations</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;get pre-defined configurations&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
               <string>Select Config(s)</string>
@@ -197,7 +197,7 @@
               <enum>Qt::WheelFocus</enum>
              </property>
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ConfigTable: a list of pre-defined configs&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on ONE row to fetch its list of snapshot(s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ConfigTable: a list of pre-defined configs&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;CLICK&lt;/span&gt; on ONE row to fetch its list of snapshot(s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::WinPanel</enum>
@@ -357,7 +357,7 @@
             <enum>Qt::StrongFocus</enum>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;snapshotTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;DOUBLE CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;snapshotTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -523,9 +523,11 @@ MASAR is an EPICS V4 service which does MAchine Snapshot, Archiving, and Retriev
 
 Quick Start ...
 
-    1. To restore the machine to a particular state/snapshot: double click on one row in the left-top Config table --&gt; double click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
+    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --&gt; click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
     
-    2. To save a machine snapshot: double click on one row in the left-top Config table  --&gt; click &quot;Save Machine Snapshot ...&quot; --&gt; put a concise comment (&lt;80 characters) such as: &quot;SBM EmitX and Y 69 nm. This is golden&quot;
+    2. To save a machine snapshot: click on one row in the left-top Config table  --&gt; click &quot;Save Machine Snapshot ...&quot; --&gt; put a concise description (&lt;80 characters) such as: &quot;SBM EmitX and Y 69 nm. This is golden&quot;;
+
+  3. To compare multiple saved snapshots: click on one row in the left-top Config table --&gt; Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --&gt; click &quot;Compare Snapshots...&quot;
 
 
 Tips ...
@@ -534,7 +536,7 @@ Tips ...
     
     2. Always follow the instructions on the pop-up message which shows something is not working as expected and how to fix it; 
   
-    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctr + c to copy one single cell ...  
+    3. MASAR GUI is mainly table-based. Treat the table as Microsoft Excel: resize the column, sort by the column, select multiple rows, Ctrl + c to copy one single cell ...  
    
 
 Terminology ...
@@ -545,9 +547,9 @@ Terminology ...
 
     * config table: pre-defined a list of configurations for different machines; it has a unique Name, Description, Date when it is created ...  
 
-    * snapshot table: a list of saved snapshots for a particular config; it has Config Name which is listed in the config table, Description,  Author ...  
+    * snapshot table: a list of saved snapshots (without EPICS data) for a particular config; it has Config Name which is listed in the config table, Description,  Author ...  
 
-    * snapshot tab: the data of one snapshot is presented in the form of table in a Tab window.
+    * snapshot tab: the EPICS data of one snapshot is presented in the form of table in a Tab window.
 
 
 More Info ...
@@ -641,8 +643,8 @@ More Info ...
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1296</width>
-     <height>25</height>
+     <width>1167</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>

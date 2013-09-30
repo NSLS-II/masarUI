@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Fri Sep 27 13:22:54 2013
+# Created: Fri Sep 27 16:07:03 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!

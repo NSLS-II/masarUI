@@ -1000,7 +1000,7 @@ Double click to view waveform data")
         
             nrows = len(data.values()[0])
             keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 
-                    'Delta', 'Saved Timestamp', 'Saved Status','Saved Severity','Live Connection', 
+                    'Diff', 'Saved Timestamp', 'Saved Status','Saved Severity','Live Connection', 
                     'Live Timestamp', 'Live Status', 'Live Severity']
             #ncols = len(data) - 3
             ncols = len(keys)
@@ -1400,7 +1400,7 @@ Click Show Details... to see the failure details"
                 alarm_status = data[9]
                 alarm_severity = data[10]
                 timestamp = data[11]
-            
+                #print(array_value)
                 dd = {}
                 noMatchedPv = []
                 #disConnectedPv = []
@@ -1415,7 +1415,6 @@ Click Show Details... to see the failure details"
                 for i in range(rowCount):
                     try:
                         index = dd[str(curWidget.item(i, 0).text())]
-                        
                         if dbrtype[index] in self.epicsNoAccess:
                             self.__setTableItem(curWidget, i, 9, "Disconnected") 
                         else:
@@ -1426,8 +1425,9 @@ Click Show Details... to see the failure details"
                             #self.__setTableItem(curWidget, i, 1, "Reconnected")  
                             #curWidget.item(i, 2).setCheckState(False)  
                             #curWidget.item(i, 2).setSelected(False)  
-                        #self.__setTableItem(curWidget, i, 9, str(d_value[index]))  
-                        self.__setTableItem(curWidget, i, 10, str(timestamp[index]))
+                        #self.__setTableItem(curWidget, i, 9, str(d_value[index])) 
+                        dt=str(datetime.datetime.fromtimestamp(timestamp[index])) 
+                        self.__setTableItem(curWidget, i, 10, dt)
                         self.__setTableItem(curWidget, i, 11, str(alarm_status[index]))
                         self.__setTableItem(curWidget, i, 12, str(alarm_severity[index]))
                                     
@@ -1437,6 +1437,21 @@ Click Show Details... to see the failure details"
                                                 self.__arrayTextFormat(array_value[index]))
                             self.arrayData[channelName[index]+"_"+str(eid)+'_live'] \
                                                 = array_value[index]
+                            try:
+                                saved_array = self.arrayData[channelName[index]+"_"+str(eid)]
+                                #print("recrod %s is array:"%channelName[index])
+                                #print(saved_array)
+                                #print(array_value[index])
+                                if str(saved_array) != str(array_value[index]):
+                                    delta_ =[m - n for m, n in zip(array_value[index],saved_array)]
+                                    delta_array = tuple(delta_)
+                                    self.__setTableItem(curWidget, i, 5,
+                                                        self.__arrayTextFormat(delta_array))
+                                #print(delta)     
+                            except:
+                                #print("something wrong with array data")
+                                #delta = 'N/A'
+                                self.__setTableItem(curWidget, i, 5, "N/A")
                         else:
                             if dbrtype[index] in self.epicsDouble:
                                 #self.__setTableItem(curWidget, i, 6, str(d_value[index]))
@@ -1445,22 +1460,21 @@ Click Show Details... to see the failure details"
                                 try:
                                     #saved_val = float(str(curWidget.item(i, 5).text()))
                                     saved_val = float(str(curWidget.item(i, 3).text()))
-                                    if d_value[index] != None:
+                                    #if d_value[index] != None:
+                                    if str(d_value[index]) != str(saved_val):
                                         delta = d_value[index] - saved_val
-                                        if abs(delta) < 1.0e-9:
-                                            #delta = 0
-                                            delta = 'Equal'
+                                        self.__setTableItem(curWidget, i, 5, str(delta))
+                                        #if abs(delta) < 1.0e-9:
+                                            #delta = 'O'
+                                            #delta = 'Equal'
                                         #else:
                                             #delta = 'NotEqual(%.6f)'%delta
-                                    else:
-                                        delta = None
+                                            #delta = '%g'%delta
+                                    #else:
                                         #delta = 'N/A'
                                 except:
-                                    #delta='N/A'
-                                    delta=None
-                                    #self.__setTableItem(curWidget, i, 1, "Disconnected")
-                                #self.__setTableItem(curWidget, i, 7, str(delta))
-                                self.__setTableItem(curWidget, i, 5, str(delta))
+                                    #self.__setTableItem(curWidget, i, 7, str(delta))
+                                    self.__setTableItem(curWidget, i, 5, "N/A")
                             elif dbrtype[index] in self.epicsLong:
                                 #self.__setTableItem(curWidget, i, 6, str(i_value[index]))
                                 self.__setTableItem(curWidget, i, 4, str(i_value[index]))
@@ -1471,34 +1485,25 @@ Click Show Details... to see the failure details"
                                     try:
                                         #saved_val = int(float(str(curWidget.item(i, 5).text())))
                                         saved_val = int(float(str(curWidget.item(i, 3).text())))
-                                        if i_value[index] != None:
-                                            delta = i_value[index] - saved_val
-                                            if delta == 0:
-                                                delta = 'Equal'
-                                            #else:
-                                                #delta = 'NotEqual(%d)'%delta
-                                        else:
-                                            delta = None
-                                            #delta='N/A'
-                                            #self.__setTableItem(curWidget, i, 1, "Disconnected")                                        
+                                        #if i_value[index] != None:
+                                        if str(i_value[index]) != str(saved_val):
+                                            delta = i_value[index] - saved_val     
+                                            self.__setTableItem(curWidget, i, 5, str(delta))                                   
                                     except:
-                                        delta = None
-                                        #delta='N/A'
-                                    #self.__setTableItem(curWidget, i, 7, str(delta))
-                                    self.__setTableItem(curWidget, i, 5, str(delta))
+                                        #self.__setTableItem(curWidget, i, 7, str(delta))
+                                        self.__setTableItem(curWidget, i, 5, "N/A")
                             elif dbrtype[index] in self.epicsString:
                                 #self.__setTableItem(curWidget, i, 6, str(s_value[index]))   
-                                saved_val = str(curWidget.item(i, 3).text())
                                 #print(saved_val)  
                                 self.__setTableItem(curWidget, i, 4, str(s_value[index]))
-                                if s_value[index] != None:
-                                    if s_value[index] == saved_val:
-                                        delta = 'Equal'
-                                    else:
-                                        delta = 'NotEqual'
-                                else:
-                                    delta='N/A'
-                                self.__setTableItem(curWidget, i, 5, str(delta))
+                                try:
+                                    saved_val = str(curWidget.item(i, 3).text())
+                                    if s_value[index] != saved_val:
+                                        self.__setTableItem(curWidget, i, 5, "NotEqual")
+                                        #delta = 'O'
+                                        #delta = 0
+                                except:
+                                    self.__setTableItem(curWidget, i, 5, "N/A")
                     except:
                         noMatchedPv.append(str(curWidget.item(i, 0).text()))
                 #end of for i in range(rowCount):
@@ -1797,7 +1802,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentWidget(tableWidget)
-        print("%d tabs when compareSnapshots"%self.snapshotTabWidget.count())
+        #print("%d tabs when compareSnapshots"%self.snapshotTabWidget.count())
         self.resizeSplitter(1)
         #assert(data != None and isinstance(tabWidget, QTableWidget))
         #print("configure the table for comparing multiple snapshots")
@@ -1899,10 +1904,11 @@ delta01: live value - value in 1st snapshot")
                             self.__setTableItem(table, i, j+1, str(data[j]['D_value'][pvIndex]))
                             if j > 0 and table.item(i,1) != None:
                                 delta=data[j]['D_value'][pvIndex]-float(str(table.item(i,1).text())) 
-                                if abs(delta) < 1.0e-6:
-                                    delta = 'Equal'
-                                else:
-                                    delta = 'NotEqual(%.6f)'%delta
+                                if abs(delta) < 1.0e-9:
+                                    #delta = 'Equal'
+                                    delta = 'O'
+                                #else:
+                                    #delta = 'NotEqual(%.6f)'%delta
                                 #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
                                 self.__setTableItem(table, i,nEvents+1+j,str(delta))
                         if data[j]['DBR'][pvIndex] in self.epicsLong:
@@ -1911,9 +1917,9 @@ delta01: live value - value in 1st snapshot")
                             if j > 0 and table.item(i,1) != None:
                                 delta=data[j]['I_value'][pvIndex] - int(str(table.item(i,1).text())) 
                                 if delta == 0:
-                                    delta = 'Equal'
-                                else:
-                                    delta = 'NotEqual(%d)'%delta
+                                    delta = 'O'
+                                #else:
+                                    #delta = 'NotEqual(%d)'%delta
                                 #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
                                 self.__setTableItem(table, i,nEvents+1+j,str(delta))
                         if data[j]['DBR'][pvIndex] in self.epicsString:
@@ -1921,7 +1927,7 @@ delta01: live value - value in 1st snapshot")
                             self.__setTableItem(table, i, j+1, str(data[j]['S_value'][pvIndex]))
                             if j > 0 and table.item(i,1) != None:
                                 if data[j]['S_value'][pvIndex] == str(table.item(i,1).text()):
-                                    delta = 'Equal'
+                                    delta = 'O'
                                 else:
                                     delta = 'NotEqual'
                                 #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
@@ -1961,10 +1967,10 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i, nEvents+1, str(d_value[liveIndex]))
                                 if table.item(i,1) != None:
                                     delta = d_value[liveIndex] - float(str(table.item(i,1).text())) 
-                                    if abs(delta) < 1.0e-6:
-                                        delta = 'Equal'
-                                    else:
-                                        delta = 'NotEqual(%.6f)'%delta    
+                                    if abs(delta) < 1.0e-9:
+                                        delta = 'O'
+                                    #else:
+                                        #delta = 'NotEqual(%.6f)'%delta    
                                     #self.__setTableItem(table, i,3*nEvents+1,str(delta))
                                     self.__setTableItem(table, i,2*nEvents+1,str(delta))                     
                             if dbrtype[liveIndex] in self.epicsLong:
@@ -1973,9 +1979,9 @@ delta01: live value - value in 1st snapshot")
                                 if table.item(i,1) != None:
                                     delta = i_value[liveIndex] - int(str(table.item(i,1).text())) 
                                     if delta == 0:
-                                        delta = 'Equal'
-                                    else:
-                                        delta = 'NotEqual(%d)'%delta    
+                                        delta = 'O'
+                                    #else:
+                                        #delta = 'NotEqual(%d)'%delta    
                                     #self.__setTableItem(table, i,3*nEvents+1,str(delta))  
                                     self.__setTableItem(table, i,2*nEvents+1,str(delta)) 
                             if dbrtype[liveIndex] in self.epicsString:
@@ -1983,7 +1989,7 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i, nEvents+1, str(s_value[liveIndex]))
                                 if table.item(i,1) != None:
                                     if s_value[liveIndex]  == str(table.item(i,1).text()):
-                                        delta = 'Equal'
+                                        delta = 'O'
                                     else:
                                         delta = 'NotEqual'  
                                     #self.__setTableItem(table, i,3*nEvents+1,str(delta))    
@@ -1991,7 +1997,7 @@ delta01: live value - value in 1st snapshot")
         
         table.setSortingEnabled(True)      
         #table.sortItems(3*nEvents+1, 1)
-        table.sortItems(nEvents+2, 1)
+        table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
         

@@ -837,13 +837,13 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             
             data = self.retrieveMasarData(eventid=eventIds[i])
             if data:
-                if isNew:
+                #if isNew:
                     #for j in range(self.snapshotTabWidget.count(), 0, -1):
                         #self.snapshotTabWidget.removeTab(j)
-                    self.pv4cDict.clear()
-                    self.data4eid.clear()
-                    self.arrayData.clear()
-                    isNew = False
+                    #self.pv4cDict.clear()
+                    #self.data4eid.clear()
+                    #self.arrayData.clear()
+                    #isNew = False
 
                 tableWidget.clear()
                 self.setSnapshotTable(data, tableWidget, eventIds[i])
@@ -1566,7 +1566,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during getting live machine.")
-            self.compareLiveWithMultiSnapshots = False
+            #self.compareLiveWithMultiSnapshots = False
             return False
         if not rpcResult:
             QMessageBox.warning(self,
@@ -1876,7 +1876,6 @@ delta01: live value - value in 1st snapshot")
         #must have the following two lines, otherwise the sorting will make data messed up
         table.setSortingEnabled(False)
         table.clear()
-        
         keys = self.compareSnapshotsTableKeys
         table.setHorizontalHeaderLabels(keys) 
          
@@ -1896,9 +1895,10 @@ delta01: live value - value in 1st snapshot")
                         #self.__setTableItem(table, i, 2*(j+1), dt)
                         self.__setTableItem(table, i, 2*(nEvents+1)+j, dt)
                     if data[j]['isArray'][pvIndex]:
-                        #self.__setTableItem(table, i, 2*j+1, self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))
+                        #self.__setTableItem(table, i, 2*j+1, self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))   
                         self.__setTableItem(table, i, j+1, \
-                                            self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))
+                                        self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))
+                        #print(table.item(i,j+1).text())
                         self.arrayData[pvList[i]+'_'+str(eventIds[j])+'_compare'] \
                                                                   =data[j]['arrayValue'][pvIndex] 
                         try:
@@ -1911,7 +1911,7 @@ delta01: live value - value in 1st snapshot")
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
                                 
-                    if data[j]['DBR'][pvIndex] in self.epicsDouble:
+                    elif data[j]['DBR'][pvIndex] in self.epicsDouble:
                         #self.__setTableItem(table, i, 2*j+1, str(data[j]['D_value'][pvIndex]))
                         self.__setTableItem(table, i, j+1, str(data[j]['D_value'][pvIndex]))
                         try:
@@ -1922,7 +1922,7 @@ delta01: live value - value in 1st snapshot")
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
                             
-                    if data[j]['DBR'][pvIndex] in self.epicsLong:
+                    elif data[j]['DBR'][pvIndex] in self.epicsLong:
                         #self.__setTableItem(table, i, 2*j+1, str(data[j]['I_value'][pvIndex]))
                         self.__setTableItem(table, i, j+1, str(data[j]['I_value'][pvIndex]))
                         try:
@@ -1933,7 +1933,7 @@ delta01: live value - value in 1st snapshot")
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
                             
-                    if data[j]['DBR'][pvIndex] in self.epicsString:
+                    elif data[j]['DBR'][pvIndex] in self.epicsString:
                         #self.__setTableItem(table, i, 2*j+1, str(data[j]['S_value'][pvIndex]))
                         self.__setTableItem(table, i, j+1, str(data[j]['S_value'][pvIndex]))
                         try:
@@ -1942,8 +1942,15 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i,nEvents+1+j,str("NotEqual"))
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                    elif data[j]['DBR'][pvIndex] in self.epicsNoAccess:
+                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                    else:
+                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                 
+                else:#if pvList[i] in data[j]['PV Name']:
+                    self.__setTableItem(table, i,nEvents+1+j,"N/A")  
                 #print(pvIndex,data[j]['D_value'][pvIndex])   
-        
+                
         #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set 
         #QThread.sleep(2)
         #QThread.usleep(10000)
@@ -1976,14 +1983,14 @@ delta01: live value - value in 1st snapshot")
                                 pvIndex = data[0]['PV Name'].index(pvList[i])
                                 ref_wf = data[0]['arrayValue'][pvIndex]
                                 if str(ref_wf) != str(array_value[liveIndex]):
-                                    delta=[m-n for m,n in zip(array_value[liveIndex],ref_wf)]
+                                    delta=[m-n for m,n in zip(ref_wf,array_value[liveIndex])]
                                     delta_array = tuple(delta)
                                     self.__setTableItem(table,i,2*nEvents+1, \
-                                                        self.__arrayTextFormat(delta))
+                                                        self.__arrayTextFormat(delta_array))
                             except:
                                 self.__setTableItem(table, i,2*nEvents+1,str("N/A")) 
                                 
-                        if dbrtype[liveIndex] in self.epicsDouble:
+                        elif dbrtype[liveIndex] in self.epicsDouble:
                             #self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
                             self.__setTableItem(table, i, nEvents+1, str(d_value[liveIndex]))
                             try:
@@ -1993,7 +2000,7 @@ delta01: live value - value in 1st snapshot")
                             except:
                                 self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
                                        
-                        if dbrtype[liveIndex] in self.epicsLong:
+                        elif dbrtype[liveIndex] in self.epicsLong:
                             #self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
                             self.__setTableItem(table, i, nEvents+1, str(i_value[liveIndex]))
                             try:
@@ -2003,7 +2010,7 @@ delta01: live value - value in 1st snapshot")
                             except:
                                 self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
                                 
-                        if dbrtype[liveIndex] in self.epicsString:
+                        elif dbrtype[liveIndex] in self.epicsString:
                             #self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
                             self.__setTableItem(table, i, nEvents+1, str(s_value[liveIndex]))
                             try:
@@ -2011,10 +2018,19 @@ delta01: live value - value in 1st snapshot")
                                     self.__setTableItem(table, i,2*nEvents+1,str("NotEqual"))
                             except:
                                 self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
-        
-        table.setSortingEnabled(True)      
-        #table.sortItems(3*nEvents+1, 1)
-        table.sortItems(nEvents+2, 0)
+                        elif dbrtype[liveIndex] in self.epicsNoAccess:
+                            self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+                        else:
+                            self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+                            
+                    else:#if pvList[i] in channelName:
+                        self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+            table.setSortingEnabled(True)
+            table.sortItems(2*nEvents+1, 0)
+        else:#if self.compareLiveWithMultiSnapshots:
+            table.setSortingEnabled(True)      
+            #table.sortItems(3*nEvents+1, 1)
+            table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
         

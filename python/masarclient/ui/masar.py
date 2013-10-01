@@ -1943,9 +1943,9 @@ delta01: live value - value in 1st snapshot")
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
                     elif data[j]['DBR'][pvIndex] in self.epicsNoAccess:
-                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                        self.__setTableItem(table, i,nEvents+2+j,"N/A")
                     else:
-                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                        self.__setTableItem(table, i,nEvents+2+j,"N/A")
                  
                 else:#if pvList[i] in data[j]['PV Name']:
                     self.__setTableItem(table, i,nEvents+1+j,"N/A")  

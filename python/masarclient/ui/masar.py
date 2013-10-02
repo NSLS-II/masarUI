@@ -1506,7 +1506,10 @@ Click Show Details... to see the failure details"
                                         #delta = 0
                                 except:
                                     self.__setTableItem(curWidget, i, 5, "N/A")
+                            else:           
+                                self.__setTableItem(curWidget, i, 5, "N/A")
                     except:
+                        self.__setTableItem(curWidget, i, 5, "N/A")
                         noMatchedPv.append(str(curWidget.item(i, 0).text()))
                 #end of for i in range(rowCount):
                 if len(noMatchedPv) > 0:
@@ -1516,16 +1519,17 @@ Click Show Details... to see the failure details"
                 
                 #Mark all disconnected PVs with pink color
                 for i in range(rowCount):
-                    if str(curWidget.item(i, 9).text()) == "Disconnected":                   
-                        #self.__setTableItem(curWidget, i, 5, "N/A")  
-                        self.__setTableItem(curWidget, i, 5, "")  
-                        #for item_idx in range(9):
-                        for item_idx in range(colCount):
-                            itemtmp = curWidget.item(i, item_idx)
-                            if not itemtmp:
-                                itemtmp = QTableWidgetItem()
-                                curWidget.setItem(i, item_idx, itemtmp)
-                            itemtmp.setBackground(self.brushdisconnectedpv)               
+                    try:
+                        if str(curWidget.item(i, 9).text()) == "Disconnected":                   
+                            self.__setTableItem(curWidget, i, 5, "N/A")  
+                            for item_idx in range(colCount):
+                                itemtmp = curWidget.item(i, item_idx)
+                                if not itemtmp:
+                                    itemtmp = QTableWidgetItem()
+                                    curWidget.setItem(i, item_idx, itemtmp)
+                                itemtmp.setBackground(self.brushdisconnectedpv)
+                    except:
+                        pass
                 #sort by "Connection"  
                 #curWidget.sortItems(1,0)
                 #sort by "delta"  
@@ -1942,8 +1946,10 @@ delta01: live value - value in 1st snapshot")
                                 self.__setTableItem(table, i,nEvents+1+j,str("NotEqual"))
                         except:
                             self.__setTableItem(table, i,nEvents+1+j,"N/A")
-                    elif data[j]['DBR'][pvIndex] in self.epicsNoAccess:
-                        self.__setTableItem(table, i,nEvents+2+j,"N/A")
+                    #elif data[j]['DBR'][pvIndex] in self.epicsNoAccess:
+                        #self.__setTableItem(table, i,nEvents+2+j,"N/A")
+                    elif j > 0:
+                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
                     else:
                         self.__setTableItem(table, i,nEvents+2+j,"N/A")
                  

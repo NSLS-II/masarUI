@@ -471,6 +471,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.previewConfName = cname
                 self.isPreviewSaved = False
                 
+                for j in range(len(data['isConnected'])):
+                    if not data['isConnected'][j]:
+                        disConnectedPVs.append(data['PV Name'][j])
                 if len(disConnectedPVs) > 0:
                     detailedText = ""
                     for i in range(len(disConnectedPVs)):
@@ -633,7 +636,8 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             return False
         if result:
             QMessageBox.information(self,"Successful", 
-                        " Succeed to save the preview as a snapshot and update the event list")
+                        " Succeed to save the preview as a snapshot to the database\n\n \
+You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot")
         else:
             QMessageBox.information(self, "Failures",
                                     "Failed to save preview.")

@@ -32,11 +32,11 @@ class ShowArrayValueDlg(QDialog):
 
         # add label
         pvnameLabel = QLabel()
-        label = 'Saved value (%s)' %(len(savedValue))
+        label = 'Saved value (%d data points)' %(len(savedValue))
         if liveValue != None:
-            label += ', Live value (%s)'%(len(liveValue))
+            label += ' and live value (%d data points)'%(len(liveValue))
         
-        label += ' for\n  '+pvname
+        label += ' for\n'+pvname
         pvnameLabel.setText(label)
         
         #add Close button
@@ -104,7 +104,7 @@ class ShowArrayValueDlg(QDialog):
             #self.canvas.draw()
             ax2.set_ylabel("Live data Value", color='r')             
 
-        ax1.plot(self.t, self.savedValue, 'b.')
+        ax1.plot(self.t, self.savedValue, 'b-')
         for t1 in ax1.get_yticklabels():
             t1.set_color('b')
         self.canvas.draw()

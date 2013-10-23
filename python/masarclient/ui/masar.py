@@ -876,26 +876,43 @@ Double click to view waveform data")
 
     def __showArrayData(self, row, column):
         #if column != 5 and column != 6: # display the array value only
-        if column != 3 and column != 4: # display the array value only
-            return
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
             return
         
+        pvname = str(curWidget.item(row, 0).text())
         eid = self.__find_key(self.tabWindowDict, curWidget)
+        eid_ = eid
         #print(eid)
         if eid == 'comment':
             QMessageBox.warning(self, 'Warning', 'It is comment panel.')
-
-        if eid == 'preview':
-            eid = self.previewId
-        pvname = str(curWidget.item(row, 0).text())
-        try:
-            arraySaved = self.arrayData[pvname+'_'+str(eid)]
-        except:
-            QMessageBox.warning(self, 'Warning', 'No array data found for this pv.')
             return
+        #in non-compare tab, saved value / live value  is in column 3 / 4
+        if eid != "compare": 
+            if column != 3 and column != 4: 
+                #print(column)
+                return       
+        if eid == "compare":
+            if column < 1 or column > 1 + len(self.eventIds):
+                #print("compare: %d"%column)
+                return
+        
+        if eid == 'preview':
+            eid_ = self.previewId
+        #print("pv / eid_: %s / %s"%(pvname, eid_))
+        if eid == "compare":
+            if column == 1 + len(self.eventIds):#live value column: use the Ref. snapshot
+                eid_ = str(self.eventIds[0])+'_compare'
+            else:
+                eid_ = str(self.eventIds[column-1])+'_compare'
+            #print("pv / eid_: %s / %s"%(pvname, eid_))
+        try:
+            arraySaved = self.arrayData[pvname+'_'+str(eid_)]
+        except:
+            QMessageBox.warning(self, 'Warning', 'No saved array data for the PV %s'%pvname)
+            return
+        #print("eid / eid_: %s / %s"%(eid, eid_))
         if eid != 'preview':
             try:
                 arrayLive = self.arrayData[pvname+"_"+str(eid)+'_live']
@@ -1909,6 +1926,7 @@ delta01: live value - value in 1st snapshot")
                         #print(table.item(i,j+1).text())
                         self.arrayData[pvList[i]+'_'+str(eventIds[j])+'_compare'] \
                                                                   =data[j]['arrayValue'][pvIndex] 
+                        #print(self.arrayData)
                         try:
                             ref_wf = data[0]['arrayValue'][pvIndex] 
                             if j >0 and str(data[j]['arrayValue'][pvIndex])!=str(ref_wf):
@@ -1988,7 +2006,7 @@ delta01: live value - value in 1st snapshot")
                             #self.__setTableItem(table, i, 2*nEvents+1, self.__arrayTextFormat(array_value[liveIndex]))
                             self.__setTableItem(table, i, nEvents+1, \
                                                 self.__arrayTextFormat(array_value[liveIndex]))
-                            self.arrayData[pvList[i]+'_liveData'+'_compare']=array_value[liveIndex]
+                            self.arrayData[pvList[i]+'_compare'+'_live']=array_value[liveIndex]
                             try:
                                 pvIndex = data[0]['PV Name'].index(pvList[i])
                                 ref_wf = data[0]['arrayValue'][pvIndex]

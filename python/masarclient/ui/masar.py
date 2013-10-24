@@ -1110,7 +1110,7 @@ Double click to view waveform data")
             table.setSortingEnabled(True)
             #be careful of this sorting action 
             #sort by "Connection"  
-            #table.sortItems(1,1)
+            table.sortItems(1,1)
         else:
             raise "Error occurred in setSnapshotTable(self, data, table, eventid)"
 
@@ -1422,7 +1422,8 @@ Click Show Details... to see the failure details"
                 disConnectedPVs = data[8]
                 alarm_status = data[9]
                 alarm_severity = data[10]
-                timestamp = data[11]
+                ts = data[11]
+                ts_nano = data[12]
                 #print(array_value)
                 dd = {}
                 noMatchedPv = []
@@ -1449,7 +1450,8 @@ Click Show Details... to see the failure details"
                             #curWidget.item(i, 2).setCheckState(False)  
                             #curWidget.item(i, 2).setSelected(False)  
                         #self.__setTableItem(curWidget, i, 9, str(d_value[index])) 
-                        dt=str(datetime.datetime.fromtimestamp(timestamp[index])) 
+                        #dt=str(datetime.datetime.fromtimestamp(timestamp[index])) 
+                        dt=str(datetime.datetime.fromtimestamp(ts[index]+ts_nano[index]*1.0e-9)) 
                         self.__setTableItem(curWidget, i, 10, dt)
                         self.__setTableItem(curWidget, i, 11, str(alarm_status[index]))
                         self.__setTableItem(curWidget, i, 12, str(alarm_severity[index]))
@@ -1556,6 +1558,7 @@ Click Show Details... to see the failure details"
                 #sort by "delta"  
                 curWidget.sortItems(5,0)
                 curWidget.resizeColumnsToContents() 
+                curWidget.sortItems(9,1)
                 detailedText = ""
                 for i in range(len(disConnectedPVs)):
                     detailedText += '\n' + disConnectedPVs[i] 
@@ -1575,9 +1578,11 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         
     def getLiveMachineData(self, pvlist):
         """
-        self.mc.getLiveMachine(params) doesn't return live timestamp, live alarm,
-        get these data via cav3.caget
-        Called by getLiveMachineAction(), setCompareSnapshotsTable(), resoreSnapshotAction()
+        Oct-24-2013: self.mc.getLiveMachine(params) does return live timestamp, live alarm, etc.
+        
+        #self.mc.getLiveMachine(params) doesn't return live timestamp, live alarm,
+        #get these data via cav3.caget
+        #Called by getLiveMachineAction(), setCompareSnapshotsTable(), resoreSnapshotAction()
         """
         params = {}
         for pv in pvlist:
@@ -1604,13 +1609,30 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         longValue = rpcResult[3]
         dbrtype = rpcResult[4]
         isConnected = rpcResult[5]
-        is_array = rpcResult[6]
-        raw_array_value = rpcResult[7]  
-        status = [""]*len(channelName)
-        severity = [""]*len(channelName)
-        timestamp = [0]*len(channelName)
+        #timestamp = rpcResult[6]
+        ts = rpcResult[6]
+        ts_nano = rpcResult[7]  
+        severity = list(rpcResult[8])
+        status = list(rpcResult[9])
+        is_array = rpcResult[10]
+        raw_array_value  = rpcResult[11]
+        #=======================================================================
+        # is_array = rpcResult[6]
+        # raw_array_value = rpcResult[7]  
+        # status = [""]*len(channelName)
+        # severity = [""]*len(channelName)
+        # timestamp = [0]*len(channelName)
+        #=======================================================================
         
         for i in range(len(is_array)):
+            try:
+                severity[i] = self.severityDict[severity[i]]
+            except:
+                severity[i] = 'N/A'
+            try:
+                status[i] = self.alarmDict[status[i]]
+            except:
+                status[i] = 'N/A'
             if dbrtype[i] in self.epicsLong:
                 array_value.append(raw_array_value[i][2])
             elif dbrtype[i] in self.epicsDouble:
@@ -1626,29 +1648,32 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         for i in range(len(dbrtype)):
             if dbrtype[i] in self.epicsNoAccess:    
                 disConnectedPVs.append(channelName[i])
-                status[i] = 'UDF_ALARM'
-                severity[i] = 'INVALID_ALARM'
-                timestamp[i] = 0
-                
-        connectedPVs = list(set(channelName)-set(disConnectedPVs))
-        v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-        for v3Result in v3Results:
-            if v3Result.name not in channelName:
-                QMessageBox.warning(self,"Waring",
-                                    "Exception happened in getLiveMachineData() by cav3.caget")
-                return False
-            pvIndex = channelName.index(v3Result.name)
-            if v3Result.ok == True:
-                status[pvIndex] = self.alarmDict[v3Result.status]
-                severity[pvIndex] = self.severityDict[v3Result.severity] 
-                timestamp[pvIndex] = v3Result.timestamp  
-            else:
-                status[pvIndex] = 'UDF_ALARM'
-                severity[pvIndex] = 'INVALID_ALARM'
-                timestamp[pvIndex] = 0
+        #=======================================================================
+        #        status[i] = 'UDF_ALARM'
+        #        severity[i] = 'INVALID_ALARM'
+        #        timestamp[i] = 0
+        #        
+        # connectedPVs = list(set(channelName)-set(disConnectedPVs))
+        # v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
+        # for v3Result in v3Results:
+        #    if v3Result.name not in channelName:
+        #        QMessageBox.warning(self,"Waring",
+        #                            "Exception happened in getLiveMachineData() by cav3.caget")
+        #        return False
+        #    pvIndex = channelName.index(v3Result.name)
+        #    if v3Result.ok == True:
+        #        status[pvIndex] = self.alarmDict[v3Result.status]
+        #        severity[pvIndex] = self.severityDict[v3Result.severity] 
+        #        timestamp[pvIndex] = v3Result.timestamp  
+        #    else:
+        #        status[pvIndex] = 'UDF_ALARM'
+        #        severity[pvIndex] = 'INVALID_ALARM'
+        #        timestamp[pvIndex] = 0
+        #=======================================================================
 
         return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array,
-                array_value,disConnectedPVs,status, severity, timestamp)
+                array_value,disConnectedPVs,status, severity, ts, ts_nano)
+                #array_value,disConnectedPVs,status, severity, timestamp)
 
 
     def saveDataFileAction(self):

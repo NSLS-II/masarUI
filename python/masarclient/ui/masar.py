@@ -1021,9 +1021,12 @@ Double click to view waveform data")
             table.clear()
         
             nrows = len(data.values()[0])
-            keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 
-                    'Diff', 'Saved Timestamp', 'Saved Status','Saved Severity','Live Connection', 
-                    'Live Timestamp', 'Live Status', 'Live Severity']
+            keys = ['PV Name', 'Saved Connection', 'Not Restore','Saved Value','Live Value','Diff', 
+                    'Saved Timestamp', 'Saved Status','Saved Severity',
+                    'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
+            #keys = ['PV Name', 'Description', 'Not Restore', 'Saved Value', 'Live Value', 'Diff', 
+                    #'Saved Connection', 'Saved Timestamp', 'Saved Status','Saved Severity',
+                    #'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
             #ncols = len(data) - 3
             ncols = len(keys)
             table.setRowCount(nrows)
@@ -1042,6 +1045,11 @@ Double click to view waveform data")
             isConnected = data['isConnected']
             is_array = data['isArray'] 
             array_value = data['arrayValue']
+            
+            #pvs = [pvnames[m]+'.DESC' for m in range(len(pvnames))]
+            #v3Results = cav3.caget(pvs, timeout=2, throw=False)
+            #for n in range(len(pvs)):
+                #print("%s    %s"%(pvs[n], v3Results[n]))
             
             for i in range(nrows):
                 #item = table.item(i, 8)
@@ -1106,6 +1114,9 @@ Double click to view waveform data")
                             itemtmp = QTableWidgetItem()
                             table.setItem(i, item_idx, itemtmp)
                         itemtmp.setBackground(self.brushbadpv)
+                
+                #if v3Results[i]:
+                    #self.__setTableItem(table, i, 1, str(v3Results[i]))
 
             table.setSortingEnabled(True)
             #be careful of this sorting action 

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Fri Sep 27 16:07:03 2013
+# Created: Tue Nov 26 14:17:15 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -315,7 +315,7 @@ class Ui_masar(object):
         self.authorTextEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Snapshot Desc", None, QtGui.QApplication.UnicodeUTF8))
         self.ByWho.setText(QtGui.QApplication.translate("masar", "Author", None, QtGui.QApplication.UnicodeUTF8))
-        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">Double CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.eventTableWidget.setSortingEnabled(True)
         self.fetchSnapshotButton.setToolTip(QtGui.QApplication.translate("masar", "get PVs data", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchSnapshotButton.setText(QtGui.QApplication.translate("masar", "Display Snapshot(s)", None, QtGui.QApplication.UnicodeUTF8))
@@ -325,7 +325,7 @@ class Ui_masar(object):
 "\n"
 "Quick Start ...\n"
 "\n"
-"    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --> click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
+"    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --> double click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
 "    \n"
 "    2. To save a machine snapshot: click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise description (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\";\n"
 "\n"

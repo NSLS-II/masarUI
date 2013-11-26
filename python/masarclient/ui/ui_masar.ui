@@ -357,7 +357,7 @@
             <enum>Qt::StrongFocus</enum>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;snapshotTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;snapshotTable: a list of saved snapshot(s) for the selected config(s)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;Double CLICK&lt;/span&gt; on one row to display &lt;span style=&quot; color:#00ff00;&quot;&gt;ONE&lt;/span&gt; snapshot data &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -523,7 +523,7 @@ MASAR is an EPICS V4 service which does MAchine Snapshot, Archiving, and Retriev
 
 Quick Start ...
 
-    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --&gt; click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
+    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --&gt; double click on one row in the left-bottom Snapshot table --&gt; click the button &quot;Restore Machine&quot;;
     
     2. To save a machine snapshot: click on one row in the left-top Config table  --&gt; click &quot;Save Machine Snapshot ...&quot; --&gt; put a concise description (&lt;80 characters) such as: &quot;SBM EmitX and Y 69 nm. This is golden&quot;;
 

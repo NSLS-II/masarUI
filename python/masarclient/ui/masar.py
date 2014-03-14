@@ -13,6 +13,7 @@ import os
 import sys
 import time
 import datetime
+import re
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                           QFileDialog, QColor, QBrush, QTabWidget)
@@ -97,6 +98,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.__service = 'masar'
         self.mc = masarClient.client(channelname) 
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
+        self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
+        self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
         self.__initSystemCombox()   
         
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
@@ -1389,6 +1392,8 @@ Click Show Details... to see the failure details"
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
 
+#************************** End of restoreSnapshotAction(self) ********************************************* 
+ 
     def getLiveMachineAction(self):
         """
         See ui_masar.py (.ui):
@@ -1585,7 +1590,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             QMessageBox.warning(self, "Warning", 
                                 "No snapshot is displayed. Please refer Welcome to MASAR for help")
             return
-
+#************************** End of getLiveMachineAction(self) ********************************************* 
         
     def getLiveMachineData(self, pvlist):
         """
@@ -2097,6 +2102,50 @@ delta01: live value - value in 1st snapshot")
             table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
+    def restoreFilterChanged(self):
+        self.currentRestoreFilter = str(self.restoreFilterLineEdit.text())
+        
+    def partialRestoreMachine(self):
+        print("restore filter: %s"%(self.currentRestoreFilter))
+
+    def pvFilterChanged(self):
+        self.currentPvFilter = str(self.pvFilterLineEdit.text())
+ 
+    def getInfoFromTabWidget(self):
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if not isinstance(curWidget, QTableWidget):
+            QMessageBox.warning(self, "Warning", 
+                                "No snapshot is displayed. Please refer Welcome to MASAR for help")
+            return None
+        
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        if eid == 'comment':
+            return
+        if eid == 'preview':
+            eid = self.previewId 
+            
+        data_ = self.data4eid[str(eid)]
+        pvlist_ = self.pv4cDict[str(eid)]  
+        eventIds_ = self.eventIds 
+        return(data_, pvlist_, eventIds_)     
+               
+    def pvSearch(self):
+        print("pv filter: %s"%(self.currentPvFilter))
+        pattern = self.currentPvFilter
+        if pattern == '*':
+            pattern = ""
+            
+        info = self.getInfoFromTabWidget()
+        if info == None:
+            return 
+        pvList = info[1]
+        print(pvList) 
+        print("%d PVs in the orignal tab \n"%(len(pvList)))
+
+        regex = re.compile(pattern)
+        filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
+        print(filteredPVs) 
+                
         
 def main(channelname = None):
     app = QApplication(sys.argv)

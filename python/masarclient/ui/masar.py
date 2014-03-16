@@ -98,7 +98,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.__service = 'masar'
         self.mc = masarClient.client(channelname) 
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
-        self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
+        #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
         self.__initSystemCombox()   
         
@@ -1003,7 +1003,7 @@ Double click to view waveform data")
                 
     def setSnapshotTable(self, data, table, eventid):
         """
-        called by setSnapshotTabWindow() and saveMachineSnapshot()(preview table) 
+        called by setSnapshotTabWindow(), saveMachineSnapshot()(preview table), and searchPV() 
         This table is different from compareSnapshotsTable, see setCompareSnapshotsTable()
         """
         if data:
@@ -2102,11 +2102,11 @@ delta01: live value - value in 1st snapshot")
             table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
-    def restoreFilterChanged(self):
-        self.currentRestoreFilter = str(self.restoreFilterLineEdit.text())
+    #def restoreFilterChanged(self):
+        #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text())
         
-    def partialRestoreMachine(self):
-        print("restore filter: %s"%(self.currentRestoreFilter))
+    #def partialRestoreMachine(self):
+        #print("restore filter: %s"%(self.currentRestoreFilter))
 
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
@@ -2127,10 +2127,25 @@ delta01: live value - value in 1st snapshot")
         data_ = self.data4eid[str(eid)]
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
-        return(data_, pvlist_, eventIds_)     
+        return(data_, pvlist_, eid, eventIds_)    
+    
+    def createNewTableWidget(self, eventID, label):
+        if self.tabWindowDict.has_key(str(eventID)):
+            tableWidget = self.tabWindowDict[str(eventID)]
+        else:
+            tableWidget = QTableWidget()
+            self.tabWindowDict[str(eventID)] = tableWidget
+            QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
+                            self.__showArrayData)
+        
+        self.snapshotTabWidget.addTab(tableWidget, label)
+        self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
+        self.snapshotTabWidget.setCurrentWidget(tableWidget)    
+        return tableWidget     
                
-    def pvSearch(self):
-        print("pv filter: %s"%(self.currentPvFilter))
+    def searchPV(self):
+        data = odict()
+        #print("pv filter: %s"%(self.currentPvFilter))
         pattern = self.currentPvFilter
         if pattern == '*':
             pattern = ""
@@ -2138,14 +2153,64 @@ delta01: live value - value in 1st snapshot")
         info = self.getInfoFromTabWidget()
         if info == None:
             return 
+        if str(info[2]) == 'compare':
+            QMessageBox.warning(self, "Warning", 
+                                "pv searching on compareSnapshotTab is not supported yet")    
+            return
+                
         pvList = info[1]
-        print(pvList) 
-        print("%d PVs in the orignal tab \n"%(len(pvList)))
+        #print(pvList) 
+        #print("info[0]")
+        #print(info[0]['PV Name'])
+        #print("%d PVs in the orignal tab \n"%(len(pvList)))
 
         regex = re.compile(pattern)
         filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
-        print(filteredPVs) 
-                
+        #print(filteredPVs) 
+        if 0 == len(filteredPVs):
+            QMessageBox.warning(self, "Warning", 
+                                "No matching pv, please re-enter your search pattern")
+            return          
+        
+        #print(str(info[2]))    
+        label = "filtered snapshot(ID_" + str(info[2]) + ")" 
+        tableWidget = self.createNewTableWidget("filter", label)
+        
+        status,severity,ts,ts_nano,dbr,sval,ival,dval,isCon,isArr,arr = [],[],[],[],[],[],[],[],[],[],[]
+        for i in range(len(filteredPVs)):
+            index = info[0]['PV Name'].index(filteredPVs[i])
+            status.append(info[0]['Status'][index])
+            severity.append(info[0]['Severity'][index])
+            ts.append(info[0]['Time stamp'][index])
+            ts_nano.append(info[0]['Time stamp (nano)'][index])
+            dbr.append(info[0]['DBR'][index])
+            sval.append(info[0]['S_value'][index])
+            ival.append(info[0]['I_value'][index])
+            dval.append(info[0]['D_value'][index])
+            isCon.append(info[0]['isConnected'][index])
+            isArr.append(info[0]['isArray'][index])
+            arr.append(info[0]['arrayValue'][index])
+            
+        data['PV Name'] = filteredPVs
+        data['Status'] = status
+        data['Severity'] = severity
+        data['Time stamp'] = ts
+        data['Time stamp (nano)'] = ts_nano
+        data['DBR'] = dbr
+        data['S_value'] = sval
+        data['I_value'] = ival
+        data['D_value'] = dval
+        data['isConnected'] = isCon
+        data['isArray'] = isArr
+        data['arrayValue'] = arr 
+        
+        self.pv4cDict['filter'] = data['PV Name']    
+        self.data4eid['filter'] = data     
+        
+        tableWidget.clear()
+        self.setSnapshotTable(data, tableWidget, 'filter')
+        tableWidget.resizeColumnsToContents()
+        
         
 def main(channelname = None):
     app = QApplication(sys.argv)

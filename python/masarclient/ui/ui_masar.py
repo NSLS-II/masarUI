@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Fri Mar 14 16:26:48 2014
+# Created: Sat Mar 15 21:04:29 2014
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -228,27 +228,9 @@ class Ui_masar(object):
         self.verticalLayout.addWidget(self.snapshotTabWidget)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.restoreFilterLineEdit = QtGui.QLineEdit(self.layoutWidget2)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.restoreFilterLineEdit.sizePolicy().hasHeightForWidth())
-        self.restoreFilterLineEdit.setSizePolicy(sizePolicy)
-        self.restoreFilterLineEdit.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.restoreFilterLineEdit.setObjectName(_fromUtf8("restoreFilterLineEdit"))
-        self.gridLayout.addWidget(self.restoreFilterLineEdit, 2, 0, 1, 1)
         self.compareSnapshotsButton = QtGui.QPushButton(self.layoutWidget2)
         self.compareSnapshotsButton.setObjectName(_fromUtf8("compareSnapshotsButton"))
         self.gridLayout.addWidget(self.compareSnapshotsButton, 0, 3, 2, 1)
-        self.partialRestoreButton = QtGui.QPushButton(self.layoutWidget2)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.partialRestoreButton.sizePolicy().hasHeightForWidth())
-        self.partialRestoreButton.setSizePolicy(sizePolicy)
-        self.partialRestoreButton.setToolTip(_fromUtf8(""))
-        self.partialRestoreButton.setObjectName(_fromUtf8("partialRestoreButton"))
-        self.gridLayout.addWidget(self.partialRestoreButton, 2, 1, 1, 1)
         self.pvFilterLineEdit = QtGui.QLineEdit(self.layoutWidget2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -285,7 +267,7 @@ class Ui_masar(object):
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
         self.menubar = QtGui.QMenuBar(masar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1197, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1197, 15))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         masar.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(masar)
@@ -310,10 +292,8 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL(_fromUtf8("currentChanged(int)")), masar.configTab)
         QtCore.QObject.connect(self.compareSnapshotsButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.openMsgBox)
         QtCore.QObject.connect(self.saveMachineSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveMachineSnapshot)
-        QtCore.QObject.connect(self.restoreFilterLineEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.restoreFilterChanged)
-        QtCore.QObject.connect(self.partialRestoreButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.partialRestoreMachine)
         QtCore.QObject.connect(self.pvFilterLineEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.pvFilterChanged)
-        QtCore.QObject.connect(self.pvSearchButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.pvSearch)
+        QtCore.QObject.connect(self.pvSearchButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.searchPV)
         QtCore.QMetaObject.connectSlotsByName(masar)
         masar.setTabOrder(self.systemCombox, self.configFilterLineEdit)
         masar.setTabOrder(self.configFilterLineEdit, self.fetchConfigButton)
@@ -400,9 +380,7 @@ class Ui_masar(object):
 "    [2] http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "Welcome to MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabToolTip(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "How to use MASAR", None, QtGui.QApplication.UnicodeUTF8))
-        self.restoreFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
-        self.partialRestoreButton.setText(QtGui.QApplication.translate("masar", "Partial Restore ", None, QtGui.QApplication.UnicodeUTF8))
         self.pvFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Compare Live Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveMachineSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Machine Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))

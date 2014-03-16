@@ -573,42 +573,10 @@ More Info ...
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="2" column="0" alignment="Qt::AlignLeft">
-           <widget class="QLineEdit" name="restoreFilterLineEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
-            </property>
-            <property name="text">
-             <string>*</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="3" rowspan="2">
            <widget class="QPushButton" name="compareSnapshotsButton">
             <property name="text">
              <string>Compare Snapshots...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1" alignment="Qt::AlignLeft">
-           <widget class="QPushButton" name="partialRestoreButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="text">
-             <string>Partial Restore </string>
             </property>
            </widget>
           </item>
@@ -692,7 +660,7 @@ More Info ...
      <x>0</x>
      <y>0</y>
      <width>1197</width>
-     <height>19</height>
+     <height>15</height>
     </rect>
    </property>
   </widget>
@@ -853,8 +821,8 @@ More Info ...
    <slot>systemComboxChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>49</y>
+     <x>368</x>
+     <y>45</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -869,8 +837,8 @@ More Info ...
    <slot>configFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>369</x>
-     <y>75</y>
+     <x>426</x>
+     <y>71</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -885,8 +853,8 @@ More Info ...
    <slot>fetchConfigAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>105</y>
+     <x>64</x>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -959,46 +927,14 @@ More Info ...
    </hints>
   </connection>
   <connection>
-   <sender>restoreFilterLineEdit</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>masar</receiver>
-   <slot>restoreFilterChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>458</x>
-     <y>924</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>383</x>
-     <y>949</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>partialRestoreButton</sender>
-   <signal>clicked()</signal>
-   <receiver>masar</receiver>
-   <slot>partialRestoreMachine()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>573</x>
-     <y>934</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>441</x>
-     <y>944</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pvFilterLineEdit</sender>
    <signal>textChanged(QString)</signal>
    <receiver>masar</receiver>
    <slot>pvFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>815</x>
-     <y>932</y>
+     <x>1034</x>
+     <y>939</y>
     </hint>
     <hint type="destinationlabel">
      <x>816</x>
@@ -1010,11 +946,11 @@ More Info ...
    <sender>pvSearchButton</sender>
    <signal>clicked()</signal>
    <receiver>masar</receiver>
-   <slot>pvSearch()</slot>
+   <slot>searchPV()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>900</x>
-     <y>934</y>
+     <x>1115</x>
+     <y>941</y>
     </hint>
     <hint type="destinationlabel">
      <x>990</x>
@@ -1045,6 +981,6 @@ More Info ...
   <slot>restoreFilterChanged()</slot>
   <slot>partialRestoreMachine()</slot>
   <slot>pvFilterChanged()</slot>
-  <slot>pvSearch()</slot>
+  <slot>searchPV()</slot>
  </slots>
 </ui>

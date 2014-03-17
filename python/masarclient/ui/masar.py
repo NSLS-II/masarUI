@@ -2146,10 +2146,11 @@ delta01: live value - value in 1st snapshot")
     def searchPV(self):
         data = odict()
         #print("pv filter: %s"%(self.currentPvFilter))
-        pattern = self.currentPvFilter
-        if pattern == '*':
-            pattern = ""
-            
+        pattern_ = self.currentPvFilter
+        pattern = 'r'+pattern_ 
+        #if pattern == '*':
+            #pattern = ""   
+             
         info = self.getInfoFromTabWidget()
         if info == None:
             return 
@@ -2164,7 +2165,7 @@ delta01: live value - value in 1st snapshot")
         #print(info[0]['PV Name'])
         #print("%d PVs in the orignal tab \n"%(len(pvList)))
 
-        regex = re.compile(pattern)
+        regex = re.compile(pattern, re.IGNORECASE)
         filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
         #print(filteredPVs) 
         if 0 == len(filteredPVs):

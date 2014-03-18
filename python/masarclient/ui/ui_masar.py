@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Sat Mar 15 21:04:29 2014
+# Created: Tue Mar 18 09:38:42 2014
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -238,6 +238,7 @@ class Ui_masar(object):
         sizePolicy.setHeightForWidth(self.pvFilterLineEdit.sizePolicy().hasHeightForWidth())
         self.pvFilterLineEdit.setSizePolicy(sizePolicy)
         self.pvFilterLineEdit.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.pvFilterLineEdit.setText(_fromUtf8(""))
         self.pvFilterLineEdit.setObjectName(_fromUtf8("pvFilterLineEdit"))
         self.gridLayout.addWidget(self.pvFilterLineEdit, 2, 3, 1, 1)
         self.getLiveMachineButton = QtGui.QPushButton(self.layoutWidget2)
@@ -267,7 +268,7 @@ class Ui_masar(object):
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
         self.menubar = QtGui.QMenuBar(masar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1197, 15))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1197, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         masar.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(masar)
@@ -381,7 +382,6 @@ class Ui_masar(object):
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "Welcome to MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabToolTip(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "How to use MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
-        self.pvFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Compare Live Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveMachineSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Machine Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))
         self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))

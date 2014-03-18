@@ -592,7 +592,7 @@ More Info ...
              <enum>Qt::RightToLeft</enum>
             </property>
             <property name="text">
-             <string>*</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -660,7 +660,7 @@ More Info ...
      <x>0</x>
      <y>0</y>
      <width>1197</width>
-     <height>15</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

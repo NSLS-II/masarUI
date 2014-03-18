@@ -106,7 +106,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.authorText = str(self.authorTextEdit.text())  
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
-        self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare
+        self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare, filter
         self.e2cDict = {} # event to config dictionary
         self.pv4cDict = {} # pv name list for each selected configuration
         self.data4eid = {} # snapshot data for eventId
@@ -311,6 +311,24 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.splitter.setSizes([500,600])
 #********* End of Config Table ********************************************************************
 
+    def createNewTableWidget(self, eventID, label):
+        """
+        types of tables in snapshotTab: comment(Welcome page), ordinary(double-click on event table), 
+        preview, compare, filter
+        """
+        if self.tabWindowDict.has_key(str(eventID)):
+            tableWidget = self.tabWindowDict[str(eventID)]
+        else:
+            tableWidget = QTableWidget()
+            self.tabWindowDict[str(eventID)] = tableWidget
+            QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
+                            self.__showArrayData)
+        
+        self.snapshotTabWidget.addTab(tableWidget, label)
+        self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
+        self.snapshotTabWidget.setCurrentWidget(tableWidget)    
+        return tableWidget 
+    
 #********* Start of Save machine snapshot ********************************************************* 
     def saveMachineSnapshot(self):
         """
@@ -448,27 +466,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 data = result[1]
                 self.pv4cDict[str(eid)] = data['PV Name']
                 self.data4eid[str(eid)] = data
-            
-                try:
-                    tabWidget = self.tabWindowDict['preview']
-                    index = self.snapshotTabWidget.indexOf(tabWidget)
-                except:
-                    tabWidget = QTableWidget()
-                    index = self.snapshotTabWidget.count()
-                    self.tabWindowDict['preview'] = tabWidget
-                    QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), 
-                                    self.__showArrayData)
+                
+                label = QString.fromUtf8((cname+': Preview'))
+                tabWidget = self.createNewTableWidget('preview', label)
             
                 self.setSnapshotTable(data, tabWidget, eid)
-                tabWidget.resizeColumnsToContents()
                 #sort the table by "Connection"
                 tabWidget.sortByColumn(1,1)
-                label = QString.fromUtf8((cname+': Preview'))
-                self.snapshotTabWidget.addTab(tabWidget, label)
-                self.snapshotTabWidget.setTabText(index, label)  
-                #seems to need setCurrentWidget to make preview tab as the current tab    
-                self.snapshotTabWidget.setCurrentIndex(index)
-                self.snapshotTabWidget.setCurrentWidget(tabWidget) 
                 #set self.previewId in saveMachinePreviewAction instead of here
                 self.previewId = eid
                 self.previewConfName = cname
@@ -834,43 +838,23 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         
         #print(eventIds)
         for i in range(len(eventIds)):
-            if self.tabWindowDict.has_key(eventIds[i]):
-                tableWidget = self.tabWindowDict[eventIds[i]]
-            else:
-                tableWidget = QTableWidget()
-                self.tabWindowDict[eventIds[i]] = tableWidget
-                QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),
-                                 self.__showArrayData)
-            
             data = self.retrieveMasarData(eventid=eventIds[i])
-            if data:
-                #if isNew:
-                    #for j in range(self.snapshotTabWidget.count(), 0, -1):
-                        #self.snapshotTabWidget.removeTab(j)
-                    #self.pv4cDict.clear()
-                    #self.data4eid.clear()
-                    #self.arrayData.clear()
-                    #isNew = False
-
-                tableWidget.clear()
-                self.setSnapshotTable(data, tableWidget, eventIds[i])
-                tableWidget.resizeColumnsToContents()
-                
-                ts = eventTs[i].split('.')[0] 
-                label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))
-                self.snapshotTabWidget.addTab(tableWidget, label)
-                #self.snapshotTabWidget.setTabText(i+1, label)
-                #print("it has %d tabs now"%self.snapshotTabWidget.count())
-                self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
-                self.pv4cDict[str(eventIds[i])] = data['PV Name']
-                self.data4eid[str(eventIds[i])] = data         
-                tableWidget.setStatusTip("Snapshot data of " + eventNames[i] + " saved at " + ts)
-                tableWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n \
-Double click to view waveform data")
-                self.resizeSplitter(1)
-            else:
+            if None == data:
                 QMessageBox.warning(self, "Warning", 
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
+                return
+            
+            ts = eventTs[i].split('.')[0] 
+            label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
+            tableWidget = self.createNewTableWidget(eventIds[i], label)        
+            self.setSnapshotTable(data, tableWidget, eventIds[i])
+            
+            self.pv4cDict[str(eventIds[i])] = data['PV Name']
+            self.data4eid[str(eventIds[i])] = data         
+            tableWidget.setStatusTip("Snapshot data of " + eventNames[i] + " saved at " + ts)
+            tableWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n \
+Double click to view waveform data")
+            self.resizeSplitter(1)
                           
         #self.snapshotTabWidget.setCurrentIndex(1)
         #print("total tabs:%d"%self.snapshotTabWidget.count())
@@ -1125,6 +1109,7 @@ Double click to view waveform data")
             #be careful of this sorting action 
             #sort by "Connection"  
             table.sortItems(1,1)
+            table.resizeColumnsToContents()
         else:
             raise "Error occurred in setSnapshotTable(self, data, table, eventid)"
 
@@ -2111,7 +2096,7 @@ delta01: live value - value in 1st snapshot")
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
  
-    def getInfoFromTabWidget(self):
+    def getInfoFromTableWidget(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", 
@@ -2127,31 +2112,18 @@ delta01: live value - value in 1st snapshot")
         data_ = self.data4eid[str(eid)]
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
-        return(data_, pvlist_, eid, eventIds_)    
-    
-    def createNewTableWidget(self, eventID, label):
-        if self.tabWindowDict.has_key(str(eventID)):
-            tableWidget = self.tabWindowDict[str(eventID)]
-        else:
-            tableWidget = QTableWidget()
-            self.tabWindowDict[str(eventID)] = tableWidget
-            QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
-                            self.__showArrayData)
-        
-        self.snapshotTabWidget.addTab(tableWidget, label)
-        self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
-        self.snapshotTabWidget.setCurrentWidget(tableWidget)    
-        return tableWidget     
+        return(data_, pvlist_, eid, eventIds_)        
                
     def searchPV(self):
         data = odict()
         #print("pv filter: %s"%(self.currentPvFilter))
-        pattern_ = self.currentPvFilter
-        pattern = 'r'+pattern_ 
-        #if pattern == '*':
-            #pattern = ""   
+        pattern = self.currentPvFilter
+        #pattern = 'r'+`pattern_` 
+        #print("pattern: %s"%(pattern))
+        if pattern == '*':
+            pattern = ""   
              
-        info = self.getInfoFromTabWidget()
+        info = self.getInfoFromTableWidget()
         if info == None:
             return 
         if str(info[2]) == 'compare':
@@ -2210,7 +2182,7 @@ delta01: live value - value in 1st snapshot")
         
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')
-        tableWidget.resizeColumnsToContents()
+        #tableWidget.resizeColumnsToContents()
         
         
 def main(channelname = None):

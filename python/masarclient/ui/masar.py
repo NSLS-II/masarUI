@@ -14,6 +14,7 @@ import sys
 import time
 import datetime
 import re
+import fnmatch
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                           QFileDialog, QColor, QBrush, QTabWidget)
@@ -2117,11 +2118,12 @@ delta01: live value - value in 1st snapshot")
     def searchPV(self):
         data = odict()
         #print("pv filter: %s"%(self.currentPvFilter))
-        pattern = self.currentPvFilter
+        pattern_ = self.currentPvFilter
+        pattern = fnmatch.translate(pattern_)
         #pattern = 'r'+`pattern_` 
         #print("pattern: %s"%(pattern))
-        if pattern == '*':
-            pattern = ""   
+        #if pattern == '*':
+            #pattern = ""   
              
         info = self.getInfoFromTableWidget()
         if info == None:

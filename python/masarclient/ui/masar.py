@@ -118,6 +118,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.compareLiveWithMultiSnapshots = False
         self.compareSnapshotsTableKeys = []
         self.eventIds = []
+        self.origID = ""
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -2132,13 +2133,14 @@ delta01: live value - value in 1st snapshot")
             QMessageBox.warning(self, "Warning", 
                                 "pv searching on compareSnapshotTab is not supported yet")    
             return
+        if str(info[2]).isdigit():
+            self.origID = str(info[2])
                 
         pvList = info[1]
         #print(pvList) 
         #print("info[0]")
         #print(info[0]['PV Name'])
         #print("%d PVs in the orignal tab \n"%(len(pvList)))
-
         regex = re.compile(pattern, re.IGNORECASE)
         filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
         #print(filteredPVs) 
@@ -2147,8 +2149,12 @@ delta01: live value - value in 1st snapshot")
                                 "No matching pv, please re-enter your search pattern")
             return          
         
-        #print(str(info[2]))    
-        label = "filtered snapshot(ID_" + str(info[2]) + ")" 
+        #print(str(info[2])) 
+        if str(info[2]) == 'filter':   
+            label = "filtered snapshot(ID_" + self.origID + "_filter)" 
+        else:
+            label = "filtered snapshot(ID_" + str(info[2]) + ")" 
+            
         tableWidget = self.createNewTableWidget("filter", label)
         
         status,severity,ts,ts_nano,dbr,sval,ival,dval,isCon,isArr,arr = [],[],[],[],[],[],[],[],[],[],[]

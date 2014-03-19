@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Tue Mar 18 09:38:42 2014
+# Created: Wed Mar 19 11:53:58 2014
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -261,7 +261,6 @@ class Ui_masar(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.pvSearchButton.sizePolicy().hasHeightForWidth())
         self.pvSearchButton.setSizePolicy(sizePolicy)
-        self.pvSearchButton.setToolTip(_fromUtf8(""))
         self.pvSearchButton.setObjectName(_fromUtf8("pvSearchButton"))
         self.gridLayout.addWidget(self.pvSearchButton, 2, 4, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)
@@ -348,7 +347,11 @@ class Ui_masar(object):
 "    \n"
 "    2. To save a machine snapshot: click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise description (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\";\n"
 "\n"
-"  3. To compare multiple saved snapshots: click on one row in the left-top Config table --> Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --> click \"Compare Snapshots...\"\n"
+"    3. To compare multiple saved snapshots: click on one row in the left-top Config table --> Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --> click \"Compare Snapshots...\";\n"
+"\n"
+"    4. To search / filter PVs: the searching supports wildcard pattern matching -- use * to match multiple characters, use ? to match single character, and use [m-n] to match the range from m to n; *BPM:[1-3]* means searching any PV name which contains BPM:1, BPM:2 and BPM:3; the searching can be nested -- you may search the filtered snapshot again and again using different search pattern to refine your search result \n"
+"\n"
+"    5. To partially restore snapshot (don\'t restore some PVs): click \'Not Restore\' in the snapshot Tab for the PV you don\'t want to restore; better way: firstly filter PVs as #4 instruction, then only restore the filtered PVs by clicking \"Restore Machine\".\n"
 "\n"
 "\n"
 "Tips ...\n"
@@ -382,10 +385,12 @@ class Ui_masar(object):
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "Welcome to MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabToolTip(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "How to use MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pvFilterLineEdit.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Compare Live Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveMachineSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Machine Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))
         self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveDataFileButton.setText(QtGui.QApplication.translate("masar", "Export Snapshot to File ...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pvSearchButton.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>search/filter pvs in the active snapshot Tab (the one you are watching) </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.pvSearchButton.setText(QtGui.QApplication.translate("masar", "PV Search", None, QtGui.QApplication.UnicodeUTF8))
 
 import masarRC_rc

@@ -9,12 +9,7 @@ from __future__ import division
 from __future__ import print_function
 #from __future__ import unicode_literals
 
-import os
-import sys
-import time
-import datetime
-import re
-import fnmatch
+import os, sys, time, datetime, re, fnmatch, imp, traceback
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                           QFileDialog, QColor, QBrush, QTabWidget)
@@ -32,11 +27,17 @@ else:
     print ('Python version 2.7 or higher is needed.')
     sys.exit()
 
+try:
+    imp.find_module('pyOlog')
+    pyOlogExisting = True
+except ImportError:
+    pyOlogExisting = False
 
 import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
+from authendlg import AuthenDlg
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -119,6 +120,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.compareSnapshotsTableKeys = []
         self.eventIds = []
         self.origID = ""
+        self.passWd = ''
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -1189,6 +1191,37 @@ Double click to view waveform data")
             QMessageBox.warning(self, 'Warning', 
                         'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
             return
+        if eid == 'filter':
+            eid4Log = self.origID + '(filtered)'
+        else:
+            eid4Log = eid
+        
+        if pyOlogExisting:
+            import ldap  
+            userID =  os.popen('whoami').read() 
+                
+            dlg = AuthenDlg(self.passWd)
+            dlg.exec_()
+            if dlg.isAccepted:
+                self.passWd = dlg.result()
+                user = userID[:-1]
+                ldap.protocol_version = 3
+                ldap.set_option(ldap.OPT_REFERRALS, 0)
+                try:
+                    lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
+                    #for NSLS2, cn is admin, must use uid instead
+                    username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
+                    lp.simple_bind_s(username, self.passWd)
+                except:
+                    self.passWd = ""
+                    QMessageBox.warning(self, 'Warning', 
+'Failed to get anthentication, you may have typed wrong password, try again if you like')   
+                    #traceback.print_exc()   
+                    return               
+                        
+            else:#if dlg.isAccepted:
+                return                         
+ 
         selectedNoRestorePv = {}
 
         # get table rows
@@ -1365,8 +1398,11 @@ It may take a while to restore the machine. Do you want to continue?"
                 output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
             for no_restorepv in no_restorepvs:
                 output += "\n  "+no_restorepv + ": Disconnected" 
-            print ("Failed to restore the following pvs which is caused by:"+output+"\n\
-========list end (failed to restore pv)========")  
+
+            logText = "Snapshot %s was restored, but failed to restore the following \
+pvs which is caused by:\n"%eid4Log+output+"\n"
+            print (logText)  
+            
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
                               text="Not Very Successful: failed to restore %s PVs.\
@@ -1376,8 +1412,29 @@ Click Show Details... to see the failure details"
             msg.setDetailedText(output)
             msg.exec_()
         else:
+            logText = "successfully restore machine with the snapshot %s"%eid4Log
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
+        
+        if pyOlogExisting:
+            try:    
+                import requests
+                #print("requests version: %s"%requests.__version__) 
+                from pyOlog import OlogClient, Tag, Logbook, LogEntry  
+                userID =  os.popen('whoami').read()                   
+                if 'https_proxy' in os.environ.keys():
+                    #print("unset https_proxy: %s"%(os.environ['https_proxy']))
+                    del os.environ['https_proxy']         
+                client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
+                        username=userID[:-1], password=self.passWd)
+                client.log(LogEntry(text=logText, owner=userID[:-1], \
+                                 logbooks=[Logbook(name='Operations', owner='Controls')],\
+                                 tags=[Tag(name='MASAR')]))
+            except:
+                QMessageBox.warning(self, 'Warning', 
+                        'Failed to create a log entry on the logbook')   
+                traceback.print_exc()
+                
 
 #************************** End of restoreSnapshotAction(self) ********************************************* 
  

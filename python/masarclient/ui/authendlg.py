@@ -26,7 +26,7 @@ class AuthenDlg(QDialog):
 
         desc = QLabel()
         if self.password != "":#authentication is required only once Once it is correct
-            desc.setText("Your action will be recorded on the logbook\n \
+            desc.setText("Caution! your action will be recorded on the logbook\n \
 Click OK if you want to continue, otherwise click Cancel")
         else: 
             desc.setText("Your action will be recorded on the logbook\n \

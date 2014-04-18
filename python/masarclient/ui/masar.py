@@ -334,6 +334,76 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return tableWidget 
     
 #********* Start of Save machine snapshot ********************************************************* 
+    def getAuthentication(self):
+        if pyOlogExisting:
+            import ldap  
+            userID =  os.popen('whoami').read() 
+            #print(os.path.realpath(__file__))
+            dirPath = os.path.dirname(os.path.abspath(__file__))
+            #fd = open('%s/masar.config'%os.environ['PWD'], "r")
+            fd = open('%s/masar.config'%dirPath, "r")
+            #print(fd.readlines())
+            lines = fd.readlines()
+            for line in lines:
+                if line[:10] == 'ldapServer':
+                    ldapServer = line.split('=')[1]
+                if line[:8] == 'userName':
+                    userName = line.split('==')[1]
+            #print(userName[:-1])
+                            
+            dlg = AuthenDlg(self.passWd)
+            dlg.exec_()
+            if dlg.isAccepted:
+                self.passWd = dlg.result()
+                user = userID[:-1]#remove trailing '\n' 
+                ldap.protocol_version = 3
+                ldap.set_option(ldap.OPT_REFERRALS, 0)
+                try:
+                    #lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
+                    lp = ldap.initialize(ldapServer[:-1])
+                    #for NSLS2, cn is admin, must use uid instead
+                    #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
+                    username = userName[:-1]%user
+                    #print(username)
+                    lp.simple_bind_s(username, self.passWd)
+                    return True
+                except:
+                    self.passWd = ""
+                    QMessageBox.warning(self, 'Warning', 
+'Failed to get anthentication, you may have typed wrong password, try again if you like')   
+                    #traceback.print_exc()   
+                    return False               
+                        
+            else:#if dlg.isAccepted:
+                return False   
+        
+        return True#if pyOlogExisting: 
+            
+    def createLogEntry(self, logText):
+        if pyOlogExisting:
+            userID =  os.popen('whoami').read() 
+            dirPath = os.path.dirname(os.path.abspath(__file__))
+            fd = open('%s/masar.config'%dirPath, "r")
+            lines = fd.readlines()
+            for line in lines:
+                if line[:10] == 'ologServer':
+                    ologServer = line.split('=')[1]
+            try:    
+                import requests
+                #print("requests version: %s"%requests.__version__) 
+                from pyOlog import OlogClient, Tag, Logbook, LogEntry  
+                if 'https_proxy' in os.environ.keys():
+                    #print("unset https_proxy: %s"%(os.environ['https_proxy']))
+                    del os.environ['https_proxy']        
+                #client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
+                client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
+                client.log(LogEntry(text=logText, owner=userID[:-1], \
+                                 logbooks=[Logbook(name='Operations', owner='Controls')],\
+                                 tags=[Tag(name='MASAR')]))
+            except:
+                QMessageBox.warning(self, 'Warning', 
+                        'Failed to create a log entry on the logbook') 
+                      
     def saveMachineSnapshot(self):
         """
         See ui_masar.py(.ui):
@@ -352,6 +422,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 "Please select one configuration from the left-top Config Table, and one only.")
             return
 
+        if not self.getAuthentication():
+            return
+        
         self.previewId = None
         self.previewConfName = None
         
@@ -504,7 +577,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
                 msg.setAttribute(Qt.WA_DeleteOnClose)
                 msg.show()
                 continueButton.clicked.connect(self.saveMachinePreviewAction) 
-                quitButton.clicked.connect(self.ignore) 
+                quitButton.clicked.connect(self.createQuitEntry) 
 
     def getMachinePreviewData(self, configName):
         """
@@ -574,6 +647,10 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
         data['arrayValue'] = array_value
 
         return (eventid, data)
+
+    def createQuitEntry(self):
+        logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId,self.previewConfName)
+        self.createLogEntry(logText)
     
     def ignore(self):
         pass
@@ -607,16 +684,24 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
                 #self.previewId = result[0]
                 #print(self.previewId)
                 self.saveMachinePreviewData(self.previewId, self.previewConfName, comment)
+                logText="Succeed to save a snapshot %s to MASAR database using Conifg %s  \
+with comment:\n %s"%(self.previewId, self.previewConfName, comment[1])
+                self.createLogEntry(logText)
             else:
-                QMessageBox.warning(self,
-                    "Warning",
-                    "Either user name or comment is empty.")
+                QMessageBox.warning(self,"Warning","Either user name or comment is empty.")
+                logText="saved an invisible snapshot %s using Conifg %s"\
+                        %(self.previewId,self.previewConfName)
+                self.createLogEntry(logText)
                 return
         else:
             #QMessageBox.warning(self,
                 #"Warning",
                 #"Comment is cancelled.")
+            logText="saved an invisible snapshot %s using Conifg %s"\
+                        %(self.previewId,self.previewConfName)
+            self.createLogEntry(logText)
             return
+        
         self.isPreviewSaved = True
 
     def __getComment(self):
@@ -647,11 +732,11 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             return False
         if result:
             QMessageBox.information(self,"Successful", 
-                        " Succeed to save the preview as a snapshot to the database\n\n \
-You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot")
+                        " Succeed to save a snapshot %s to MASAR database using Conifg %s\n\n \
+You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot"\
+                                    %(self.previewId,self.previewConfName))
         else:
-            QMessageBox.information(self, "Failures",
-                                    "Failed to save preview.")
+            QMessageBox.information(self, "Failures", "Failed to save preview.")
 #********* End of Save machine snapshot ********************************************************* 
 
 
@@ -1176,8 +1261,7 @@ Double click to view waveform data")
             else:
                 bar.setTabTextColor(i, Qt.gray)
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
-#************************** End of config snapShotTab ********************************************* 
- 
+#************************** End of config snapShotTab *********************************************   
  
     def restoreSnapshotAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
@@ -1194,50 +1278,10 @@ Double click to view waveform data")
         if eid == 'filter':
             eid4Log = self.origID + '(filtered)'
         else:
-            eid4Log = eid
-        
-        if pyOlogExisting:
-            import ldap  
-            userID =  os.popen('whoami').read() 
-            #print(os.path.realpath(__file__))
-            dirPath = os.path.dirname(os.path.abspath(__file__))
-            #fd = open('%s/masar.config'%os.environ['PWD'], "r")
-            fd = open('%s/masar.config'%dirPath, "r")
-            #print(fd.readlines())
-            lines = fd.readlines()
-            for line in lines:
-                if line[:10] == 'ologServer':
-                    ologServer = line.split('=')[1]
-                if line[:10] == 'ldapServer':
-                    ldapServer = line.split('=')[1]
-                if line[:8] == 'userName':
-                    userName = line.split('==')[1]
-            #print(userName[:-1])
-                            
-            dlg = AuthenDlg(self.passWd)
-            dlg.exec_()
-            if dlg.isAccepted:
-                self.passWd = dlg.result()
-                user = userID[:-1]#remove trailing '\n' 
-                ldap.protocol_version = 3
-                ldap.set_option(ldap.OPT_REFERRALS, 0)
-                try:
-                    #lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
-                    lp = ldap.initialize(ldapServer[:-1])
-                    #for NSLS2, cn is admin, must use uid instead
-                    #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
-                    username = userName[:-1]%user
-                    #print(username)
-                    lp.simple_bind_s(username, self.passWd)
-                except:
-                    self.passWd = ""
-                    QMessageBox.warning(self, 'Warning', 
-'Failed to get anthentication, you may have typed wrong password, try again if you like')   
-                    #traceback.print_exc()   
-                    return               
-                        
-            else:#if dlg.isAccepted:
-                return                         
+            eid4Log = eid                      
+ 
+        if not self.getAuthentication():
+            return
  
         selectedNoRestorePv = {}
 
@@ -1433,25 +1477,8 @@ Click Show Details... to see the failure details"
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
         
-        if pyOlogExisting:
-            try:    
-                import requests
-                #print("requests version: %s"%requests.__version__) 
-                from pyOlog import OlogClient, Tag, Logbook, LogEntry  
-                if 'https_proxy' in os.environ.keys():
-                    #print("unset https_proxy: %s"%(os.environ['https_proxy']))
-                    del os.environ['https_proxy']        
-                #client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
-                client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
-                client.log(LogEntry(text=logText, owner=userID[:-1], \
-                                 logbooks=[Logbook(name='Operations', owner='Controls')],\
-                                 tags=[Tag(name='MASAR')]))
-            except:
-                QMessageBox.warning(self, 'Warning', 
-                        'Failed to create a log entry on the logbook')   
-                #traceback.print_exc()
+        self.createLogEntry(logText)
                 
-
 #************************** End of restoreSnapshotAction(self) ********************************************* 
  
     def getLiveMachineAction(self):

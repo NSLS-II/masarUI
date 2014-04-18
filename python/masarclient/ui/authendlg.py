@@ -66,6 +66,5 @@ Otherwise Click Cancel \n")
         if not self.isAccepted:
             return None
         else:
-            #print(self.password)
             return (self.password)
         

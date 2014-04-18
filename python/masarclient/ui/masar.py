@@ -1199,18 +1199,35 @@ Double click to view waveform data")
         if pyOlogExisting:
             import ldap  
             userID =  os.popen('whoami').read() 
-                
+            #print(os.path.realpath(__file__))
+            dirPath = os.path.dirname(os.path.abspath(__file__))
+            #fd = open('%s/masar.config'%os.environ['PWD'], "r")
+            fd = open('%s/masar.config'%dirPath, "r")
+            #print(fd.readlines())
+            lines = fd.readlines()
+            for line in lines:
+                if line[:10] == 'ologServer':
+                    ologServer = line.split('=')[1]
+                if line[:10] == 'ldapServer':
+                    ldapServer = line.split('=')[1]
+                if line[:8] == 'userName':
+                    userName = line.split('==')[1]
+            #print(userName[:-1])
+                            
             dlg = AuthenDlg(self.passWd)
             dlg.exec_()
             if dlg.isAccepted:
                 self.passWd = dlg.result()
-                user = userID[:-1]
+                user = userID[:-1]#remove trailing '\n' 
                 ldap.protocol_version = 3
                 ldap.set_option(ldap.OPT_REFERRALS, 0)
                 try:
-                    lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
+                    #lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
+                    lp = ldap.initialize(ldapServer[:-1])
                     #for NSLS2, cn is admin, must use uid instead
-                    username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
+                    #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
+                    username = userName[:-1]%user
+                    #print(username)
                     lp.simple_bind_s(username, self.passWd)
                 except:
                     self.passWd = ""
@@ -1421,19 +1438,18 @@ Click Show Details... to see the failure details"
                 import requests
                 #print("requests version: %s"%requests.__version__) 
                 from pyOlog import OlogClient, Tag, Logbook, LogEntry  
-                userID =  os.popen('whoami').read()                   
                 if 'https_proxy' in os.environ.keys():
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
-                    del os.environ['https_proxy']         
-                client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
-                        username=userID[:-1], password=self.passWd)
+                    del os.environ['https_proxy']        
+                #client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
+                client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
                 client.log(LogEntry(text=logText, owner=userID[:-1], \
                                  logbooks=[Logbook(name='Operations', owner='Controls')],\
                                  tags=[Tag(name='MASAR')]))
             except:
                 QMessageBox.warning(self, 'Warning', 
                         'Failed to create a log entry on the logbook')   
-                traceback.print_exc()
+                #traceback.print_exc()
                 
 
 #************************** End of restoreSnapshotAction(self) ********************************************* 

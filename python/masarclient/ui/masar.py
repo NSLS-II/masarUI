@@ -35,6 +35,7 @@ except ImportError:
 
 import ui_masar
 import commentdlg
+import commentdetail
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
 from authendlg import AuthenDlg
@@ -345,6 +346,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             #print(fd.readlines())
             lines = fd.readlines()
             for line in lines:
+                if line[:12] == 'ldapExisting':
+                    ldapExisting = line.split('=')[1]                
                 if line[:10] == 'ldapServer':
                     ldapServer = line.split('=')[1]
                 if line[:8] == 'userName':
@@ -355,6 +358,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             dlg.exec_()
             if dlg.isAccepted:
                 self.passWd = dlg.result()
+                if ldapExisting[:-1] != 'True':
+                    return True # don't use ldap to verify username if ldap doesn't exist
+                
                 user = userID[:-1]#remove trailing '\n' 
                 ldap.protocol_version = 3
                 ldap.set_option(ldap.OPT_REFERRALS, 0)
@@ -389,7 +395,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if line[:10] == 'ologServer':
                     ologServer = line.split('=')[1]
             try:    
-                import requests
+                #import requests
                 #print("requests version: %s"%requests.__version__) 
                 from pyOlog import OlogClient, Tag, Logbook, LogEntry  
                 if 'https_proxy' in os.environ.keys():
@@ -403,6 +409,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             except:
                 QMessageBox.warning(self, 'Warning', 
                         'Failed to create a log entry on the logbook') 
+                #traceback.print_exc()
                       
     def saveMachineSnapshot(self):
         """
@@ -577,7 +584,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
                 msg.setAttribute(Qt.WA_DeleteOnClose)
                 msg.show()
                 continueButton.clicked.connect(self.saveMachinePreviewAction) 
-                quitButton.clicked.connect(self.createQuitEntry) 
+                quitButton.clicked.connect(self.createLog4InvisibleSnapshot) 
 
     def getMachinePreviewData(self, configName):
         """
@@ -648,7 +655,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
 
         return (eventid, data)
 
-    def createQuitEntry(self):
+    def createLog4InvisibleSnapshot(self):
         logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId,self.previewConfName)
         self.createLogEntry(logText)
     
@@ -665,41 +672,31 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             QMessageBox.warning(self, "Warning",
 "Preview (id: %s) for config (%s) has already been saved" %(self.previewId, self.previewConfName))
             return
-        # who is int object
-        #who = str(os.system("whoami"))
-        #author = os.popen('whoami').read()
-        #print(author)
+
         comment = self.__getComment()
-        #else:
-            #return
-        # comment result always returns a tuple
-        # it return like (user, comment note)
         if comment and isinstance(comment, tuple):
             if comment[0] and comment[1]: 
-                #result = self.getMachinePreviewData(self.previewConfName)
-                #if result == None:
-                    #QMessageBox.warning(self,"Error",
-                     #                   "can't get machine preview data from MASAR server")
-                    #return
-                #self.previewId = result[0]
-                #print(self.previewId)
-                self.saveMachinePreviewData(self.previewId, self.previewConfName, comment)
-                logText="Succeed to save a snapshot %s to MASAR database using Conifg %s  \
-with comment:\n %s"%(self.previewId, self.previewConfName, comment[1])
-                self.createLogEntry(logText)
-            else:
+                commentDetail = ''
+                if pyOlogExisting: 
+                    commentDetail = self.__getCommentDetail()
+                if self.saveMachinePreviewData(self.previewId, self.previewConfName, comment):
+                    if commentDetail: 
+                        logText="Succeed to save a snapshot #%s to MASAR database using Conifg %s  \
+with description: %s.\nComment: %s"%(self.previewId,self.previewConfName,comment[1],commentDetail)
+                    else:
+                        logText="Succeed to save a snapshot #%s to MASAR database using Conifg %s  \
+with description: %s"%(self.previewId, self.previewConfName, comment[1])
+                    self.createLogEntry(logText)
+                else:
+                    self.createLog4InvisibleSnapshot()
+                    return
+                    
+            else:#if comment[0] and comment[1]: 
                 QMessageBox.warning(self,"Warning","Either user name or comment is empty.")
-                logText="saved an invisible snapshot %s using Conifg %s"\
-                        %(self.previewId,self.previewConfName)
-                self.createLogEntry(logText)
+                self.createLog4InvisibleSnapshot()
                 return
-        else:
-            #QMessageBox.warning(self,
-                #"Warning",
-                #"Comment is cancelled.")
-            logText="saved an invisible snapshot %s using Conifg %s"\
-                        %(self.previewId,self.previewConfName)
-            self.createLogEntry(logText)
+        else:#if comment and isinstance(comment, tuple):
+            self.createLog4InvisibleSnapshot()
             return
         
         self.isPreviewSaved = True
@@ -712,12 +709,20 @@ with comment:\n %s"%(self.previewId, self.previewConfName, comment[1])
         else:
             return None
 
+    def __getCommentDetail(self):
+        cdlg = commentdetail.CommentDetail()
+        cdlg.exec_()
+        if cdlg.isAccepted:
+            return (cdlg.result())
+        else:
+            return None
+
     def saveMachinePreviewData(self, eventid, confname, comment):
         if not eventid:
             QMessageBox.warning(self,
                         "Warning",
                         "Unknown event.")
-            return
+            return False
 
         params = {'eventid':    str(eventid),
                   'configname': str(confname),
@@ -735,8 +740,10 @@ with comment:\n %s"%(self.previewId, self.previewConfName, comment[1])
                         " Succeed to save a snapshot %s to MASAR database using Conifg %s\n\n \
 You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot"\
                                     %(self.previewId,self.previewConfName))
+            return True
         else:
             QMessageBox.information(self, "Failures", "Failed to save preview.")
+            return False
 #********* End of Save machine snapshot ********************************************************* 
 
 

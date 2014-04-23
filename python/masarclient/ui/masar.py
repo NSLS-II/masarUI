@@ -12,8 +12,8 @@ from __future__ import print_function
 import os, sys, time, datetime, re, fnmatch, imp, traceback
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
-                          QFileDialog, QColor, QBrush, QTabWidget)
-from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread)
+                          QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence)
+from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread, QEventLoop)
 #import PyQt4.QTest as QTest
 
 try:
@@ -334,7 +334,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.snapshotTabWidget.addTab(tableWidget, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
         self.snapshotTabWidget.setCurrentWidget(tableWidget)    
+        shortcut = QShortcut(QKeySequence('Ctrl+F'), self)
+        shortcut.activated.connect(self.handleFind)
         return tableWidget 
+    
+    def handleFind(self):
+        print("test find")
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):
@@ -434,6 +439,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if not self.getAuthentication():
             return
         
+        self.saveMachineSnapshotButton.setEnabled(False)
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
         self.previewId = None
         self.previewConfName = None
         
@@ -587,6 +594,8 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
                 msg.show()
                 continueButton.clicked.connect(self.saveMachinePreviewAction) 
                 quitButton.clicked.connect(self.createLog4InvisibleSnapshot) 
+        else:
+            self.saveMachineSnapshotButton.setEnabled(True)
 
     def getMachinePreviewData(self, configName):
         """
@@ -658,21 +667,21 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
         return (eventid, data)
 
     def createLog4InvisibleSnapshot(self):
+        self.saveMachineSnapshotButton.setEnabled(True)
         logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId,self.previewConfName)
         self.createLogEntry(logText)
     
-    def ignore(self):
-        pass
-
     def saveMachinePreviewAction(self):
         #if self.previewId == None or self.previewConfName == None:
         if self.previewConfName == None:
             QMessageBox.warning(self, "Warning",
                                 'No preview to save. Please click "Preview Machine" first')
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
         elif self.isPreviewSaved:
             QMessageBox.warning(self, "Warning",
 "Preview (id: %s) for config (%s) has already been saved" %(self.previewId, self.previewConfName))
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
 
         comment = self.__getComment()
@@ -689,16 +698,20 @@ with description: %s.\nComment: %s"%(self.previewId,self.previewConfName,comment
                         logText="Succeed to save a snapshot #%s to MASAR database using Conifg %s  \
 with description: %s"%(self.previewId, self.previewConfName, comment[1])
                     self.createLogEntry(logText)
+                    self.saveMachineSnapshotButton.setEnabled(True)
                 else:
                     self.createLog4InvisibleSnapshot()
+                    self.saveMachineSnapshotButton.setEnabled(True)
                     return
                     
             else:#if comment[0] and comment[1]: 
                 QMessageBox.warning(self,"Warning","Either user name or comment is empty.")
                 self.createLog4InvisibleSnapshot()
+                self.saveMachineSnapshotButton.setEnabled(True)
                 return
         else:#if comment and isinstance(comment, tuple):
             self.createLog4InvisibleSnapshot()
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
         
         self.isPreviewSaved = True
@@ -1298,7 +1311,9 @@ Double click to view waveform data")
  
         if not self.getAuthentication():
             return
- 
+        
+        self.restoreMachineButton.setEnabled(False)  
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
         selectedNoRestorePv = {}
 
         # get table rows
@@ -1327,6 +1342,7 @@ Double click to view waveform data")
         disConnectedPVs = []
         liveData = self.getLiveMachineData(pvlist)
         if not liveData:
+            self.restoreMachineButton.setEnabled(True)
             return
         disConnectedPVs = liveData[8]
         
@@ -1358,6 +1374,7 @@ Double click to view waveform data")
                                 no_restorepvs.append(pvlist[index])
                                 ignoreall = True
                             elif reply == QMessageBox.Cancel:
+                                self.restoreMachineButton.setEnabled(True)
                                 return
                         else:
                             no_restorepvs.append(pvlist[index])
@@ -1366,10 +1383,12 @@ Double click to view waveform data")
             except:
                 print (type(pvlist[index]), pvlist[index])
                 QMessageBox.warning(self, 'Warning', 'PV name (%s) is invalid.'%(pvlist[index]))
+                self.restoreMachineButton.setEnabled(True)
                 return
     
         if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
+            self.restoreMachineButton.setEnabled(True)
             return
         
         #cagetres = cav3.caget(r_pvlist, throw=False)
@@ -1430,11 +1449,13 @@ Double click to view waveform data")
 text="%d PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n\
 It may take a while to restore the machine. Do you want to continue?" 
                               %len(no_restorepvs))
+            msg.setModal(False)
             msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg.setDefaultButton(QMessageBox.No)
             msg.setDetailedText(str_no_restore)
             reply = msg.exec_()
             if reply == QMessageBox.No:
+                self.restoreMachineButton.setEnabled(True)
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
         
@@ -1463,6 +1484,7 @@ It may take a while to restore the machine. Do you want to continue?"
                             bad_pvs.append(res)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring machine.')
+            self.restoreMachineButton.setEnabled(True)
             return
         #bad_pvs == [ca_nothing(), ca_nothing() ...]
         #bad_pvs = bad_pvs + no_restorepvs
@@ -1486,14 +1508,18 @@ pvs which is caused by:\n"%eid4Log+output+"\n"
 Click Show Details... to see the failure details"
                                %totalBadPVs)
             #msg.setStandardButtons(QMessageBox.Ok)
+            msg.setModal(False)
             msg.setDetailedText(output)
-            msg.exec_()
+            msg.show()
+            #msg.exec_()   
+            msg.show()
         else:
             logText = "successfully restore machine with the snapshot %s"%eid4Log
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
         
         self.createLogEntry(logText)
+        self.restoreMachineButton.setEnabled(True)
                 
 #************************** End of restoreSnapshotAction(self) ********************************************* 
  
@@ -1512,9 +1538,12 @@ Click Show Details... to see the failure details"
             if eid == 'preview':
                 eid = self.previewId # get event id for preview snapshot
             elif eid == 'comment':
+                self.getLiveMachineButton.setEnabled(True)
                 return # nothing should do here
             elif eid == 'compare':
                 #self.beCompared = True
+                self.getLiveMachineButton.setEnabled(False)
+                QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
                 data_ = self.data4eid['compare']
                 pvlist_ = self.pv4cDict['compare']
                 eventIds_ = self.eventIds 
@@ -1524,7 +1553,12 @@ Click Show Details... to see the failure details"
                 #curWidget.setSortingEnabled(True) 
                 #since compareSnapshotsTable is so different from singleSnapshotTable, 
                 ## don't continue and just return
+                self.getLiveMachineButton.setEnabled(True)
                 return
+            self.getLiveMachineButton.setEnabled(False)
+            QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
+            #print(datetime.datetime.now())
+            self.getLiveMachineButton.setStyleSheet(_fromUtf8("QPushButton:disabled { color: gray }"))
             #catch KeyError: 'None'
             pvlist = self.pv4cDict[str(eid)]
             
@@ -1692,7 +1726,10 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         else:# end of if isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", 
                                 "No snapshot is displayed. Please refer Welcome to MASAR for help")
+            self.getLiveMachineButton.setEnabled(True)
             return
+        
+        self.getLiveMachineButton.setEnabled(True)
 #************************** End of getLiveMachineAction(self) ********************************************* 
         
     def getLiveMachineData(self, pvlist):
@@ -1862,6 +1899,10 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
 
 
 #************************** Start of comparing multiple snapshots ********************************* 
+    def ignoreCompare(self):
+        self.compareSnapshotsButton.setEnabled(True)
+        pass
+    
     def openMsgBox(self):  
         """
         Dialog for comparing multiple snapshots
@@ -1869,6 +1910,9 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         QtCore.QObject.connect(self.compareSnapshotsButton, 
                     QtCore.SIGNAL(_fromUtf8("clicked()")), masar.openMsgBox) 
         """ 
+        self.compareSnapshotsButton.setEnabled(False)
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
+        
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
         #print(selectedEvents)
@@ -1887,7 +1931,7 @@ Click Ignore if you don't want to continue")
             #msg.open(self, SLOT(msgBoxClosed()))
             #msg.open.connect(self.msgBoxClosed)
             okButton.clicked.connect(self.compareSnapshots) 
-            quitButton.clicked.connect(self.ignore) 
+            quitButton.clicked.connect(self.ignoreCompare) 
             #msg.buttonClicked.connect(self.compareSnapshots)    
             #print("QMessageBox is closed")        
         elif ln >=2 and ln <= 9:
@@ -1896,6 +1940,7 @@ Click Ignore if you don't want to continue")
         elif ln >0 and ln <2 or ln > 9:
             QMessageBox.warning(self,"Waring", 
                                 "Please select 2 ~ 9 snapshots for comparison,not %d snapshots"%ln) 
+            self.compareSnapshotsButton.setEnabled(True)
             return       
  
     
@@ -1903,11 +1948,13 @@ Click Ignore if you don't want to continue")
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
         if ln == 0:
+            self.compareSnapshotsButton.setEnabled(True)
             return
         #print(selectedEvents)
         elif ln < 2 or ln > 9:
             QMessageBox.warning(self,"Waring", 
                                 "Please select 2 ~ 9 snapshots for comparison,not %d snapshots"%ln) 
+            self.compareSnapshotsButton.setEnabled(True)
             return
         #print("compare %d snapshots" %ln)
         #eventTs=[]
@@ -1943,6 +1990,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
             if result == None or not isinstance(result, odict) :
                 QMessageBox.warning(self,"Warning",
                                     "Failed to retrieve data for snapshot %s"%eventIds[i])
+                self.compareSnapshotsButton.setEnabled(True)
                 return
             else:
                 data.append(result) 
@@ -2026,6 +2074,7 @@ delta01: live value - value in 1st snapshot")
         #tabWidget.resizeRowsToContents()  
         #self.compareId = eid    
         #self.compareConfName =  None
+        self.compareSnapshotsButton.setEnabled(True)
 
     def selectRefSnapshot(self, eventIDs):
         #print(eventIDs)

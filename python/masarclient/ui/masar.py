@@ -122,6 +122,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.eventIds = []
         self.origID = ""
         self.passWd = ''
+        self.timeAtRetrieveSnapshot = 0
+        self.timeAtSetSnapshotTabWindow = 0
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -916,10 +918,14 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             
-        #print(eventNames)
-        self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+        self.timeAtRetrieveSnapshot = time.time()
+        loopTime = self.timeAtRetrieveSnapshot - self.timeAtSetSnapshotTabWindow
+        if loopTime > 1.0: #fix the problem: double-click triggers multiple-retrieve-requests     
+            #print(datetime.datetime.now())
+            self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
         #this doesn't work well: wait for seconds, then get the Live Machine data
         #QThread.sleep(2)
+        #Sleep(0.3)
         #self.getLiveMachineAction()   
         
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
@@ -935,10 +941,11 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         #print(eventIds)
         for i in range(len(eventIds)):
             data = self.retrieveMasarData(eventid=eventIds[i])
-            if None == data:
+            #print(len(data['PV Name']))
+            #if None == data:
+            if data == None or not isinstance(data, odict):
                 QMessageBox.warning(self, "Warning", 
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
-                return
             
             ts = eventTs[i].split('.')[0] 
             label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
@@ -956,6 +963,7 @@ Double click to view waveform data")
         #print("total tabs:%d"%self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentWidget(tableWidget)
+        self.timeAtSetSnapshotTabWindow = time.time()
 
     def __showArrayData(self, row, column):
         #if column != 5 and column != 6: # display the array value only
@@ -1025,12 +1033,13 @@ Double click to view waveform data")
         try:
             rpcResult = self.mc.retrieveSnapshot(params)
         except:
-            QMessageBox.warning(self,
-                                "Warning",
-                                "Except happened during retrieving snapshot data.")
-            return False
+            #QMessageBox.warning(self, "Warning",
+                                #"Except happened during retrieving snapshot data.")
+            #return False
+            return rpcResult
         if not rpcResult:
             return False
+        #print("retrieveMasarData() is called")
         pvnames = rpcResult[0]
         s_value = rpcResult[1]
         d_value = rpcResult[2]

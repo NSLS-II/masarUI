@@ -391,16 +391,24 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 return False   
         
         return True#if pyOlogExisting: 
-            
-    def createLogEntry(self, logText, logbookName='Operations'):
-        if pyOlogExisting:
+    
+    def getLogbookConfig(self):
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        fd = open('%s/masar.config'%dirPath, "r")
+        lines = fd.readlines()
+        for line in lines:
+            if line[:10] == 'ologServer':
+                ologServer = line.split('=')[1]
+            if line[:11] == 'logbookName':
+                logbookName = line.split('=')[1]
+            if line[:17] == 'logbook4Invisible':
+                logbook4Invisible = line.split('=')[1]        
+        
+        return ologServer,logbookName,logbook4Invisible
+        
+    def createLogEntry(self, logText, logbookName = None):
+        if pyOlogExisting:        
             userID =  os.popen('whoami').read() 
-            dirPath = os.path.dirname(os.path.abspath(__file__))
-            fd = open('%s/masar.config'%dirPath, "r")
-            lines = fd.readlines()
-            for line in lines:
-                if line[:10] == 'ologServer':
-                    ologServer = line.split('=')[1]
             try:    
                 #import requests
                 #print("requests version: %s"%requests.__version__) 
@@ -408,10 +416,25 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if 'https_proxy' in os.environ.keys():
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
                     del os.environ['https_proxy']        
-                #client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
+
+                logbookList = []
+                logbookConfig = self.getLogbookConfig() 
+                #print(logbookConfig)
+                ologServer = logbookConfig[0] 
+                if logbookName:#invisible snapshot logging
+                    logbookList.append(Logbook(name=logbookConfig[2], owner='controls'))
+                else:           
+                    logbookName = logbookConfig[1] 
+                    logbookNameList = logbookName.split(',')
+                    #print(logBookNameList)
+                    for bookName in logbookNameList:
+                        logbookList.append(Logbook(name=bookName, owner='controls'))
+                
                 client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
+                
                 client.log(LogEntry(text=logText, owner=userID[:-1], \
-                                 logbooks=[Logbook(name=logbookName, owner='Controls')],\
+                                 #logbooks=[Logbook(name=logbookName, owner='Controls')],\
+                                 logbooks=logbookList,\
                                  tags=[Tag(name='MASAR')]))
             except:
                 QMessageBox.warning(self, 'Warning', 
@@ -905,6 +928,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         #tableId = 1
         #the following have the same function
         self.eventTableWidget.doubleClicked.connect(self.retrieveSnapshot)
+        #QApplication.processEvents(QEventLoop.AllEvents)
         #self.eventTableWidget.cellDoubleClicked.connect(self.retrieveSnapshot)
         #self.eventTableWidget.itemDoubleClicked.connect(self.retrieveSnapshot)
         #QObject.connect(self.eventTableWidget, 

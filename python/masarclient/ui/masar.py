@@ -392,7 +392,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         return True#if pyOlogExisting: 
             
-    def createLogEntry(self, logText):
+    def createLogEntry(self, logText, logbookName='Operations'):
         if pyOlogExisting:
             userID =  os.popen('whoami').read() 
             dirPath = os.path.dirname(os.path.abspath(__file__))
@@ -411,7 +411,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 #client = OlogClient(url='https://webdev.cs.nsls2.local:8181/Olog', \
                 client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
                 client.log(LogEntry(text=logText, owner=userID[:-1], \
-                                 logbooks=[Logbook(name='Operations', owner='Controls')],\
+                                 logbooks=[Logbook(name=logbookName, owner='Controls')],\
                                  tags=[Tag(name='MASAR')]))
             except:
                 QMessageBox.warning(self, 'Warning', 
@@ -669,7 +669,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
     def createLog4InvisibleSnapshot(self):
         self.saveMachineSnapshotButton.setEnabled(True)
         logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId,self.previewConfName)
-        self.createLogEntry(logText)
+        self.createLogEntry(logText,logbookName='Controls Commissoning')
     
     def saveMachinePreviewAction(self):
         #if self.previewId == None or self.previewConfName == None:
@@ -1291,6 +1291,9 @@ Double click to view waveform data")
                 bar.setTabTextColor(i, Qt.gray)
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
 #************************** End of config snapShotTab *********************************************   
+    def ignore4RestoreMachine(self):
+        self.restoreMachineButton.setEnabled(True)
+        return
  
     def restoreSnapshotAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
@@ -1508,18 +1511,23 @@ pvs which is caused by:\n"%eid4Log+output+"\n"
 Click Show Details... to see the failure details"
                                %totalBadPVs)
             #msg.setStandardButtons(QMessageBox.Ok)
-            msg.setModal(False)
             msg.setDetailedText(output)
+            msg.setModal(False)
+            continueButton = msg.addButton("Ok", QMessageBox.ActionRole)
+            quitButton = msg.addButton(QMessageBox.Ignore)
+            msg.setAttribute(Qt.WA_DeleteOnClose)
             msg.show()
+            continueButton.clicked.connect(self.ignore4RestoreMachine) 
+            quitButton.clicked.connect(self.ignore4RestoreMachine) 
             #msg.exec_()   
-            msg.show()
         else:
+            self.restoreMachineButton.setEnabled(True)
             logText = "successfully restore machine with the snapshot %s"%eid4Log
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
         
         self.createLogEntry(logText)
-        self.restoreMachineButton.setEnabled(True)
+        #self.restoreMachineButton.setEnabled(True)
                 
 #************************** End of restoreSnapshotAction(self) ********************************************* 
  
@@ -1530,6 +1538,7 @@ Click Show Details... to see the failure details"
         getLiveMachineData() returns live timestamp, live alarm via cav3.caget.
         Comparing live machine with multiple snapshots is special, see setCompareSnapshotsTable() 
         """
+        #print("%s: compare Live Machine button is clicked"%datetime.datetime.now())
         curWidget = self.snapshotTabWidget.currentWidget()
         if isinstance(curWidget, QTableWidget):
             # get event id
@@ -1555,10 +1564,9 @@ Click Show Details... to see the failure details"
                 ## don't continue and just return
                 self.getLiveMachineButton.setEnabled(True)
                 return
+            
             self.getLiveMachineButton.setEnabled(False)
             QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
-            #print(datetime.datetime.now())
-            self.getLiveMachineButton.setStyleSheet(_fromUtf8("QPushButton:disabled { color: gray }"))
             #catch KeyError: 'None'
             pvlist = self.pv4cDict[str(eid)]
             
@@ -1721,7 +1729,8 @@ text="There are %s PVs disconnected. Click Show Details ... below for more info\
 Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                     msg.setModal(False)
                     msg.setDetailedText(detailedText)
-                    msg.show()
+                    #msg.show()
+                    msg.exec_()
                      
         else:# end of if isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", 

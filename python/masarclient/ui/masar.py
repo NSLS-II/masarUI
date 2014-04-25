@@ -1315,11 +1315,16 @@ Double click to view waveform data")
                 bar.setTabTextColor(i, Qt.gray)
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
 #************************** End of config snapShotTab *********************************************   
+    
     def ignore4RestoreMachine(self):
         self.restoreMachineButton.setEnabled(True)
         return
  
     def restoreSnapshotAction(self):
+        """
+         QtCore.QObject.connect(self.restoreMachineButton, 
+                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
+        """
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, 'Warning', 
@@ -1525,8 +1530,8 @@ It may take a while to restore the machine. Do you want to continue?"
             for no_restorepv in no_restorepvs:
                 output += "\n  "+no_restorepv + ": Disconnected" 
 
-            logText = "Snapshot %s was restored, but failed to restore the following \
-pvs which is caused by:\n"%eid4Log+output+"\n"
+            logText = "Snapshot #%s was restored with Config %s, but failed to restore the following \
+pvs which is caused by:\n"%(eid4Log,self.e2cDict[eid][2])+output+"\n"
             print (logText)  
             
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
@@ -1546,7 +1551,8 @@ Click Show Details... to see the failure details"
             #msg.exec_()   
         else:
             self.restoreMachineButton.setEnabled(True)
-            logText = "successfully restore machine with the snapshot %s"%eid4Log
+            logText = "successfully restore machine with the snapshot #%s with Conifg %s" \
+                        %(eid4Log, self.e2cDict[eid][2])
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
         
@@ -2312,7 +2318,8 @@ delta01: live value - value in 1st snapshot")
         data_ = self.data4eid[str(eid)]
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
-        return(data_, pvlist_, eid, eventIds_)        
+        config_ = self.e2cDict[eid]
+        return(data_, pvlist_, eid, eventIds_, config_)        
                
     def searchPV(self):
         data = odict()
@@ -2333,6 +2340,7 @@ delta01: live value - value in 1st snapshot")
             return
         if str(info[2]).isdigit():
             self.origID = str(info[2])
+            self.e2cDict['filter'] = info[4]
                 
         pvList = info[1]
         #print(pvList) 

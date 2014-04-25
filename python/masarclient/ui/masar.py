@@ -439,7 +439,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             except:
                 QMessageBox.warning(self, 'Warning', 
                         'Failed to create a log entry on the logbook') 
-                #traceback.print_exc()
+                traceback.print_exc()
                       
     def saveMachineSnapshot(self):
         """
@@ -692,7 +692,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
     def createLog4InvisibleSnapshot(self):
         self.saveMachineSnapshotButton.setEnabled(True)
         logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId,self.previewConfName)
-        self.createLogEntry(logText,logbookName='Controls Commissoning')
+        #self.createLogEntry(logText,logbookName='Controls Commissoning')
     
     def saveMachinePreviewAction(self):
         #if self.previewId == None or self.previewConfName == None:

@@ -35,7 +35,6 @@ except ImportError:
 
 import ui_masar
 import commentdlg
-import commentdetail
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
 from authendlg import AuthenDlg
@@ -712,6 +711,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             if comment[0] and comment[1]: 
                 commentDetail = ''
                 if pyOlogExisting: 
+                    import commentdetail
                     commentDetail = self.__getCommentDetail()
                 if self.saveMachinePreviewData(self.previewId, self.previewConfName, comment):
                     if commentDetail: 

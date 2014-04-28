@@ -1279,14 +1279,14 @@ Double click to view waveform data")
 
 
 #************************** Start of config snapShotTab *******************************************  
-    def closeTab(self):
+    def closeTab(self, index):
         """
         snapshotTab is closable, movable
         See ui_masar.py(.ui):
         QtCore.QObject.connect(self.snapshotTabWidget, 
                     QtCore.SIGNAL(_fromUtf8("tabCloseRequested(int)")), masar.closeTab)
         """
-        index = self.snapshotTabWidget.currentIndex()
+        #index = self.snapshotTabWidget.currentIndex()
         if index != 0:
             self.snapshotTabWidget.removeTab(index)
             #print("the selected tab is closed")

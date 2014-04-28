@@ -1552,7 +1552,7 @@ Click Show Details... to see the failure details"
             #msg.exec_()   
         else:
             self.restoreMachineButton.setEnabled(True)
-            logText = "successfully restore machine with the snapshot #%s with Conifg %s" \
+            logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
                         %(eid4Log, self.e2cDict[eid][2])
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
@@ -1590,7 +1590,6 @@ Click Show Details... to see the failure details"
                 #print(pvlist_)
                 self.compareLiveWithMultiSnapshots = True
                 self.setCompareSnapshotsTable(data_, curWidget, pvlist_, eventIds_)
-                #curWidget.setSortingEnabled(True) 
                 #since compareSnapshotsTable is so different from singleSnapshotTable, 
                 ## don't continue and just return
                 self.getLiveMachineButton.setEnabled(True)
@@ -1635,14 +1634,7 @@ Click Show Details... to see the failure details"
                             self.__setTableItem(curWidget, i, 9, "Disconnected") 
                         else:
                             self.__setTableItem(curWidget, i, 9, "Connected")              
-                            #continue 
-                        #reset the Connection status
-                        #if str(curWidget.item(i, 1).text()) == "Disconnected":
-                            #self.__setTableItem(curWidget, i, 1, "Reconnected")  
-                            #curWidget.item(i, 2).setCheckState(False)  
-                            #curWidget.item(i, 2).setSelected(False)  
-                        #self.__setTableItem(curWidget, i, 9, str(d_value[index])) 
-                        #dt=str(datetime.datetime.fromtimestamp(timestamp[index])) 
+             
                         dt=str(datetime.datetime.fromtimestamp(ts[index]+ts_nano[index]*1.0e-9)) 
                         self.__setTableItem(curWidget, i, 10, dt)
                         self.__setTableItem(curWidget, i, 11, str(alarm_status[index]))
@@ -1664,7 +1656,9 @@ Click Show Details... to see the failure details"
                                     delta_array = tuple(delta_)
                                     self.__setTableItem(curWidget, i, 5,
                                                         self.__arrayTextFormat(delta_array))
-                                #print(delta)     
+                                #print(delta) 
+                                else:
+                                    self.__setTableItem(curWidget, i, 5, "")    
                             except:
                                 #print("something wrong with array data")
                                 #delta = 'N/A'
@@ -1681,14 +1675,8 @@ Click Show Details... to see the failure details"
                                     if str(d_value[index]) != str(saved_val):
                                         delta = d_value[index] - saved_val
                                         self.__setTableItem(curWidget, i, 5, str(delta))
-                                        #if abs(delta) < 1.0e-9:
-                                            #delta = 'O'
-                                            #delta = 'Equal'
-                                        #else:
-                                            #delta = 'NotEqual(%.6f)'%delta
-                                            #delta = '%g'%delta
-                                    #else:
-                                        #delta = 'N/A'
+                                    else:
+                                        self.__setTableItem(curWidget, i, 5, "")
                                 except:
                                     #self.__setTableItem(curWidget, i, 7, str(delta))
                                     self.__setTableItem(curWidget, i, 5, "N/A")
@@ -1705,7 +1693,9 @@ Click Show Details... to see the failure details"
                                         #if i_value[index] != None:
                                         if str(i_value[index]) != str(saved_val):
                                             delta = i_value[index] - saved_val     
-                                            self.__setTableItem(curWidget, i, 5, str(delta))                                   
+                                            self.__setTableItem(curWidget, i, 5, str(delta))  
+                                        else:
+                                            self.__setTableItem(curWidget, i, 5, "") 
                                     except:
                                         #self.__setTableItem(curWidget, i, 7, str(delta))
                                         self.__setTableItem(curWidget, i, 5, "N/A")
@@ -1717,11 +1707,11 @@ Click Show Details... to see the failure details"
                                     saved_val = str(curWidget.item(i, 3).text())
                                     if s_value[index] != saved_val:
                                         self.__setTableItem(curWidget, i, 5, "NotEqual")
-                                        #delta = 'O'
-                                        #delta = 0
+                                    else:
+                                        self.__setTableItem(curWidget, i, 5, "")
                                 except:
                                     self.__setTableItem(curWidget, i, 5, "N/A")
-                            else:           
+                            else:#if dbrtype[index] in self.epicsDouble:           
                                 self.__setTableItem(curWidget, i, 5, "N/A")
                     except:
                         self.__setTableItem(curWidget, i, 5, "N/A")
@@ -1748,7 +1738,7 @@ Click Show Details... to see the failure details"
                 #sort by "Connection"  
                 #curWidget.sortItems(1,0)
                 #sort by "delta"  
-                curWidget.sortItems(5,0)
+                curWidget.sortItems(5,1)
                 curWidget.resizeColumnsToContents() 
                 curWidget.sortItems(9,1)
                 detailedText = ""

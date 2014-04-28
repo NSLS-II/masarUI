@@ -37,7 +37,6 @@ import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
-from authendlg import AuthenDlg
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -344,6 +343,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def getAuthentication(self):
         if pyOlogExisting:
             import ldap  
+            from authendlg import AuthenDlg
+
             userID =  os.popen('whoami').read() 
             #print(os.path.realpath(__file__))
             dirPath = os.path.dirname(os.path.abspath(__file__))
@@ -359,7 +360,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if line[:8] == 'userName':
                     userName = line.split('==')[1]
             #print(userName[:-1])
-                            
+          
             dlg = AuthenDlg(self.passWd)
             dlg.exec_()
             if dlg.isAccepted:

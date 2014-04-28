@@ -1893,7 +1893,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         is_array = data['isArray'] 
         array_value = data['arrayValue']
         
-        head = '# pv name, status, severity, time stamp, epics dbr, is connected, is array, value'
+        head = '# pv name, elem location, elem type, status, severity, time stamp, epics dbr, is connected, is array, value'
 
         filename = QFileDialog.getSaveFileName(self, 'Save File', '.')
         if not filename:
@@ -1903,6 +1903,25 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             fname.write(head+'\n')
             for i in range(len(pvnames)):
                 line = pvnames[i]
+                # a quick, urgly solution for NSLS II naming conversion only
+                # to be replaced by information from other service like channel finder
+                if pvnames[i].startswith("SR:C"):
+                    line += ','+pvnames[i][3:6]
+                else:
+                    line += ','
+
+                if 'MG' in pvnames[i]:
+                    loc1 = pvnames[i].find("{PS:")
+                    loc2 =  pvnames[i][loc1:].find("}")
+                    if loc1 != -1 and loc2 != 0 and loc1+4<loc1+loc2:
+                        line += ','+pvnames[i][loc1+4:loc1+loc2]
+                    else:
+                        line += ','
+                else:
+                    line += ','
+
+                # need to make above pretty and general    
+
                 line += ','+str(status[i])
                 line += ','+str(severity[i])
                 line += ','+str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
@@ -1920,6 +1939,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                         line += ','+str(s_value[i])
                     else:
                         line += ''
+
                 fname.write(line+'\n')
             fname.close()
         except:

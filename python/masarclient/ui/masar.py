@@ -712,7 +712,6 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             if comment[0] and comment[1]: 
                 commentDetail = ''
                 if pyOlogExisting: 
-                    import commentdetail
                     commentDetail = self.__getCommentDetail()
                 if self.saveMachinePreviewData(self.previewId, self.previewConfName, comment):
                     if commentDetail: 
@@ -749,6 +748,7 @@ with description: %s"%(self.previewId, self.previewConfName, comment[1])
             return None
 
     def __getCommentDetail(self):
+        import commentdetail
         cdlg = commentdetail.CommentDetail()
         cdlg.exec_()
         if cdlg.isAccepted:

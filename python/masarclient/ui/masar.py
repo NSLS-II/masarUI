@@ -37,6 +37,7 @@ import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
+from finddlg import FindDlg
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -54,6 +55,7 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
     sys.exit()
 
 # import this last to avoid import error on some platform and with different versions. 
+os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = '40000000'
 import cothread.catools as cav3
 from cothread import Sleep
 
@@ -328,16 +330,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.tabWindowDict[str(eventID)] = tableWidget
             QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
                             self.__showArrayData)
+            shortcut = QShortcut(QKeySequence('Ctrl+F'), tableWidget)
+            shortcut.activated.connect(self.handleFind)#could open many FindDlg dialogs
         
         self.snapshotTabWidget.addTab(tableWidget, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
         self.snapshotTabWidget.setCurrentWidget(tableWidget)    
-        shortcut = QShortcut(QKeySequence('Ctrl+F'), self)
-        shortcut.activated.connect(self.handleFind)
         return tableWidget 
     
     def handleFind(self):
-        print("test find")
+        print("test find1")
+        dlg = FindDlg(self)#have to use 'self' to make QDialog modalless, why?
+        #dlg.setModal(False)
+        dlg.show()
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):

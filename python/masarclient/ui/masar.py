@@ -12,7 +12,8 @@ from __future__ import print_function
 import os, sys, time, datetime, re, fnmatch, imp, traceback
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
-                          QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence)
+                        QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence,
+                        QDialog, QGridLayout, QLineEdit, QPushButton)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread, QEventLoop)
 #import PyQt4.QTest as QTest
 
@@ -124,6 +125,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.passWd = ''
         self.timeAtRetrieveSnapshot = 0
         self.timeAtSetSnapshotTabWindow = 0
+        #self.shortcut4Find = None
+        self.dlgFlag = [0]
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -330,8 +333,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.tabWindowDict[str(eventID)] = tableWidget
             QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
                             self.__showArrayData)
-            shortcut = QShortcut(QKeySequence('Ctrl+F'), tableWidget)
-            shortcut.activated.connect(self.handleFind)#could open many FindDlg dialogs
+            shortcut4Find = QShortcut(QKeySequence('Ctrl+F'), tableWidget)
+            shortcut4Find.activated.connect(self.handleFind)
         
         self.snapshotTabWidget.addTab(tableWidget, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
@@ -339,10 +342,22 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return tableWidget 
     
     def handleFind(self):
+        if self.dlgFlag[0] == 1:#only open one Find dialog
+            return
         print("test find1")
-        dlg = FindDlg(self)#have to use 'self' to make QDialog modalless, why?
+        self.dlgFlag[0] = 1
+        #info = self.getInfoFromTableWidget()
+        #print(info[2])
+        #tableWidget = self.snapshotTabWidget.currentWidget()
+        tabWidget = self.snapshotTabWidget
+        #self.dlgFlag is a list which could be modified inside FindDlg()
+        findDlg = FindDlg(tabWidget, self.dlgFlag, self) 
+        #dlg = FindDlg(info, self)#have to use 'self' to make QDialog modalless, why?
         #dlg.setModal(False)
-        dlg.show()
+        findDlg.show()
+        print("after dlg.show()")
+        pattern = findDlg.getPattern()
+        print(pattern)
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):
@@ -2413,6 +2428,7 @@ delta01: live value - value in 1st snapshot")
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')
         #tableWidget.resizeColumnsToContents()
+ #end of class masarUI       
         
         
 def main(channelname = None):

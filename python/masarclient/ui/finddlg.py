@@ -29,19 +29,20 @@ class FindDlg(QDialog):
         self.setWindowTitle('PV Search')
         self.pattern = ""
         self.foundPVCount = 0
-        self.highlighted = False
-        self.foundPVs = []
         self.foundPVPos = []
         self.pvIndex = 0
         #self.pvListStr = ""
       
         self.findLineEdit = QLineEdit() 
+        self.findLineEdit.setToolTip("use *, ? in the search pattern")
         QObject.connect(self.findLineEdit, SIGNAL(_fromUtf8("textChanged(QString)")), 
                         self.getPattern)        
         self.findNextButton =  QPushButton("> Next", self)
+        self.findNextButton.setToolTip("Find next PV which matches the pattern")
         self.findNextButton.resize(self.findNextButton.sizeHint())
         self.findNextButton.clicked.connect(self.findNext)
         findPrevButton =  QPushButton("< Previous",self)
+        findPrevButton.setToolTip("Find previous PV which matches the pattern")
         findPrevButton.resize(findPrevButton.sizeHint())
         findPrevButton.clicked.connect(self.findPrev)
         closeButton =  QPushButton("Close")
@@ -58,73 +59,62 @@ class FindDlg(QDialog):
         layout.addWidget(closeButton,         1, 2, 1, 1)
         layout.addWidget(self.infoLabel,      2, 0, 1, 3)
         self.setLayout(layout)
-        #print("set layout")
-        #info = self.getInfoFromTableWidget()
-        #print(self.info[1])
-        #pvList = []
-        #table = self.tab.currentWidget()
-        #for i in range(table.rowCount()):
-            #pvName = str(table.item(i,0).text())
-            #pvList.append(pvName)
-        #self.pvListStr = str(pvList)   
-        #print("%d rows in the first table"%table.rowCount())
                 
     def getPattern(self):
         self.pattern = str(self.findLineEdit.text())
-        #return self.pattern
-        #print(self.pattern)
         
     def highlightPV(self):
-        print("highlight PVs")
         table = self.tab.currentWidget()
+        for j in range(table.rowCount()):
+            table.item(j,0).setBackground(QBrush(Qt.white))
+            
         pattern_ = self.pattern
         pattern = fnmatch.translate(pattern_)
         regex = re.compile(pattern, re.IGNORECASE)
-        pvList = []
-        foundPVs = []
-        foundPVPos = []#pv position (# row)
+        foundPVPos = []#pv position -- the row where PV is 
         for i in range(table.rowCount()):
             pvName = str(table.item(i,0).text())
-            #pvList.append(pvName)
             if regex.search(pvName):
-                #self.foundPVs.append(pvName)
-                #self.foundPVPos.append(i)
                 foundPVPos.append(i)
                 table.item(i,0).setBackground(QBrush(Qt.yellow))
         
         self.foundPVCount = len(foundPVPos)
-        print(foundPVPos)
-        self.infoLabel.setText("%d PVs found"%self.foundPVCount)
+        #print(foundPVPos)
+        if self.foundPVCount > 0:
+            self.infoLabel.setText("%d PVs found: the first PV is at row #%d, the last @%d"
+                               %(self.foundPVCount,foundPVPos[0]+1, foundPVPos[-1]+1))
+        else:
+            self.infoLabel.setText("No matching PV found. Remember to use * or ? for searching")
         return foundPVPos
          
     def findNext(self):
         table = self.tab.currentWidget()
         self.foundPVPos = self.highlightPV()
-        print("find next %d PVs: %s"%(self.foundPVCount, self.pattern))
+        #print("find next %d PVs: %s"%(self.foundPVCount, self.pattern))
         if self.foundPVCount>0:
-            print("pv index: %d"%self.pvIndex)
+            #print("pv index: %d"%self.pvIndex)
+            if self.pvIndex >= self.foundPVCount or self.pvIndex < 0:
+                self.pvIndex = 0 
             table.setCurrentCell(self.foundPVPos[self.pvIndex], 0)
             self.pvIndex += 1
-            if self.pvIndex >= self.foundPVCount:
-                self.pvIndex = 0 
-            print("next pv position: %d / %d"%(self.pvIndex, self.foundPVPos[self.pvIndex]))
+            #print("next pv position: %d / %d"%(self.pvIndex, self.foundPVPos[self.pvIndex]))
                                                                
     def findPrev(self):
         table = self.tab.currentWidget()
         self.foundPVPos = self.highlightPV()
-        print("find prev %d PVs: %s"%(self.foundPVCount, self.pattern))
+        #print("find prev %d PVs: %s"%(self.foundPVCount, self.pattern))
         if self.foundPVCount>0:
-            print("pv index: %d"%self.pvIndex)
-            if self.pvIndex <= 0:
+            #print("pv index: %d"%self.pvIndex)
+            if self.pvIndex <= 0 or self.pvIndex >= self.foundPVCount:
                 self.pvIndex = self.foundPVCount 
             self.pvIndex -= 1
             table.setCurrentCell(self.foundPVPos[self.pvIndex], 0)
-            print("prev pv position: %d / %d"%(self.pvIndex, self.foundPVPos[self.pvIndex]))
+            #print("prev pv position: %d / %d"%(self.pvIndex, self.foundPVPos[self.pvIndex]))
 
     def cleanup(self):
-        print("cleanup, then close")   
+        #print("cleanup, then close")   
         self.dlg[0]=0 # make sure Find Dialog could pop up after it is closed    
-        print(self.dlg)
+        #print(self.dlg)
         table = self.tab.currentWidget()
         for i in range(len(self.foundPVPos)):
             table.item(self.foundPVPos[i],0).setBackground(QBrush(Qt.white))

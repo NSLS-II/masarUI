@@ -344,10 +344,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def handleFind(self):
         if self.dlgFlag[0] == 1:#only open one Find dialog
             return
-        print("test find1")
+        #print("test find1")
         self.dlgFlag[0] = 1
-        #info = self.getInfoFromTableWidget()
-        #print(info[2])
         #tableWidget = self.snapshotTabWidget.currentWidget()
         tabWidget = self.snapshotTabWidget
         #self.dlgFlag is a list which could be modified inside FindDlg()
@@ -355,9 +353,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #dlg = FindDlg(info, self)#have to use 'self' to make QDialog modalless, why?
         #dlg.setModal(False)
         findDlg.show()
-        print("after dlg.show()")
-        pattern = findDlg.getPattern()
-        print(pattern)
+        #print("after dlg.show()")
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):
@@ -458,7 +454,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                  tags=[Tag(name='MASAR')]))
             except:
                 QMessageBox.warning(self, 'Warning', 
-                        'Failed to create a log entry on the logbook') 
+            'Although failing to create an Olog entry, you are done with your action / command') 
                 traceback.print_exc()
                       
     def saveMachineSnapshot(self):

@@ -105,6 +105,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
         self.__initSystemCombox()   
+        time.sleep(1.0)
         
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
         self.authorText = str(self.authorTextEdit.text())  
@@ -149,6 +150,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         #automatically fetch all configs at startup. This action should be quick
         self.fetchConfigAction()
+        time.sleep(1.0)
 
     def __setDateTime(self):
         self.eventStartDateTime.setDateTime(QDateTime.currentDateTime())
@@ -1495,7 +1497,7 @@ Double click to view waveform data")
                                  #"Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
                                  #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             msg = QMessageBox(self, windowTitle='Warning', 
-text="%d PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n\
+text="%d PVs will not be restored. Click Show Details... to see the disconnected / no-restore Pvs.\n\
 It may take a while to restore the machine. Do you want to continue?" 
                               %len(no_restorepvs))
             msg.setModal(False)
@@ -1575,6 +1577,16 @@ Click Show Details... to see the failure details"
         
         self.createLogEntry(logText)
         #self.restoreMachineButton.setEnabled(True)
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
+        if not os.path.isfile(configFile):
+            return
+        
+        print("config File exists,will monitor setpoint v.s. readback")
+        from monitorsetpoint import MonSetpoint
+        monWin = MonSetpoint(configFile, self)
+        monWin.show()
+        
                 
 #************************** End of restoreSnapshotAction(self) ********************************************* 
  

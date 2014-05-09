@@ -39,6 +39,7 @@ import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
 from finddlg import FindDlg
+from verifysetpoint import VerifySetpoint
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -57,8 +58,10 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
 
 # import this last to avoid import error on some platform and with different versions. 
 os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = '40000000'
+import cothread
 import cothread.catools as cav3
 from cothread import Sleep
+#qtapp = cothread.iqt()
 
 #class masarUI(QMainWindow, ui_masar.Ui_masar, QTabWidgetExt):
 class masarUI(QMainWindow, ui_masar.Ui_masar):
@@ -128,6 +131,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.timeAtSetSnapshotTabWindow = 0
         #self.shortcut4Find = None
         self.dlgFlag = [0]
+        self.verifyWindowDict = {}#
+        
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -1380,6 +1385,12 @@ Double click to view waveform data")
             selectedNoRestorePv[str(curWidget.item(row, 0).text())]= \
                                                 bool(curWidget.item(row, 2).checkState())
         pvlist = list(self.pv4cDict[str(eid)])
+        #=======================================================================
+        # for pv in pvlist:
+        #    fd = open('/home/yhu/pvlist.cfg', "a")
+        #    fd.write(pv + '\n')
+        # fd.close()
+        #=======================================================================
         data = self.data4eid[str(eid)]
         s_val = data['S_value']
         d_val = data['D_value']
@@ -1577,15 +1588,16 @@ Click Show Details... to see the failure details"
         
         self.createLogEntry(logText)
         #self.restoreMachineButton.setEnabled(True)
+        
         dirPath = os.path.dirname(os.path.abspath(__file__))
         configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
         if not os.path.isfile(configFile):
             return
-        
-        print("config File exists,will monitor setpoint v.s. readback")
-        from monitorsetpoint import MonSetpoint
-        monWin = MonSetpoint(configFile, self)
-        monWin.show()
+        #print("config File exists, masar will monitor setpoint v.s. readback")
+        if not self.verifyWindowDict.has_key(configFile):
+            verifyWin = VerifySetpoint(configFile, rowCount, self.verifyWindowDict, self)
+            verifyWin.show()
+            self.verifyWindowDict[configFile] = verifyWin
         
                 
 #************************** End of restoreSnapshotAction(self) ********************************************* 
@@ -2441,6 +2453,7 @@ delta01: live value - value in 1st snapshot")
         
 def main(channelname = None):
     app = QApplication(sys.argv)
+    #app = cothread.iqt() 
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")

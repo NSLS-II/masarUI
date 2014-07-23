@@ -18,5 +18,6 @@ syntax: glob
 ./*.so
 ./RELEASE.local
 ./CONFIG_SITE.local
+./python/masarclient/ui/configure
 
 syntax: regexp

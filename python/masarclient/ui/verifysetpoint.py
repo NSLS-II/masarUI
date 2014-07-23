@@ -12,8 +12,8 @@ from PyQt4.QtGui import (QDialog, QGridLayout, QTableWidget, QLineEdit, QPushBut
                          QLabel, QSizePolicy, QTableWidgetItem, QDesktopWidget)
 from PyQt4.QtCore import (QString, QObject, SIGNAL, Qt, QSize)
 import cothread
-from cothread.catools import caget, camonitor
-import threading, time
+from cothread.catools import caget, camonitor, FORMAT_TIME, connect
+import threading, time, traceback
 try:
     _fromUtf8 = QString.fromUtf8
 except AttributeError:
@@ -23,6 +23,7 @@ class VerifySetpoint(QDialog):
     def __init__(self, configFile, rowCount, verifyWindowDict, parent=None):
         super(VerifySetpoint, self).__init__(parent)
         self.configFile = configFile
+        self.rowCount = rowCount
         self.verifyWindowDict = verifyWindowDict
         self.setWindowTitle('%s: setpoint v.s. readback'%self.configFile.split('/')[-1])  
         resolution = QDesktopWidget().screenGeometry()
@@ -37,25 +38,29 @@ class VerifySetpoint(QDialog):
         setpointPVList = []
         readbackPVList = []
         self.allPVList = []
-        thresholdList = []
+        #thresholdList = []
+        rampRateList = []
         for line in lines:
             #print(line.split())
             setpointPVList.append(str(line.split()[0]))
             readbackPVList.append(str(line.split()[1]))
             if len(line.split())>2:
-                thresholdList.append(str(line.split()[2]))
-        self.allPVList = setpointPVList + readbackPVList
+                #thresholdList.append(str(line.split()[2]))
+                rampRateList.append(str(line.split()[2]))
+        self.allPVList = setpointPVList + readbackPVList + rampRateList
+        self.pvListColumn = 3
         #print(setpointPVList)
         #print(readbackPVList)
         #print(self.allPVList)
-        #print(thresholdList)      
+        #print(thresholdList) 
+        #print(rampRateList)      
         
         layout = QGridLayout(self)  
         self.label = QLabel()
-        if rowCount > len(readbackPVList):
+        if self.rowCount > len(readbackPVList):
             self.label.setText("%d PVs in the original snapshot, but only %d pairs of setpoint &\
 readback PVs in this table because some setpoint PVs don't have readbacks\n\nPlease click the \
-button below to update data\n"%(rowCount,len(readbackPVList)))   
+button below to update data\n"%(self.rowCount,len(readbackPVList)))   
         else:
             self.label.setText("%d pairs of setpoint & readback PVs in this table\n\n \
 Please click the button below to update data\n"%(len(readbackPVList)))             
@@ -71,8 +76,10 @@ Please click the button below to update data\n"%(len(readbackPVList)))
         self.table.resize(self.table.sizeHint())
         
         self.table.setRowCount(len(setpointPVList))
-        if len(thresholdList):
-            self.keys = ['setpoint PV','readback PV','SP value','RB value','diff', 'threshold']
+        #if len(thresholdList):
+        if len(rampRateList):
+            #self.keys = ['setpoint PV','readback PV','SP value','RB value','diff', 'threshold']
+            self.keys = ['setpoint PV','readback PV','SP value (Amp)','RB value (Amp)','diff', 'ramp-rate (Amp/Sec)']
         else:
             self.keys = ['setpoint PV','readback PV','SP value','RB value','diff']
         
@@ -132,27 +139,47 @@ Please click the button below to update data\n"%(len(readbackPVList)))
     #def callback(self, value, index):
         #while(True):
             #if self.startUpdate: 
+        disConnectedPVs = []
+        connectedPVs = []
         self.table.clear()
         self.table.setHorizontalHeaderLabels(self.keys) 
         self.table.setSortingEnabled(False)
         #print("update table:")
         #print(self.allPVList)
         #cothread.Sleep(2)
+        connnectionStatus = connect(self.allPVList, cainfo=True, wait=False, timeout=2, throw=False)
+        for status in connnectionStatus:
+            if status.ok != True:
+                disConnectedPVs.append(status.name)
+            else:
+                connectedPVs.append(status.name)
+        
+        if len(disConnectedPVs) > 0:
+            print("%d PVs seem disconnected: \n"%len(disConnectedPVs))
+            print(disConnectedPVs)
+            self.label.setText("%d PVs in the original snapshot, but only %d pairs of setpoint &\
+readback in this table because some PVs don't have readbacks or they are disconnected\n\nPlease click the \
+button below to update data\n"%(self.rowCount,len(connectedPVs)))
+            self.allPVList = connectedPVs
+        
         try:
             pvValues = caget(self.allPVList)
         except:
             print("Oops: can't get PV values to verify setpoint and readback")
             self.label.setText("Oops: can't get PV values to verify setpoint and readback\n\n")
+            traceback.print_exc()
             return
-        #pvValues = value
         #print(pvValues)
-        for i in range(int(len(self.allPVList)/2)):
+        
+        for i in range(int(len(self.allPVList)/self.pvListColumn)):
             self.__setTableItem(self.table, i, 0, str(self.allPVList[i]))#setpoint PV name
-            self.__setTableItem(self.table, i, 1, str(self.allPVList[i+int(len(self.allPVList)/2)]))
+            self.__setTableItem(self.table, i, 1, str(self.allPVList[i+int(len(self.allPVList)/self.pvListColumn)]))
             self.__setTableItem(self.table, i, 2, str(pvValues[i]))
-            self.__setTableItem(self.table, i, 3, str(pvValues[i+int(len(self.allPVList)/2)]))
-            diff = abs(pvValues[i] - pvValues[i+int(len(self.allPVList)/2)])
+            self.__setTableItem(self.table, i, 3, str(pvValues[i+int(len(self.allPVList)/self.pvListColumn)]))
+            diff_ = abs(pvValues[i] - pvValues[i+int(len(self.allPVList)/self.pvListColumn)])
+            diff = diff_.__format__('.9f')
             self.__setTableItem(self.table, i, 4, str(diff))
+            self.__setTableItem(self.table, i, 5, str(pvValues[i+int((self.pvListColumn-1)*len(self.allPVList)/self.pvListColumn)]))
     
         #self.table.resize(self.table.sizeHint())
         self.table.setSortingEnabled(True)

@@ -13,7 +13,7 @@ import os, sys, time, datetime, re, fnmatch, imp, traceback
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                         QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence,
-                        QDialog, QGridLayout, QLineEdit, QPushButton)
+                        QDialog, QGridLayout, QLineEdit, QPushButton, QLabel, QDialogButtonBox)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread, QEventLoop)
 #import PyQt4.QTest as QTest
 
@@ -1343,6 +1343,9 @@ Double click to view waveform data")
     def ignore4RestoreMachine(self):
         self.restoreMachineButton.setEnabled(True)
         return
+    
+    def ignoreRamping(self):
+        pass
  
     def restoreSnapshotAction(self):
         """
@@ -1520,6 +1523,51 @@ It may take a while to restore the machine. Do you want to continue?"
                 self.restoreMachineButton.setEnabled(True)
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
+        
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
+        if os.path.isfile(configFile):
+            print("Gradually put setpoints ...\n")
+            rampDlg = QDialog(self)
+            rampDlg.setWindowTitle("Ramping / gradual put")
+            dlgLayout = QGridLayout(rampDlg)
+            dlgLabel = QLabel("It is better to restore the machine with ramping instead of one simple put")
+            dlgLayout.addWidget(dlgLabel, 0, 0, 1, 5)
+            stepLabel = QLabel("Number of steps:")
+            dlgLayout.addWidget(stepLabel, 1, 0, 1, 1)
+            stepLineEdit = QLineEdit()
+            stepLineEdit.setText("1")
+            dlgLayout.addWidget(stepLineEdit, 1,1,1,1)
+            emptyLabel = QLabel("        ")
+            dlgLayout.addWidget(emptyLabel, 1,2,1,1)
+            delayLabel = QLabel("Delay (Seconds) between steps:")
+            dlgLayout.addWidget(delayLabel, 1, 3, 1, 1)
+            delayLineEdit = QLineEdit()
+            delayLineEdit.setText("0")
+            dlgLayout.addWidget(delayLineEdit, 1,4,1,1)
+            simplePutButton = QPushButton("Use simple put")
+            simplePutButton.setDefault(True)
+            #dlgLayout.addWidget(simplePutButton, 2,0,1,1)
+            rampingPutButton = QPushButton("Use ramping put")
+            rampingPutButton.setAutoDefault(False)
+            #dlgLayout.addWidget(rampingPutButton, 2,1,1,1)
+            buttonBox = QDialogButtonBox()
+            buttonBox.addButton(simplePutButton, QDialogButtonBox.AcceptRole)# AcceptRole 0
+            buttonBox.addButton(rampingPutButton, QDialogButtonBox.RejectRole)# RejectRole 1
+            dlgLayout.addWidget(buttonBox,2,0,1,2)
+            rampDlg.setLayout(dlgLayout)
+            QObject.connect(buttonBox, SIGNAL(_fromUtf8("rejected()")), rampDlg.accept)#QDialog.Accepted 1
+            QObject.connect(buttonBox, SIGNAL(_fromUtf8("accepted()")), rampDlg.reject)#QDialog.Rejected 0
+            reply = rampDlg.exec_()
+            #print(reply)
+            if reply == QDialogButtonBox.RejectRole:
+                print("Use ramping put")
+            else:
+                print("Use simple put")
+            #simplePutButton.clicked.connect(self.ignoreRamping)
+            
+            #self.restoreMachineButton.setEnabled(True)
+            #return
         
         bad_pvs = []
         try:
@@ -1935,7 +1983,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         
         head = '# pv name, elem location, elem type, status, severity, time stamp, epics dbr, is connected, is array, value'
 
-        filename = QFileDialog.getSaveFileName(self, 'Save File', '.')
+        filename = QFileDialog.getSaveFileName(self, 'Save File as .csv', '.')
         if not filename:
             return
         try:

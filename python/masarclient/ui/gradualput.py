@@ -113,13 +113,17 @@ but takes longer time?")
         
         stepSize = [(i - j)/step for i, j in zip(self.rampRestoreData, curValues)]
         #print(stepSize)
-        maxDelay = max([abs(k/p) for k, p in zip(stepSize, rampRateData)])
+        maxDelay = round(max([abs(k/p) for k, p in zip(stepSize, rampRateData)]))
+        #print(maxDelay)
         if maxDelay > delay:
-            delay = maxDelay
-            #self.delayLineEdit.setText(str(delay))
-            print("Adjust the delay time between steps to %d Sec"%delay)
-            QMessageBox.warning(self, 'Information', "The delay time between steps is adjusted to %d Seconds"%delay)
-            
+            reply = QMessageBox.warning(self, 'Information',\
+"The delay time (%d seconds) is too small for ramping. Do you want to increase it to %d seconds, which will\
+ take %d seconds to restore the machine "%(delay, maxDelay, maxDelay * step), QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                delay = maxDelay
+                #self.delayLineEdit.setText(str(delay))
+                print("Adjust the delay time between steps to %d Sec"%delay)
+
         try:
             for l in range(1, step):
                 stepValues = [l * m + n for m, n in zip(stepSize, curValues)]

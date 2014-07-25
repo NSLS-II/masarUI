@@ -21,7 +21,7 @@ except AttributeError:
     
 class VerifySetpoint(QDialog):
     def __init__(self, configFile, rowCount, verifyWindowDict, parent=None):
-        super(VerifySetpoint, self).__init__(parent)
+        super(VerifySetpoint, self).__init__(parent, Qt.CustomizeWindowHint|Qt.WindowTitleHint)
         self.configFile = configFile
         self.rowCount = rowCount
         self.verifyWindowDict = verifyWindowDict
@@ -39,21 +39,21 @@ class VerifySetpoint(QDialog):
         readbackPVList = []
         self.allPVList = []
         #thresholdList = []
-        rampRateList = []
+        rampRatePVList = []
         for line in lines:
             #print(line.split())
             setpointPVList.append(str(line.split()[0]))
             readbackPVList.append(str(line.split()[1]))
             if len(line.split())>2:
                 #thresholdList.append(str(line.split()[2]))
-                rampRateList.append(str(line.split()[2]))
-        self.allPVList = setpointPVList + readbackPVList + rampRateList
+                rampRatePVList.append(str(line.split()[2]))
+        self.allPVList = setpointPVList + readbackPVList + rampRatePVList
         self.pvListColumn = 3
         #print(setpointPVList)
         #print(readbackPVList)
         #print(self.allPVList)
         #print(thresholdList) 
-        #print(rampRateList)      
+        #print(rampRatePVList)      
         
         layout = QGridLayout(self)  
         self.label = QLabel()
@@ -77,7 +77,7 @@ Please click the button below to update data\n"%(len(readbackPVList)))
         
         self.table.setRowCount(len(setpointPVList))
         #if len(thresholdList):
-        if len(rampRateList):
+        if len(rampRatePVList):
             #self.keys = ['setpoint PV','readback PV','SP value','RB value','diff', 'threshold']
             self.keys = ['setpoint PV','readback PV','SP value (Amp)','RB value (Amp)','diff', 'ramp-rate (Amp/Sec)']
         else:
@@ -99,10 +99,11 @@ Please click the button below to update data\n"%(len(readbackPVList)))
         
         self.quit = QPushButton('Close Widget', self)
         #self.connect(self.quit, SIGNAL('clicked()'), self.close)
+        #self.destroyed.connect(self.cleanup())
+        #self.deleteLater.connect(self.cleanup())
         self.connect(self.quit, SIGNAL('clicked()'), self.cleanup)
         layout.addWidget(self.quit, 2, 1, 1, 1)
         self.setLayout(layout)    
-        
         #self.timer = cothread.Timer(2, self.updateTable, retrigger=True, reuse=True)
         self.updateTable()
         #camonitor(self.allPVList, self.callback)

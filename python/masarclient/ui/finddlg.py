@@ -20,7 +20,7 @@ except AttributeError:
 class FindDlg(QDialog):
     #def __init__(self, info, parent=None):
     def __init__(self, tab, dlg, parent=None):
-        super(FindDlg, self).__init__(parent)
+        super(FindDlg, self).__init__(parent, Qt.CustomizeWindowHint|Qt.WindowTitleHint)
         #self.setModal(False)
         #self.table = tab.currentWidget()
         self.tab = tab

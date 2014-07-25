@@ -19,5 +19,5 @@ syntax: glob
 ./RELEASE.local
 ./CONFIG_SITE.local
 ./python/masarclient/ui/configure
-
+example/masar.db
 syntax: regexp

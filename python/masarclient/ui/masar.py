@@ -461,8 +461,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                                  logbooks=logbookList,\
                                  tags=[Tag(name='MASAR')]))
             except:
-                QMessageBox.warning(self, 'Warning', 
-            'Although failing to create an Olog entry, you are done with your action / command') 
+                #QMessageBox.warning(self, 'Warning', 
+            #'Although failing to create an Olog entry, you are done with your action / command') 
+                print("%s: failed to create an Olog entry"%datetime.datetime.now())
                 traceback.print_exc()
                       
     def saveMachineSnapshot(self):
@@ -2370,6 +2371,7 @@ delta01: live value - value in 1st snapshot")
 
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
+        self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
  
     def getInfoFromTableWidget(self):
         curWidget = self.snapshotTabWidget.currentWidget()

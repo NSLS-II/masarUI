@@ -143,10 +143,11 @@ but takes longer time?")
         #print(stepSize)
         delayList = [abs(k/p) for k, p in zip(stepSize, rampRateData)]
         pvIndex = delayList.index(max(delayList))
-        maxDelay = round(max(delayList))
+        maxDelay = max(delayList)
+        #maxDelay = round(max(delayList))
         #print(maxDelay)
         if maxDelay > delay:
-            reply = QMessageBox.warning(self, 'Information',"The delay (%d seconds) is too small for each step ramping. \
+            reply = QMessageBox.warning(self, 'Information',"The delay (%.1f seconds) is too small for each step ramping. \
 This PV %s takes %d seconds to ramp during steps: stepSize = %.1f, rampRate=%.1f. \n\n\
 Do you want to increase the delay time to %d seconds, which will take %d seconds to restore the machine"
 %(delay, self.rampPVList[pvIndex],maxDelay,stepSize[pvIndex],rampRateData[pvIndex], maxDelay, maxDelay * step),

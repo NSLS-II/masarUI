@@ -2,7 +2,8 @@
 '''
 Created on Dec 1, 2011
 
-@author: shengb
+@Original author: shengb
+@co-author: Yong Hu (yhu@bnl.gov)
 '''
 
 from __future__ import division
@@ -1341,29 +1342,28 @@ Double click to view waveform data")
                 bar.setTabTextColor(i, Qt.gray)
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
 #************************** End of config snapShotTab *********************************************   
-    
+ 
+#************************ Start of machine restore: simple put or ramping *************************     
     def ignore4RestoreMachine(self):
         self.restoreMachineButton.setEnabled(True)
+        self.rampingMachineButton.setEnabled(True)
         return
     
-    def ignoreRamping(self):
-        pass
- 
-    def restoreSnapshotAction(self):
-        """
-         QtCore.QObject.connect(self.restoreMachineButton, 
-                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
-        """
+    def getRestoreInfo(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, 'Warning', 
                         'No snapshot is selected yet. Please refer Welcome to MASAR for help')
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
         
         eid = self.__find_key(self.tabWindowDict, curWidget)
         if eid == 'comment' or eid == 'preview' or eid == 'compare':
             QMessageBox.warning(self, 'Warning', 
                         'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
         if eid == 'filter':
             eid4Log = self.origID + '(filtered)'
@@ -1371,10 +1371,10 @@ Double click to view waveform data")
             eid4Log = eid                      
  
         if not self.getAuthentication():
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
         
-        self.restoreMachineButton.setEnabled(False)  
-        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
         selectedNoRestorePv = {}
 
         # get table rows
@@ -1390,12 +1390,6 @@ Double click to view waveform data")
             selectedNoRestorePv[str(curWidget.item(row, 0).text())]= \
                                                 bool(curWidget.item(row, 2).checkState())
         pvlist = list(self.pv4cDict[str(eid)])
-        #=======================================================================
-        # for pv in pvlist:
-        #    fd = open('/home/yhu/pvlist.cfg', "a")
-        #    fd.write(pv + '\n')
-        # fd.close()
-        #=======================================================================
         data = self.data4eid[str(eid)]
         s_val = data['S_value']
         d_val = data['D_value']
@@ -1406,15 +1400,19 @@ Double click to view waveform data")
         # data['PV Name']
         array_value = data['arrayValue']
         
-        disConnectedPVs = []
+        print("%s: starting to get live machine data"%datetime.datetime.now())
         liveData = self.getLiveMachineData(pvlist)
         if not liveData:
-            self.restoreMachineButton.setEnabled(True)
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
         disConnectedPVs = liveData[8]
+        print("%s: got live machine data"%datetime.datetime.now())
         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
+        r_dbrtype = []
+        r_isArray = [] 
         no_restorepvs = []  # no restore from those pvs
         ignoreall = False # Ignore all pv those do not have any value.
         for index in range(len(pvlist)):
@@ -1422,6 +1420,8 @@ Double click to view waveform data")
                 # pv is unchecked, which means restore this pv
                 if not selectedNoRestorePv[pvlist[index]]:
                     r_pvlist.append(pvlist[index])
+                    r_dbrtype.append(dbrtype[index])
+                    r_isArray.append(is_array[index])
                     if is_array[index]:
                         r_data.append(array_value[index])
                     elif dbrtype[index] in self.epicsDouble:
@@ -1442,6 +1442,7 @@ Double click to view waveform data")
                                 ignoreall = True
                             elif reply == QMessageBox.Cancel:
                                 self.restoreMachineButton.setEnabled(True)
+                                self.rampingMachineButton.setEnabled(True)
                                 return
                         else:
                             no_restorepvs.append(pvlist[index])
@@ -1451,50 +1452,15 @@ Double click to view waveform data")
                 print (type(pvlist[index]), pvlist[index])
                 QMessageBox.warning(self, 'Warning', 'PV name (%s) is invalid.'%(pvlist[index]))
                 self.restoreMachineButton.setEnabled(True)
+                self.rampingMachineButton.setEnabled(True)
                 return
     
         if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
             self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             return
         
-        #cagetres = cav3.caget(r_pvlist, throw=False)
-        #problempvlist=[]
-        #for rtmp in cagetres:
-        #    if not rtmp.ok:
-        #        problempvlist.append(rtmp)
-        #ignoreallconnection = False
-        #forceall = False
-        #if len(problempvlist) > 0:
-        #    for problempv in problempvlist:
-        #        if not ignoreall and not forceall:
-        #            reply = QMessageBox.warning(self, 'Warning', 'There are a problem to connect pv %s. \nDo you want to ignore it and continue?'%(problempv),
-        #                                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel, QMessageBox.Cancel)
-        #            if reply == QMessageBox.Yes:
-        #                # ignore this pv only
-        #                no_restorepvs.append(problempv.name)
-        #            elif reply == QMessageBox.No:
-        #                # not ignore this pv
-        #                pass
-        #            elif reply == QMessageBox.YesToAll:
-        #                # ignore all pvs that there might have potential connection problem
-        #                # this does not overwrite all previous decisions
-        #                no_restorepvs.append(problempv.name)
-        #                ignoreallconnection = True
-        #            elif reply == QMessageBox.NoToAll:
-        #                # force restore pvs althouth there might have potential connection problem
-        #                # this does not overwrites all previous decisions
-        #                forceall = True
-        #            elif reply == QMessageBox.Cancel:
-        #                # cancel this operation
-        #                return
-        #        elif ignoreallconnection:
-        #            no_restorepvs.append(problempv.name)
-        #if ignoreall or ignoreallconnection:
-        
-        #merge the disconnected PVs to no_restorepvs, but no duplicated PVs in no_restorepvs
-        #no_restorepvs.append(disConnectedPVs)
-        #no_restorepvs = no_restorepvs + disConnectedPVs
         for i in range(len(disConnectedPVs)):
             if disConnectedPVs[i] not in no_restorepvs:
                 no_restorepvs.append(disConnectedPVs[i])
@@ -1509,9 +1475,7 @@ Double click to view waveform data")
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
-            #reply = QMessageBox.question(self, 'Message',
-                                 #"Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
-                                 #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                
             msg = QMessageBox(self, windowTitle='Warning', 
 text="%d PVs will not be restored. Click Show Details... to see the disconnected / no-restore Pvs.\n\
 It may take a while to restore the machine. Do you want to continue?" 
@@ -1523,23 +1487,14 @@ It may take a while to restore the machine. Do you want to continue?"
             reply = msg.exec_()
             if reply == QMessageBox.No:
                 self.restoreMachineButton.setEnabled(True)
+                self.rampingMachineButton.setEnabled(True)
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
         
-        #use ramping put?
-        dirPath = os.path.dirname(os.path.abspath(__file__))
-        configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
-        if os.path.isfile(configFile):
-            gradualPutDlg = GradualPut(configFile, r_pvlist, r_data, self)   
-            reply = gradualPutDlg.exec_()  
-            #print(reply)
-            if reply == QDialogButtonBox.AcceptRole:
-                gradualPutDlg.rampingPut()
-            #else:
-                #print("Use simple put")                   
-            #self.restoreMachineButton.setEnabled(True)
-            #return
-        
+        return (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount)
+ 
+    def simplePut(self, eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount):
+        #print("one-step simple put")
         bad_pvs = []
         try:
             final_restorepv = []
@@ -1566,6 +1521,7 @@ It may take a while to restore the machine. Do you want to continue?"
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring machine.')
             self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             return
         #bad_pvs == [ca_nothing(), ca_nothing() ...]
         #bad_pvs = bad_pvs + no_restorepvs
@@ -1586,7 +1542,8 @@ pvs which is caused by:\n"%(eid4Log,self.e2cDict[eid][2])+output+"\n"
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
                               text="Not Very Successful: failed to restore %s PVs.\
-Click Show Details... to see the failure details"
+Click Show Details... to see the failure details\n\You may take a moment to review \
+the restored PV values by clicking the button Compare Live Machine"
                                %totalBadPVs)
             #msg.setStandardButtons(QMessageBox.Ok)
             msg.setDetailedText(output)
@@ -1600,14 +1557,14 @@ Click Show Details... to see the failure details"
             #msg.exec_()   
         else:
             self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
                         %(eid4Log, self.e2cDict[eid][2])
             QMessageBox.information(self, "Congratulation", 
-                            "Cheers: successfully restore machine with selected snapshot.")
+                            "Bingo! Restoring machine is done. You may take a moment to \
+review the restored PV values by clicking the button Compare Live Machine")
         
-        self.createLogEntry(logText)
-        #self.restoreMachineButton.setEnabled(True)
-        
+        #compare readback & setpoint after restoring machine 
         dirPath = os.path.dirname(os.path.abspath(__file__))
         configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
         if not os.path.isfile(configFile):
@@ -1616,10 +1573,49 @@ Click Show Details... to see the failure details"
         if not self.verifyWindowDict.has_key(configFile):
             verifyWin = VerifySetpoint(configFile, rowCount, self.verifyWindowDict, self)
             verifyWin.show()
-            self.verifyWindowDict[configFile] = verifyWin
+            self.verifyWindowDict[configFile] = verifyWin  
+              
+    def restoreSnapshotAction(self):
+        """
+         QtCore.QObject.connect(self.restoreMachineButton, 
+                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
+        """    
+        self.restoreMachineButton.setEnabled(False)  
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents) 
         
+        restoreInfo = self.getRestoreInfo()
+        if None == restoreInfo:
+            return
+        (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount) = restoreInfo
+        
+        self.simplePut(eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount)    
                 
-#************************** End of restoreSnapshotAction(self) ********************************************* 
+    def rampingMachine(self):
+        """
+        See ui_masar.py (.ui):
+QtCore.QObject.connect(self.rampingMachineButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.rampingMachine)
+        """
+        #print("ramping machine")
+        self.rampingMachineButton.setEnabled(False)  
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
+        restoreInfo = self.getRestoreInfo()
+        if None == restoreInfo:
+            return
+        (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount) = restoreInfo
+        gradualPutDlg = GradualPut(r_pvlist, r_data, r_dbrtype, r_isArray, self)   
+        reply = gradualPutDlg.exec_()  
+        #print(reply)
+        if reply == 1:#1 means clicked QDialogButtonBox.Yes
+            rampingPutResult = gradualPutDlg.rampingPut()
+            if None == rampingPutResult:
+                self.rampingMachineButton.setEnabled(True)
+                return
+            
+            self.simplePut(eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount)
+        else:   
+            self.rampingMachineButton.setEnabled(True)
+            
+#************************** End of machine restore ********************************************* 
  
     def getLiveMachineAction(self):
         """

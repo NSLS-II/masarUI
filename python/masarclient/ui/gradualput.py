@@ -20,7 +20,7 @@ except AttributeError:
     _fromUtf8 = lambda s: s
     
 class GradualPut(QDialog):
-    def __init__(self, r_pvlist, r_data, r_dbrtype, r_isArray, parent=None):
+    def __init__(self, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, parent=None):
         super(GradualPut, self).__init__(parent)
         if len(r_pvlist) != len(r_data):
             print("Odd: lengths of restore PV list and PV data are not the same")
@@ -70,14 +70,15 @@ Click Yes when you are ready for the ramping, otherwise click No")
                 
         for i in range(len(r_pvlist)):
             #if not r_isArray[i] and r_dbrtype[i] in [2, 6]: #float and double
-            if r_dbrtype[i] in [1, 2, 4, 5, 6]: #DBR_TYPE or array with numbers (no string)
+            #No string type: DBR_LONG(DOUBLE, etc.) or array with numbers
+            if r_dbrtype[i] in [1, 2, 4, 5, 6] and  r_pvlist[i] not in no_restorepvs: 
                 self.rampPVList.append(r_pvlist[i])
                 self.rampRestoreData.append(r_data[i])
             else:
                 noRampPVList.append(r_pvlist[i])
                 
         if len(noRampPVList) > 0:
-            print("No ramping put for these PVs because their values are not numbers:")
+            print("No ramping put for these PVs because their values are not numbers or they are not accessible:")
             print(noRampPVList)
     
     def updateTotalRampingTime(self):

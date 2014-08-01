@@ -1564,6 +1564,8 @@ the restored PV values by clicking the button Compare Live Machine"
                             "Bingo! Restoring machine is done. You may take a moment to \
 review the restored PV values by clicking the button Compare Live Machine")
         
+        self.createLogEntry(logText)
+        
         #compare readback & setpoint after restoring machine 
         dirPath = os.path.dirname(os.path.abspath(__file__))
         configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
@@ -1602,7 +1604,7 @@ QtCore.QObject.connect(self.rampingMachineButton, QtCore.SIGNAL(_fromUtf8("click
         if None == restoreInfo:
             return
         (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount) = restoreInfo
-        gradualPutDlg = GradualPut(r_pvlist, r_data, r_dbrtype, r_isArray, self)   
+        gradualPutDlg = GradualPut(r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, self)   
         reply = gradualPutDlg.exec_()  
         #print(reply)
         if reply == 1:#1 means clicked QDialogButtonBox.Yes

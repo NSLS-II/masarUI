@@ -42,6 +42,7 @@ from selectrefsnapshotdlg import ShowSelectRefDlg
 from finddlg import FindDlg
 from verifysetpoint import VerifySetpoint
 from gradualput import GradualPut
+import getmasarconfig 
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -366,31 +367,39 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):
+        masarConfigDict = getmasarconfig.getmasarconfig()
+        try: 
+            ldapConfig = masarConfigDict['LDAP']
+        except:
+            return True # no authentication if no related config
+        #print(masarConfigDict)
         if pyOlogExisting:
             import ldap  
             from authendlg import AuthenDlg
 
             userID =  os.popen('whoami').read() 
-            #print(os.path.realpath(__file__))
-            dirPath = os.path.dirname(os.path.abspath(__file__))
-            #fd = open('%s/masar.config'%os.environ['PWD'], "r")
-            fd = open('%s/masar.config'%dirPath, "r")
-            #print(fd.readlines())
-            lines = fd.readlines()
-            for line in lines:
-                if line[:12] == 'ldapExisting':
-                    ldapExisting = line.split('=')[1]                
-                if line[:10] == 'ldapServer':
-                    ldapServer = line.split('=')[1]
-                if line[:8] == 'userName':
-                    userName = line.split('==')[1]
-            #print(userName[:-1])
-          
+            #===================================================================
+            # #print(os.path.realpath(__file__))
+            # dirPath = os.path.dirname(os.path.abspath(__file__))
+            # #fd = open('%s/masar.config'%os.environ['PWD'], "r")
+            # fd = open('%s/masar.config'%dirPath, "r")
+            # #print(fd.readlines())
+            # lines = fd.readlines()
+            # for line in lines:
+            #     if line[:12] == 'ldapExisting':
+            #         ldapExisting = line.split('=')[1]                
+            #     if line[:10] == 'ldapServer':
+            #         ldapServer = line.split('=')[1]
+            #     if line[:8] == 'userName':
+            #         userName = line.split('==')[1]
+            # #print(userName[:-1])
+            #===================================================================      
             dlg = AuthenDlg(self.passWd)
             dlg.exec_()
             if dlg.isAccepted:
                 self.passWd = dlg.result()
-                if ldapExisting[:-1] != 'True':
+                #if ldapExisting[:-1] != 'True':
+                if masarConfigDict['LDAP']['existing'] != 'True':
                     return True # don't use ldap to verify username if ldap doesn't exist
                 
                 user = userID[:-1]#remove trailing '\n' 
@@ -398,10 +407,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 ldap.set_option(ldap.OPT_REFERRALS, 0)
                 try:
                     #lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
-                    lp = ldap.initialize(ldapServer[:-1])
+                    lp = ldap.initialize(masarConfigDict['LDAP']['url'])
                     #for NSLS2, cn is admin, must use uid instead
                     #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
-                    username = userName[:-1]%user
+                    username = masarConfigDict['LDAP']['username']%user
                     #print(username)
                     lp.simple_bind_s(username, self.passWd)
                     return True
@@ -417,21 +426,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         return True#if pyOlogExisting: 
     
-    def getLogbookConfig(self):
-        dirPath = os.path.dirname(os.path.abspath(__file__))
-        fd = open('%s/masar.config'%dirPath, "r")
-        lines = fd.readlines()
-        for line in lines:
-            if line[:10] == 'ologServer':
-                ologServer = line.split('=')[1]
-            if line[:11] == 'logbookName':
-                logbookName = line.split('=')[1]
-            if line[:17] == 'logbook4Invisible':
-                logbook4Invisible = line.split('=')[1]        
-        
-        return ologServer,logbookName,logbook4Invisible
         
     def createLogEntry(self, logText, logbookName = None):
+        masarConfigDict = getmasarconfig.getmasarconfig()
+        try: 
+            ldapConfig = masarConfigDict['LDAP']
+        except:
+            return # no log if no related config
+        
         if pyOlogExisting:        
             userID =  os.popen('whoami').read() 
             try:    
@@ -441,25 +443,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if 'https_proxy' in os.environ.keys():
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
                     del os.environ['https_proxy']        
-
-                logbookList = []
-                logbookConfig = self.getLogbookConfig() 
-                #print(logbookConfig)
-                ologServer = logbookConfig[0] 
-                if logbookName:#invisible snapshot logging
-                    logbookList.append(Logbook(name=logbookConfig[2], owner='controls'))
-                else:           
-                    logbookName = logbookConfig[1] 
-                    logbookNameList = logbookName.split(',')
-                    #print(logBookNameList)
-                    for bookName in logbookNameList:
-                        logbookList.append(Logbook(name=bookName, owner='controls'))
                 
-                client = OlogClient(url=ologServer[:-1],username=userID[:-1],password=self.passWd)
+                client = OlogClient(url=masarConfigDict['Olog']['url'],username=userID[:-1],password=self.passWd)
                 
                 client.log(LogEntry(text=logText, owner=userID[:-1], \
                                  #logbooks=[Logbook(name=logbookName, owner='Controls')],\
-                                 logbooks=logbookList,\
+                                 logbooks=masarConfigDict['Olog']['logbookname'],\
                                  tags=[Tag(name='MASAR')]))
             except:
                 #QMessageBox.warning(self, 'Warning', 

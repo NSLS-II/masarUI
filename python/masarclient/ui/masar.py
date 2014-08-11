@@ -110,6 +110,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
         #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
+        self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
         self.__initSystemCombox()   
         time.sleep(1.0)
         
@@ -2358,7 +2359,7 @@ delta01: live value - value in 1st snapshot")
 
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
-        self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
+        #self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
  
     def getInfoFromTableWidget(self):
         curWidget = self.snapshotTabWidget.currentWidget()

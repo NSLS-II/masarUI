@@ -111,6 +111,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
         self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
+        self.snapshotIdLineEdit.returnPressed.connect(self.retrieveSnapshotById)
+        
         self.__initSystemCombox()   
         time.sleep(1.0)
         
@@ -119,9 +121,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare, filter
-        self.e2cDict = {} # event to config dictionary
-        self.pv4cDict = {} # pv name list for each selected configuration
-        self.data4eid = {} # snapshot data for eventId
+        self.e2cDict = {} # event to config dictionary;self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
+        self.pv4cDict = {} # pv name list for each selected configuration / eid
+        self.data4eid = {} # snapshot data for eventId: 'filter' is an eventID  
         self.arrayData = {} # store all array data
         self.previewId = None
         self.previewConfName = None
@@ -226,6 +228,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             reorderedData['Config Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Date'] = data['Date']
+            reorderedData['Status'] = data['Status']
             reorderedData['Version'] = data['Version']
             #print(reorderedData)
             data = reorderedData
@@ -276,6 +279,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data['Date'] = config_ts
         data['Version'] = rpcResult[4]
         data['Id'] = rpcResult[0]
+        data['Status'] = rpcResult[5]
         return data
     
     def setTable(self, data, table):
@@ -950,7 +954,46 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         #self.eventTableWidget.itemDoubleClicked.connect(self.retrieveSnapshot)
         #QObject.connect(self.eventTableWidget, 
                             #SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.retrieveSnapshot)    
-     
+
+    def snapshotIdChanged(self):
+        id = self.snapshotIdLineEdit.text()
+        #print(id)
+        
+    def retrieveSnapshotById(self):
+        #print("test")
+        eventId = str(self.snapshotIdLineEdit.text())
+        if not eventId.isdigit():
+            QMessageBox.warning(self, 'Error', 'You have to enter one integer number and only one \
+in the left box. Try again if you want')
+            return
+        
+        data = self.retrieveMasarData(eventid=eventId) 
+        if data == None or not isinstance(data, odict):
+            QMessageBox.warning(self, "Error", "Can't get snapshot data for eventId:%s.\
+You may have typed one invalid ID"%eventId)
+            return
+        
+        eventIds = []
+        eventIds.append(eventId)
+        try:
+            params = {'eventid': eventId}
+            #retrieveService(Configs/Events) returns a list of tuples
+            (configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
+            (snapshotID, snapshotDesc, ts, author) = self.mc.retrieveServiceEvents(params)#snapshotDesc is tuple
+            self.e2cDict[eventId] = [configID[0], snapshotDesc[0],configName[0]]#this is required for searchPV()
+            eventNames = []
+            eventTs = []
+            for i in range(len(configName)):
+                eventNames.append(configName[i])
+                eventTs.append(ts[i])       
+        except:
+            traceback.print_exc()
+            print("can't retrieve configName or timestamp for eventId: %s"%eventId)
+            eventNames = ['']
+            eventTs = ['']
+            
+        self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+                
     def retrieveSnapshot(self):
         """
         see ui_masar.py(.ui)
@@ -1390,14 +1433,14 @@ Double click to view waveform data")
         # data['PV Name']
         array_value = data['arrayValue']
         
-        print("%s: starting to get live machine data"%datetime.datetime.now())
+        #print("%s: starting to get live machine data"%datetime.datetime.now())
         liveData = self.getLiveMachineData(pvlist)
         if not liveData:
             self.restoreMachineButton.setEnabled(True)  
             self.rampingMachineButton.setEnabled(True)
             return
         disConnectedPVs = liveData[8]
-        print("%s: got live machine data"%datetime.datetime.now())
+        #print("%s: got live machine data"%datetime.datetime.now())
         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
@@ -2374,7 +2417,7 @@ delta01: live value - value in 1st snapshot")
         if eid == 'preview':
             eid = self.previewId 
             
-        data_ = self.data4eid[str(eid)]
+        data_ = self.data4eid[str(eid)]#'filter' is an eid
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
         config_ = self.e2cDict[eid]
@@ -2411,7 +2454,8 @@ delta01: live value - value in 1st snapshot")
         #print(filteredPVs) 
         if 0 == len(filteredPVs):
             QMessageBox.warning(self, "Warning", 
-                                "No matching pv, please re-enter your search pattern")
+"No matching pv. Did you forget to use * at the beginning / the end of your search characters?\n\n\
+Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
             return          
         
         #print(str(info[2])) 
@@ -2450,8 +2494,8 @@ delta01: live value - value in 1st snapshot")
         data['isArray'] = isArr
         data['arrayValue'] = arr 
         
-        self.pv4cDict['filter'] = data['PV Name']    
-        self.data4eid['filter'] = data     
+        self.pv4cDict['filter'] = data['PV Name']#eventID: numbers, 'filter'    
+        self.data4eid['filter'] = data#'filter' is an eventID     
         
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')

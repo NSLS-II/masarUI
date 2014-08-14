@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1305</width>
-    <height>1308</height>
+    <width>1199</width>
+    <height>1265</height>
    </rect>
   </property>
   <property name="palette">
@@ -371,8 +371,8 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="snapshotHorizontalLayout">
-           <item>
+          <layout class="QGridLayout" name="snapshotGridLayout">
+           <item row="3" column="0" colspan="2">
             <widget class="QPushButton" name="fetchSnapshotButton">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -385,6 +385,32 @@
              </property>
              <property name="text">
               <string>Display Snapshot(s)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLineEdit" name="snapshotIdLineEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please enter one integer number and only one, then press Enter key or click the right-side button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="searchSnapshotButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;please enter a snapshot ID (one integer number, and only one) in the left box, then click this button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="text">
+              <string>search a snapshot by its ID</string>
              </property>
             </widget>
            </item>
@@ -593,7 +619,7 @@ More Info ...
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3; press Enter key  or click the button 'PV Search' when you are done with the search pattern&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="layoutDirection">
              <enum>Qt::RightToLeft</enum>
@@ -676,7 +702,7 @@ More Info ...
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1305</width>
+     <width>1199</width>
      <height>19</height>
     </rect>
    </property>
@@ -695,7 +721,6 @@ More Info ...
   <tabstop>eventEndDateTime</tabstop>
   <tabstop>fetchEventButton</tabstop>
   <tabstop>eventTableWidget</tabstop>
-  <tabstop>fetchSnapshotButton</tabstop>
   <tabstop>snapshotTabWidget</tabstop>
   <tabstop>currentCommentText</tabstop>
  </tabstops>
@@ -710,8 +735,8 @@ More Info ...
    <slot>eventFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>290</x>
-     <y>434</y>
+     <x>364</x>
+     <y>535</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -726,8 +751,8 @@ More Info ...
    <slot>authorTextChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>290</x>
-     <y>460</y>
+     <x>364</x>
+     <y>561</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -742,8 +767,8 @@ More Info ...
    <slot>useTimeRange()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>492</y>
+     <x>64</x>
+     <y>575</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -758,8 +783,8 @@ More Info ...
    <slot>fetchEventAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>42</x>
-     <y>562</y>
+     <x>53</x>
+     <y>657</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -774,8 +799,8 @@ More Info ...
    <slot>retrieveSnapshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>75</x>
-     <y>937</y>
+     <x>86</x>
+     <y>1234</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -790,8 +815,8 @@ More Info ...
    <slot>restoreSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>516</x>
-     <y>906</y>
+     <x>518</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -806,8 +831,8 @@ More Info ...
    <slot>getLiveMachineAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>671</x>
-     <y>906</y>
+     <x>673</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>603</x>
@@ -822,8 +847,8 @@ More Info ...
    <slot>saveDataFileAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1185</x>
-     <y>906</y>
+     <x>1187</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -838,8 +863,8 @@ More Info ...
    <slot>systemComboxChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>368</x>
-     <y>45</y>
+     <x>364</x>
+     <y>49</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -854,8 +879,8 @@ More Info ...
    <slot>configFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>369</x>
-     <y>86</y>
+     <x>364</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -918,8 +943,8 @@ More Info ...
    <slot>openMsgBox()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1008</x>
-     <y>906</y>
+     <x>1010</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>755</x>
@@ -934,8 +959,8 @@ More Info ...
    <slot>saveMachineSnapshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>853</x>
-     <y>906</y>
+     <x>855</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>804</x>
@@ -950,8 +975,8 @@ More Info ...
    <slot>pvFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1008</x>
-     <y>936</y>
+     <x>1010</x>
+     <y>1232</y>
     </hint>
     <hint type="destinationlabel">
      <x>816</x>
@@ -966,8 +991,8 @@ More Info ...
    <slot>searchPV()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1094</x>
-     <y>937</y>
+     <x>1091</x>
+     <y>1234</y>
     </hint>
     <hint type="destinationlabel">
      <x>990</x>
@@ -982,12 +1007,44 @@ More Info ...
    <slot>rampingMachine()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>452</x>
-     <y>935</y>
+     <x>518</x>
+     <y>1234</y>
     </hint>
     <hint type="destinationlabel">
      <x>449</x>
      <y>973</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>snapshotIdLineEdit</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>masar</receiver>
+   <slot>snapshotIdChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>1202</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>292</x>
+     <y>1244</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchSnapshotButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>retrieveSnapshotById()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>1197</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>214</x>
+     <y>1238</y>
     </hint>
    </hints>
   </connection>
@@ -1016,5 +1073,7 @@ More Info ...
   <slot>pvFilterChanged()</slot>
   <slot>searchPV()</slot>
   <slot>rampingMachine()</slot>
+  <slot>snapshotIdChanged()</slot>
+  <slot>retrieveSnapshotById()</slot>
  </slots>
 </ui>

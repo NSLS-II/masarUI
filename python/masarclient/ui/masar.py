@@ -121,7 +121,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare, filter
-        self.e2cDict = {} # event to config dictionary;self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
+        self.e2cDict = {} # event to config dict; see retrieveEventData(): self.e2cDict[eid] = [cid, desc,configName]
         self.pv4cDict = {} # pv name list for each selected configuration / eid
         self.data4eid = {} # snapshot data for eventId: 'filter' is an eventID  
         self.arrayData = {} # store all array data
@@ -841,9 +841,15 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
     
     def fetchEventAction(self):
         """
+        click the button 'Select Snapshot(s)'
+        
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.fetchEventButton,  
                     QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
+                    
+         also in setConfigTable(): 
+         QObject.connect(self.configTableWidget, 
+                            SIGNAL(_fromUtf8("itemSelectionChanged()")),self.fetchEventAction)
         """
         selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
         if len(selectedConfigs) <= 0:
@@ -877,6 +883,11 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             QMessageBox.warning(self, "warning","Can't retrieve event list")
 
     def retrieveEventData(self,configids=None,confignames=None):
+        """
+        only called by fetchEventAction(): EventData here doesn't inlcude epics PV data, it only gives event header
+        information for given / selected Config -- how many events/snapshots have been taken 
+        retrieveMasarData(eventId) returns PV data
+        """
         start = None
         end = None
         if self.timeRangeCheckBox.isChecked():
@@ -893,7 +904,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         event_desc = []
         c_names = []
         event_author = []
-        self.e2cDict.clear()
+        #self.e2cDict.clear()#don't clear this global dict.
 
         if configids:
             for i in range(len(configids)):
@@ -1022,9 +1033,16 @@ You may have typed one invalid ID"%eventId)
                 
     def retrieveSnapshot(self):
         """
+        Click the button 'Display Snapshot(s)'
+        self.retrieveSnapshot() --> self.setSnapshotTabWindow() --> self.retrieveMasarData() -->
+            --> self.mc.retrieveSnapshot
+        
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.fetchSnapshotButton, 
                                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.retrieveSnapshot)
+         
+        also in setEventTable():                       
+        self.eventTableWidget.doubleClicked.connect(self.retrieveSnapshot)
         """
         selectedItems = self.eventTableWidget.selectionModel().selectedRows()
         if len(selectedItems) <= 0:
@@ -1390,7 +1408,7 @@ Double click to view waveform data")
         # this won't work: 
         ##AttributeError: 'builtin_function_or_method' object has no attribute 'setTabTextColor'
         #self.snapshotTabWidget.tabBar.setTabTextColor(0, Qt.blue)
-        
+        #print("start of configTab: %s"%datetime.datetime.now())
         bar = self.snapshotTabWidget.tabBar()
         #bar.setTabTextColor(0, Qt.blue) // for quick test
         totalTabs = self.snapshotTabWidget.count()
@@ -1404,19 +1422,28 @@ Double click to view waveform data")
         #automatically update Config & Event table:         
         try:
             #(data, pvlist, eid, eventIds, config) = self.getInfoFromTableWidget()
+            #print("try of configTab: %s"%datetime.datetime.now())
             curWidget = self.snapshotTabWidget.currentWidget()
             if not isinstance(curWidget, QTableWidget):
-                QMessageBox.warning(self, "Warning",
-                                "No snapshot is displayed. Please refer Welcome to MASAR for help")
+                self.fetchConfigAction() # update / un-highlight Configtable
+                self.eventTableWidget.clearContents()
                 return
             eid = self.__find_key(self.tabWindowDict, curWidget)
-            if eid == 'comment':
+            if eid == 'comment' or eid == 'compare':
+                self.fetchConfigAction() # update / un-highlight Configtable
+                self.eventTableWidget.clear()
                 return
             if eid == 'preview':
                 eid = self.previewId
-            params = {'eventid': eid}
-            (configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
-            self.findConfigAndEvent(configName[0], eid)
+            if eid == 'filter':
+                eid = self.origID
+            #params = {'eventid': eid}
+            #(configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
+            [cid, desc, configName] = self.e2cDict[eid]
+            #print("get configName configTab: %s"%datetime.datetime.now())
+            #print((configName, eid))
+            self.findConfigAndEvent(configName, eid)
+            #print("end of configTab: %s"%datetime.datetime.now())
         except:
             traceback.print_exc()
         
@@ -1574,7 +1601,7 @@ It may take a while to restore the machine. Do you want to continue?"
         return (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount)
  
     def simplePut(self, eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount):
-        #print("one-step simple put")
+        #print("one-step simple put eventID: %s %s"%(eid,eid4Log))
         bad_pvs = []
         try:
             final_restorepv = []
@@ -1638,11 +1665,11 @@ the restored PV values by clicking the button Compare Live Machine"
         else:
             self.restoreMachineButton.setEnabled(True)
             self.rampingMachineButton.setEnabled(True)
-            logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
-                        %(eid4Log, self.e2cDict[eid][2])
             QMessageBox.information(self, "Congratulation", 
                             "Bingo! Restoring machine is done. You may take a moment to \
 review the restored PV values by clicking the button Compare Live Machine")
+            logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
+                        %(eid4Log, self.e2cDict[eid][2])
         
         self.createLogEntry(logText)
         
@@ -2463,6 +2490,10 @@ delta01: live value - value in 1st snapshot")
             return
         if eid == 'preview':
             eid = self.previewId 
+        if eid == 'compare':
+            QMessageBox.warning(self, "Warning", 
+                                "Sorry, pv searching on compareSnapshotTab is not supported yet")    
+            return            
             
         data_ = self.data4eid[str(eid)]#'filter' is an eid
         pvlist_ = self.pv4cDict[str(eid)]  
@@ -2483,14 +2514,9 @@ delta01: live value - value in 1st snapshot")
         info = self.getInfoFromTableWidget()
         if info == None:
             return 
-        if str(info[2]) == 'compare':
-            QMessageBox.warning(self, "Warning", 
-                                "pv searching on compareSnapshotTab is not supported yet")    
-            return
         if str(info[2]).isdigit():
             self.origID = str(info[2])
-            self.e2cDict['filter'] = info[4]
-                
+            self.e2cDict['filter'] = info[4]              
         pvList = info[1]
         #print(pvList) 
         #print("info[0]")

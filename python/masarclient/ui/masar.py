@@ -233,7 +233,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             #print(reorderedData)
             data = reorderedData
             self.setTable(data, self.configTableWidget)
-            self.configTableWidget.sortByColumn(3)
+            self.configTableWidget.sortByColumn(3,1)
+            self.configTableWidget.sortByColumn(4,0)
             #signal cellClicked or itemClicked covers single click and double click
             #signal cellActivated seems equal to double click
             #signal itemSelectionChanged is the best: one can use keyboard to select table row
@@ -956,10 +957,20 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
                             #SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.retrieveSnapshot)    
 
     def snapshotIdChanged(self):
+        """
+        see ui_masar.py(.ui)
+        QtCore.QObject.connect(self.snapshotIdLineEdit, 
+                QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.snapshotIdChanged)
+        """
         id = self.snapshotIdLineEdit.text()
         #print(id)
         
     def retrieveSnapshotById(self):
+        """
+        see ui_masar.py(.ui)
+        QtCore.QObject.connect(self.searchSnapshotButton, 
+                QtCore.SIGNAL(_fromUtf8("clicked()")), masar.retrieveSnapshotById)
+        """
         #print("test")
         eventId = str(self.snapshotIdLineEdit.text())
         if not eventId.isdigit():
@@ -967,11 +978,11 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
 in the left box. Try again if you want')
             return
         
-        data = self.retrieveMasarData(eventid=eventId) 
-        if data == None or not isinstance(data, odict):
-            QMessageBox.warning(self, "Error", "Can't get snapshot data for eventId:%s.\
-You may have typed one invalid ID"%eventId)
-            return
+        #data = self.retrieveMasarData(eventid=eventId) 
+        #if data == None or not isinstance(data, odict):
+            #QMessageBox.warning(self, "Error", "Can't get snapshot data for eventId:%s.\
+#You may have typed one invalid ID"%eventId)
+            #return
         
         eventIds = []
         eventIds.append(eventId)
@@ -988,11 +999,26 @@ You may have typed one invalid ID"%eventId)
                 eventTs.append(ts[i])       
         except:
             traceback.print_exc()
-            print("can't retrieve configName or timestamp for eventId: %s"%eventId)
-            eventNames = ['']
-            eventTs = ['']
+            QMessageBox.warning(self, "Error", "Can't get Config information related to eventId:%s.\
+You may have typed one invalid ID"%eventId)
+            return
             
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+        #highlight / select the Config and Event 
+        self.findConfigAndEvent(configName[0], eventId)
+    
+    def findConfigAndEvent(self, configName, eventId):
+        configTable = self.configTableWidget
+        for i in range(configTable.rowCount()):
+            if configName == configTable.item(i, 0).text():
+                configTable.setCurrentCell(i, 0)
+                break
+                #time.sleep(1.0) 
+        eventTable = self.eventTableWidget
+        for j in range(eventTable.rowCount()):
+            if eventId == eventTable.item(j, 1).text():
+                eventTable.setCurrentCell(j, 0)
+                break
                 
     def retrieveSnapshot(self):
         """
@@ -1356,6 +1382,7 @@ Double click to view waveform data")
     def configTab(self):
         """
         Highligt the tabBar of the active/selected snapshotTab
+        and highlight snapshot related Config / Event  
         See ui_masar.py(.ui):
         QtCore.QObject.connect(self.snapshotTabWidget, 
                     QtCore.SIGNAL(_fromUtf8("currentChanged(int)")), masar.configTab)
@@ -1373,6 +1400,26 @@ Double click to view waveform data")
                 bar.setTabTextColor(i, Qt.blue)
             else:
                 bar.setTabTextColor(i, Qt.gray)
+        
+        #automatically update Config & Event table:         
+        try:
+            #(data, pvlist, eid, eventIds, config) = self.getInfoFromTableWidget()
+            curWidget = self.snapshotTabWidget.currentWidget()
+            if not isinstance(curWidget, QTableWidget):
+                QMessageBox.warning(self, "Warning",
+                                "No snapshot is displayed. Please refer Welcome to MASAR for help")
+                return
+            eid = self.__find_key(self.tabWindowDict, curWidget)
+            if eid == 'comment':
+                return
+            if eid == 'preview':
+                eid = self.previewId
+            params = {'eventid': eid}
+            (configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
+            self.findConfigAndEvent(configName[0], eid)
+        except:
+            traceback.print_exc()
+        
         #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
 #************************** End of config snapShotTab *********************************************   
  

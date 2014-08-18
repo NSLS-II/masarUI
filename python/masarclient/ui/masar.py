@@ -494,6 +494,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         disConnectedPVs = []
         
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
+        configID = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
+        configDesc = str(self.configTableWidget.item(selectedConfig[0].row(), 2).text())
         result = self.getMachinePreviewData(cname)
         
         #=======================================================================
@@ -601,20 +603,20 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 self.resizeSplitter(1)      
                 eid = result[0]
                 data = result[1]
-                self.pv4cDict[str(eid)] = data['PV Name']
-                self.data4eid[str(eid)] = data
-                
-                label = QString.fromUtf8((cname+': Preview'))
-                tabWidget = self.createNewTableWidget('preview', label)
-            
-                self.setSnapshotTable(data, tabWidget, eid)
-                #sort the table by "Connection"
-                tabWidget.sortByColumn(1,1)
                 #set self.previewId in saveMachinePreviewAction instead of here
                 self.previewId = eid
                 self.previewConfName = cname
                 self.isPreviewSaved = False
-                
+                self.pv4cDict[str(eid)] = data['PV Name']
+                self.data4eid[str(eid)] = data
+                self.e2cDict[str(self.previewId )] = [configID, configDesc, cname]#needed for configTab
+                              
+                label = QString.fromUtf8((cname+': Preview: '+str(eid)))
+                tabWidget = self.createNewTableWidget('preview', label)        
+                self.setSnapshotTable(data, tabWidget, eid)
+                #sort the table by "Connection"
+                tabWidget.sortByColumn(1,1)
+ 
                 for j in range(len(data['isConnected'])):
                     if not data['isConnected'][j]:
                         disConnectedPVs.append(data['PV Name'][j])
@@ -624,13 +626,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         detailedText += '\n' + disConnectedPVs[i]          
                     #print(detailedText)
                     msg = QMessageBox(self, windowTitle="Warning", 
-text="%d PVs are disconnected, click Show Details ... below to see the PV list\n\n\
-Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnectedPVs))
+text="%d PVs in the Config %s are disconnected, click Show Details ... below to see the PV list\n\n\
+Click Continue... if you are satisfied, Otherwise click Ignore"%(cname, len(disConnectedPVs)))
                     msg.setDetailedText(detailedText)
                 else:
                     msg = QMessageBox(self, windowTitle="Good Machine Snapshot", 
-                    text="Great! All PVs have valid data so it's a good snapshot\n\n\
- Click Ignore if you don't want to save it to the MASAR database, Otherwise Click Continue...")             
+                    text="Great! All PVs in the Config %s have valid data so it's a good snapshot\n\n\
+ Click Ignore if you don't want to save it to the MASAR database, Otherwise Click Continue..."%cname)             
                 msg.setModal(False)
                 continueButton = msg.addButton("Continue...", QMessageBox.ActionRole)
                 quitButton = msg.addButton(QMessageBox.Ignore)
@@ -1439,10 +1441,10 @@ Double click to view waveform data")
                 eid = self.origID
             #params = {'eventid': eid}
             #(configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
-            [cid, desc, configName] = self.e2cDict[eid]
+            [cid, desc, configName] = self.e2cDict[str(eid)]
             #print("get configName configTab: %s"%datetime.datetime.now())
             #print((configName, eid))
-            self.findConfigAndEvent(configName, eid)
+            self.findConfigAndEvent(configName, str(eid))
             #print("end of configTab: %s"%datetime.datetime.now())
         except:
             traceback.print_exc()

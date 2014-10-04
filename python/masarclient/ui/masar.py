@@ -627,7 +627,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     #print(detailedText)
                     msg = QMessageBox(self, windowTitle="Warning", 
 text="%d PVs in the Config %s are disconnected, click Show Details ... below to see the PV list\n\n\
-Click Continue... if you are satisfied, Otherwise click Ignore"%(cname, len(disConnectedPVs)))
+Click Continue... if you are satisfied, Otherwise click Ignore"%(len(disConnectedPVs),cname))
                     msg.setDetailedText(detailedText)
                 else:
                     msg = QMessageBox(self, windowTitle="Good Machine Snapshot", 
@@ -2579,6 +2579,7 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
         
         
 def main(channelname = None):
+    #print("%s: after main()"%datetime.datetime.now())
     app = QApplication(sys.argv)
     #app = cothread.iqt() 
     app.setOrganizationName("NSLS II")
@@ -2588,12 +2589,15 @@ def main(channelname = None):
         form = masarUI(channelname=channelname)
     else:
         form = masarUI()
+    #print("%s: after form=masarUI()"%datetime.datetime.now())
     hostname = platform.node()
     title = "MASAR Viewer on " + str(hostname) + " for MASAR Server " + str(channelname)
     form.setWindowTitle(title)
     form.show()
+    #print("%s: after form.show()"%datetime.datetime.now())
     #form.showMaximized()
     app.exec_()
+    #print("%s: after app.exec_()"%datetime.datetime.now())
     
     import atexit
     # clean Python local objects first, especially the cothread stuff.
@@ -2611,6 +2615,7 @@ def main(channelname = None):
     # however, os._exit() does nothing when exiting.
     # It would be better to call sys.exit
     sys.exit()
+    #print("%s: after sys.exit()"%datetime.datetime.now())
 
 if __name__ == '__main__':
     args = sys.argv[1:]

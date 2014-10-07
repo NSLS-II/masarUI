@@ -448,13 +448,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 from pyOlog import OlogClient, Tag, Logbook, LogEntry  
                 if 'https_proxy' in os.environ.keys():
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
-                    del os.environ['https_proxy']        
-                
-                client = OlogClient(url=masarConfigDict['Olog']['url'],username=userID[:-1],password=self.passWd)
-                
+                    del os.environ['https_proxy']   
+                         
+                client = OlogClient(url=str(masarConfigDict['Olog']['url']).strip(),\
+                                    username=str(userID).strip(), password=self.passWd)     
+                     
+                logbookNames=str(masarConfigDict['Olog']['logbookname']).strip().split(',')
+                logbooks = []
+                for name in logbookNames:
+                    logbooks.append(Logbook(name=name))
+                    
                 client.log(LogEntry(text=logText, owner=userID[:-1], \
                                  #logbooks=[Logbook(name=logbookName, owner='Controls')],\
-                                 logbooks=masarConfigDict['Olog']['logbookname'],\
+                                 logbooks=logbooks,\
                                  tags=[Tag(name='MASAR')]))
             except:
                 #QMessageBox.warning(self, 'Warning', 

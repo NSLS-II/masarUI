@@ -446,10 +446,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 #import requests
                 #print("requests version: %s"%requests.__version__) 
                 from pyOlog import OlogClient, Tag, Logbook, LogEntry  
-                if 'https_proxy' in os.environ.keys():
+                #if 'https_proxy' in os.environ.keys():
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
-                    del os.environ['https_proxy']   
-                         
+                    #del os.environ['https_proxy']   
+                os.environ["no_proxy"]="web02.cs.nsls2.local,*.cs.nsls2.local,localhost"         
                 client = OlogClient(url=str(masarConfigDict['Olog']['url']).strip(),\
                                     username=str(userID).strip(), password=self.passWd)     
                      

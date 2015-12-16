@@ -267,10 +267,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 config_ts.append(ts)
 
         except:
+            print("%s: Fatal error happened during retrieving Configs"%datetime.datetime.now())
             QMessageBox.warning(self,
                                 "Warning",
-                                "Exception happened during retrieving configurations.")
-            return False
+                                "Fatal error happened during retrieving configurations!")       
+            import atexit
+            atexit._run_exitfuncs()
+            epicsExit()
+            sys.exit()#should we quit right away?
+            #return False
         
         if not rpcResult:
             return False

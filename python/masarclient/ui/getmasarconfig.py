@@ -40,6 +40,7 @@ def getmasarconfig():
         pass
     try:
         # whether current working directory or user home directory
+        #user home directory settings will overwrite the default masar.cfg
         config.read([os.path.join(os.path.dirname(__file__), 'masar.cfg'), 
                     'masar.cfg', 
                     os.path.expanduser('~/.masar.cfg')])

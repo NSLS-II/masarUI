@@ -43,7 +43,9 @@ from finddlg import FindDlg
 from verifysetpoint import VerifySetpoint
 from gradualput import GradualPut
 import getmasarconfig 
-
+masarConfigDict = getmasarconfig.getmasarconfig()
+print(masarConfigDict)
+        
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
 
@@ -221,35 +223,74 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         automatically get a list of snapshots if any config is selected by mouse or keyboard
         interesting: fetchEventAction() is called twice whenever config(s) is selected  
         """
-        reorderedData = odict() 
+        reorderedData = odict([('Config Name', []), ('Config Id', []), ('Description', []), \
+                               ('Date', []), ('Status', []), ('Version', [])]) 
+        confOrder = set([]) 
         data = self.retrieveConfigData()
-        if data:
+        if not data:
+            QMessageBox.warning(self, "Waring", "Can't get Configuration list")  
+            return        
+        if len(data['Id']) == 0:
+            return  
+        print("setConfigTable")# this is printed twice if no "return" above, why?
+        #print(data)
+        
+        try:
+            confOrderStr = str(masarConfigDict["Order"]["conf_order"])
+            print(confOrderStr)
+            confOrder = set([int(conf) for conf in confOrderStr.split() if conf.isdigit()])
+        except:
+            pass
+        print(confOrder)
+        print(data['Id'])
+        if confOrder and confOrder.issubset(set(data['Id'])):
+            print("confOrder is a subset")
+            for cf in confOrder:
+                reorderedData['Config Name'].append(data['Name'][list(data['Id']).index(cf)])
+                reorderedData['Config Id'].append(cf)
+                reorderedData['Description'].append(data['Description'][list(data['Id']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['Id']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['Id']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['Id']).index(cf)])               
+            confL = list(set(data['Id']).difference(confOrder))
+            confL.sort(reverse=True)
+            print(confL)  
+            for cf in confL:
+                reorderedData['Config Name'].append(data['Name'][list(data['Id']).index(cf)])
+                reorderedData['Config Id'].append(cf)
+                reorderedData['Description'].append(data['Description'][list(data['Id']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['Id']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['Id']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['Id']).index(cf)])              
+            data = reorderedData
+            self.setTable(data, self.configTableWidget)
+            self.configTableWidget.sortByColumn(4,0)
+        else:
+            print("not a subset")
             reorderedData['Config Name'] = data['Name']
             reorderedData['Config Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Date'] = data['Date']
             reorderedData['Status'] = data['Status']
             reorderedData['Version'] = data['Version']
-            #print(reorderedData)
             data = reorderedData
             self.setTable(data, self.configTableWidget)
             self.configTableWidget.sortByColumn(3,1)
             self.configTableWidget.sortByColumn(4,0)
-            #signal cellClicked or itemClicked covers single click and double click
-            #signal cellActivated seems equal to double click
-            #signal itemSelectionChanged is the best: one can use keyboard to select table row
-            QObject.connect(self.configTableWidget, 
-                            SIGNAL(_fromUtf8("itemSelectionChanged()")),self.fetchEventAction)
-                            #SIGNAL(_fromUtf8("cellClicked (int,int)")),self.fetchEventAction)
-                            #SIGNAL(_fromUtf8("itemClicked (QTableWidgetItem *)")),self.fetchEventAction)
-            #QObject.connect(self.configTableWidget, 
-                            #SIGNAL(_fromUtf8("cellActivated (int,int)")),self.fetchEventAction)
-            #QObject.connect(self.configTableWidget, 
-            #SIGNAL(_fromUtf8("cellPressed (int,int)")),self.eventTableWidget.clearContents)
-            QObject.connect(self.configTableWidget, 
-                    SIGNAL(_fromUtf8("itemSelectionChanged()")),lambda: self.resizeSplitter(0))
-        else:
-            QMessageBox.warning(self, "Waring", "Can't get Configuration list")    
+        #print(reorderedData)
+        #signal cellClicked or itemClicked covers single click and double click
+        #signal cellActivated seems equal to double click
+        #signal itemSelectionChanged is the best: one can use keyboard to select table row
+        QObject.connect(self.configTableWidget, 
+                        SIGNAL(_fromUtf8("itemSelectionChanged()")),self.fetchEventAction)
+                        #SIGNAL(_fromUtf8("cellClicked (int,int)")),self.fetchEventAction)
+                        #SIGNAL(_fromUtf8("itemClicked (QTableWidgetItem *)")),self.fetchEventAction)
+        #QObject.connect(self.configTableWidget, 
+                        #SIGNAL(_fromUtf8("cellActivated (int,int)")),self.fetchEventAction)
+        #QObject.connect(self.configTableWidget, 
+        #SIGNAL(_fromUtf8("cellPressed (int,int)")),self.eventTableWidget.clearContents)
+        QObject.connect(self.configTableWidget, 
+                SIGNAL(_fromUtf8("itemSelectionChanged()")),lambda: self.resizeSplitter(0))    
 
     def retrieveConfigData(self):
         data = odict()
@@ -378,13 +419,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     
 #********* Start of Save machine snapshot ********************************************************* 
     def getAuthentication(self):
-        masarConfigDict = getmasarconfig.getmasarconfig()
-        try: 
-            ldapConfig = masarConfigDict['LDAP']
-        except:
-            return True # no authentication if no related config
+        #masarConfigDict = getmasarconfig.getmasarconfig()
         #print(masarConfigDict)
-        if pyOlogExisting:
+        #if masarConfigDict == {}:
+        if not masarConfigDict: #empty dict
+            return True # no authentication if no file for masar config
+        
+        if masarConfigDict['LDAP']['existing'] == 'True':
             import ldap  
             from authendlg import AuthenDlg
 
@@ -408,11 +449,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             dlg = AuthenDlg(self.passWd)
             dlg.exec_()
             if dlg.isAccepted:
-                self.passWd = dlg.result()
-                #if ldapExisting[:-1] != 'True':
-                if masarConfigDict['LDAP']['existing'] != 'True':
-                    return True # don't use ldap to verify username if ldap doesn't exist
-                
+                self.passWd = dlg.result()      
                 user = userID[:-1]#remove trailing '\n' 
                 ldap.protocol_version = 3
                 ldap.set_option(ldap.OPT_REFERRALS, 0)
@@ -435,15 +472,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             else:#if dlg.isAccepted:
                 return False   
         
-        return True#if pyOlogExisting: 
+        #return True#if pyOlogExisting: 
     
         
-    def createLogEntry(self, logText, logbookName = None):
-        masarConfigDict = getmasarconfig.getmasarconfig()
-        try: 
-            ldapConfig = masarConfigDict['LDAP']
-        except:
-            return # no log if no related config
+    def createLogEntry(self, logText, logbookName = None):        
+        #masarConfigDict = getmasarconfig.getmasarconfig()
+        if not masarConfigDict:
+            return  # no authentication if no file for masar config
         
         if pyOlogExisting:        
             userID =  os.popen('whoami').read() 

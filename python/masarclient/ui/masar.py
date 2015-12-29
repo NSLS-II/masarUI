@@ -44,7 +44,7 @@ from verifysetpoint import VerifySetpoint
 from gradualput import GradualPut
 import getmasarconfig 
 masarConfigDict = getmasarconfig.getmasarconfig()
-print(masarConfigDict)
+#print(masarConfigDict)
         
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -233,7 +233,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return  
         #print("\nsetConfigTable")# this is printed twice if no "return" above, why?
         #print(data)
-        
+        confOrder = []
         try:
             confOrderStr = str(masarConfigDict["Order"]["conf_order"])
             #print("confOrderStr:%s"%confOrderStr)
@@ -252,7 +252,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 reorderedData['Date'].append(data['Date'][list(data['Config Id']).index(cf)])
                 reorderedData['Status'].append(data['Status'][list(data['Config Id']).index(cf)])
                 reorderedData['Version'].append(data['Version'][list(data['Config Id']).index(cf)])               
-            confL = list(set(data['Config Id']).difference(confOrder))
+            confL = list(set(data['Config Id']).difference(confOrderSet))
             confL.sort(reverse=True)
             #print(confL)  
             for cf in confL:
@@ -915,20 +915,53 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         
         #print(configIds)
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
-        reorderedData = odict() 
-        if data:
-            reorderedData['Config Name'] = data['Config']
-            #reorderedData['Event Id'] = data['Id']
-            reorderedData['Snapshot Id'] = data['Id']
-            reorderedData['Description'] = data['Description']
-            reorderedData['Time stamp'] = data['Time stamp']
-            reorderedData['Author'] = data['Author']
-            #print(reorderedData)
-            data = reorderedData  
-            self.setEventTable(data)
-            self.eventTableWidget.resizeColumnsToContents()
-        else:
+        reorderedData = odict([('Config Name', []), ('Snapshot Id', []), ('Description', []), \
+                               ('Time stamp', []), ('Author', [])]) 
+        if not data: 
             QMessageBox.warning(self, "warning","Can't retrieve event list")
+            return
+        #if not data['Snapshot Id']:
+            #return
+        #print('\nsetEventTable')
+        #print(data['Snapshot Id'])
+        eventOrder = []
+        eventOrderStr = ''
+        try:
+            for cname in configNames:
+                eventOrderStr += str(masarConfigDict["Order"][str(cname).lower()]) + " "
+                eventOrder = [int(evt) for evt in eventOrderStr.split() if evt.isdigit()]
+        except:
+            pass        
+        #print(eventOrder)
+        eventOrderSet = set(eventOrder)   
+        if eventOrderSet and eventOrderSet.issubset(set(data['Snapshot Id'])):
+            #print("eventOrder is a subset") 
+            for evt in eventOrder:
+                reorderedData['Config Name'].append(data['Config Name'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Snapshot Id'].append(evt)
+                reorderedData['Description'].append(data['Description'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Time stamp'].append(data['Time stamp'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Author'].append(data['Author'][list(data['Snapshot Id']).index(evt)])
+            evtL = list(set(data['Snapshot Id']).difference(eventOrderSet))  
+            evtL.sort(reverse=True)
+            #print(evtL)
+            for evt in evtL:
+                reorderedData['Config Name'].append(data['Config Name'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Snapshot Id'].append(evt)
+                reorderedData['Description'].append(data['Description'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Time stamp'].append(data['Time stamp'][list(data['Snapshot Id']).index(evt)])
+                reorderedData['Author'].append(data['Author'][list(data['Snapshot Id']).index(evt)])         
+            data =  reorderedData  
+            self.eventTableWidget.setSortingEnabled(False) 
+            self.setEventTable(data)
+            self.eventTableWidget.sortByColumn(0,1)
+            self.eventTableWidget.setSortingEnabled(True) 
+        else:
+            #print("no customized event order")    
+            self.setEventTable(data)
+            self.eventTableWidget.sortByColumn(3,1)
+        self.eventTableWidget.resizeColumnsToContents()
+            
 
     def retrieveEventData(self,configids=None,confignames=None):
         """
@@ -991,13 +1024,13 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             return False
                     
         data = odict()
-        data['Config'] = c_names
+        data['Config Name'] = c_names
+        data['Snapshot Id'] = event_ids        
         data['Description'] = event_desc
-        data['Author'] = event_author
         data['Time stamp'] = event_ts
-        data['Id'] = event_ids
+        data['Author'] = event_author
         return data
-    
+               
     def setEventTable(self, data):
         """
         interesting / potential problem: double click on any event will call retrieveSnapshot()
@@ -1005,7 +1038,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         only call retrieveSnapshot() once, which instantly retrieves snapshot(s) 
         """
         self.setTable(data, self.eventTableWidget)
-        self.eventTableWidget.sortByColumn(3)
+        #self.eventTableWidget.sortByColumn(3)
         #tableId = 1
         #the following have the same function
         self.eventTableWidget.doubleClicked.connect(self.retrieveSnapshot)

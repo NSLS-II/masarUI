@@ -225,55 +225,52 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         """
         reorderedData = odict([('Config Name', []), ('Config Id', []), ('Description', []), \
                                ('Date', []), ('Status', []), ('Version', [])]) 
-        confOrder = set([]) 
         data = self.retrieveConfigData()
         if not data:
             QMessageBox.warning(self, "Waring", "Can't get Configuration list")  
             return        
-        if len(data['Id']) == 0:
+        if len(data['Config Id']) == 0:
             return  
-        print("setConfigTable")# this is printed twice if no "return" above, why?
+        #print("\nsetConfigTable")# this is printed twice if no "return" above, why?
         #print(data)
         
         try:
             confOrderStr = str(masarConfigDict["Order"]["conf_order"])
-            print(confOrderStr)
-            confOrder = set([int(conf) for conf in confOrderStr.split() if conf.isdigit()])
+            #print("confOrderStr:%s"%confOrderStr)
+            confOrder = [int(conf) for conf in confOrderStr.split() if conf.isdigit()]
         except:
             pass
-        print(confOrder)
-        print(data['Id'])
-        if confOrder and confOrder.issubset(set(data['Id'])):
-            print("confOrder is a subset")
+        #print(confOrder)
+        #print(data['Id'])
+        confOrderSet = set(confOrder)
+        if confOrderSet and confOrderSet.issubset(set(data['Config Id'])):
+            #print("confOrder is a subset")
             for cf in confOrder:
-                reorderedData['Config Name'].append(data['Name'][list(data['Id']).index(cf)])
+                reorderedData['Config Name'].append(data['Config Name'][list(data['Config Id']).index(cf)])
                 reorderedData['Config Id'].append(cf)
-                reorderedData['Description'].append(data['Description'][list(data['Id']).index(cf)])
-                reorderedData['Date'].append(data['Date'][list(data['Id']).index(cf)])
-                reorderedData['Status'].append(data['Status'][list(data['Id']).index(cf)])
-                reorderedData['Version'].append(data['Version'][list(data['Id']).index(cf)])               
-            confL = list(set(data['Id']).difference(confOrder))
+                reorderedData['Description'].append(data['Description'][list(data['Config Id']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['Config Id']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['Config Id']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['Config Id']).index(cf)])               
+            confL = list(set(data['Config Id']).difference(confOrder))
             confL.sort(reverse=True)
-            print(confL)  
+            #print(confL)  
             for cf in confL:
-                reorderedData['Config Name'].append(data['Name'][list(data['Id']).index(cf)])
+                reorderedData['Config Name'].append(data['Config Name'][list(data['Config Id']).index(cf)])
                 reorderedData['Config Id'].append(cf)
-                reorderedData['Description'].append(data['Description'][list(data['Id']).index(cf)])
-                reorderedData['Date'].append(data['Date'][list(data['Id']).index(cf)])
-                reorderedData['Status'].append(data['Status'][list(data['Id']).index(cf)])
-                reorderedData['Version'].append(data['Version'][list(data['Id']).index(cf)])              
+                reorderedData['Description'].append(data['Description'][list(data['Config Id']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['Config Id']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['Config Id']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['Config Id']).index(cf)])              
             data = reorderedData
+            #print(data['Config Id'])
+            #have to disable sorting, then enable sorting
+            self.configTableWidget.setSortingEnabled(False)
             self.setTable(data, self.configTableWidget)
             self.configTableWidget.sortByColumn(4,0)
+            self.configTableWidget.setSortingEnabled(True)
         else:
-            print("not a subset")
-            reorderedData['Config Name'] = data['Name']
-            reorderedData['Config Id'] = data['Id']
-            reorderedData['Description'] = data['Description']
-            reorderedData['Date'] = data['Date']
-            reorderedData['Status'] = data['Status']
-            reorderedData['Version'] = data['Version']
-            data = reorderedData
+            #print("not a subset")
             self.setTable(data, self.configTableWidget)
             self.configTableWidget.sortByColumn(3,1)
             self.configTableWidget.sortByColumn(4,0)
@@ -321,12 +318,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if not rpcResult:
             return False
         
-        data['Name'] = rpcResult[1]
+        data['Config Name'] = rpcResult[1]
+        data['Config Id'] = rpcResult[0]
         data['Description'] = rpcResult[2]
         data['Date'] = config_ts
-        data['Version'] = rpcResult[4]
-        data['Id'] = rpcResult[0]
         data['Status'] = rpcResult[5]
+        data['Version'] = rpcResult[4]     
         return data
     
     def setTable(self, data, table):
@@ -351,12 +348,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 return
 
         if isinstance(data, odict) and isinstance(table, QTableWidget):
+            # Removes all items in the view, and also all selections
+            #table.setSortingEnabled(False)
+            table.clear()
             nrows = len(data.values()[0])
             ncols = len(data)
             table.setRowCount(nrows)
-            table.setColumnCount(ncols)
-            # Removes all items in the view, and also all selections
-            table.clear()
+            table.setColumnCount(ncols)            
             table.setHorizontalHeaderLabels(data.keys())
             
             n = 0
@@ -371,6 +369,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         table.setItem(m, n, newitem)
                     m += 1
                 n += 1
+                
+            #table.setSortingEnabled(True)    
         else:
             raise "error occurred in setTable(self, data, table)"
  

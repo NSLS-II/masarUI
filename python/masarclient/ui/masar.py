@@ -271,9 +271,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.configTableWidget.setSortingEnabled(True)
         else:
             #print("not a subset")
+            self.configTableWidget.setSortingEnabled(False)
             self.setTable(data, self.configTableWidget)
             self.configTableWidget.sortByColumn(3,1)
             self.configTableWidget.sortByColumn(4,0)
+            self.configTableWidget.setSortingEnabled(True)
         #print(reorderedData)
         #signal cellClicked or itemClicked covers single click and double click
         #signal cellActivated seems equal to double click
@@ -958,7 +960,9 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             self.eventTableWidget.setSortingEnabled(True) 
         else:
             #print("no customized event order")    
+            self.eventTableWidget.setSortingEnabled(False) 
             self.setEventTable(data)
+            self.eventTableWidget.setSortingEnabled(True)
             self.eventTableWidget.sortByColumn(3,1)
         self.eventTableWidget.resizeColumnsToContents()
             

@@ -1568,6 +1568,15 @@ Double click to view waveform data")
             return
         
         selectedNoRestorePv = {}
+        #noRestorePvList = []
+        noRestorePvStr = ''
+        cname = self.e2cDict[str(eid)][2]
+        try:
+            noRestorePvStr = masarConfigDict["NoRestore"][str(cname).lower()]
+            #noRestorePvList = [str(pv) for pv in noRestorePvStr.split()]
+        except:
+            pass  
+        #print(noRestorePvStr)
 
         # get table rows
         rowCount = curWidget.rowCount()
@@ -1579,6 +1588,10 @@ Double click to view waveform data")
         for row in range(rowCount):
             #selectedNoRestorePv[str(curWidget.item(row, 0).text())] =
                                                 # bool(curWidget.item(row, 8).checkState())
+            if str(curWidget.item(row, 0).text()) in noRestorePvStr:
+                #print("    %s is not restored"%str(curWidget.item(row, 0).text()))
+                curWidget.item(row, 2).setCheckState(2)
+                
             selectedNoRestorePv[str(curWidget.item(row, 0).text())]= \
                                                 bool(curWidget.item(row, 2).checkState())
         pvlist = list(self.pv4cDict[str(eid)])

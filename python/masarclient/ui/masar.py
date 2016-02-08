@@ -1670,17 +1670,16 @@ Double click to view waveform data")
             if disConnectedPVs[i] not in no_restorepvs:
                 no_restorepvs.append(disConnectedPVs[i])
         #print(no_restorepvs)
-        
-        if ignoreall:
-            str_no_restore = "\n"
+        str_no_restore = "\n"
+        if len(no_restorepvs) > 0: 
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
-        elif len(no_restorepvs) > 0:
-            str_no_restore = "\n"
-            for no_restorepv in no_restorepvs:
-                str_no_restore += ' - %s' %no_restorepv + '\n'
                 
+        if ignoreall:        
+            print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
+        elif len(disConnectedPVs) > 0:
+        #elif len(no_restorepvs) > 0:              
             msg = QMessageBox(self, windowTitle='Warning', 
 text="%d PVs will not be restored. Click Show Details... to see the disconnected / no-restore Pvs.\n\
 It may take a while to restore the machine. Do you want to continue?" 
@@ -1694,8 +1693,7 @@ It may take a while to restore the machine. Do you want to continue?"
                 self.restoreMachineButton.setEnabled(True)
                 self.rampingMachineButton.setEnabled(True)
                 return
-            print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
-        
+                    
         return (eid, eid4Log, r_pvlist, r_data, r_dbrtype, r_isArray, no_restorepvs, rowCount)
  
     def simplePut(self, eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount):
@@ -1766,7 +1764,15 @@ the restored PV values by clicking the button Compare Live Machine"
             QMessageBox.information(self, "Congratulation", 
                             "Bingo! Restoring machine is done. You may take a moment to \
 review the restored PV values by clicking the button Compare Live Machine")
-            logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
+            if len(no_restorepvs) > 0:
+                str_no_restore = "\n"
+                for no_restorepv in no_restorepvs:
+                    str_no_restore += '    %s' %no_restorepv + '\n'
+                logText = "successfully restore machine with the snapshot #%s and Conifg %s.\n\
+PS: these PVs are not restored because they are configured as 'Not Restore':%s" \
+                        %(eid4Log, self.e2cDict[eid][2], str_no_restore)                
+            else:
+                logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
                         %(eid4Log, self.e2cDict[eid][2])
         
         self.createLogEntry(logText)

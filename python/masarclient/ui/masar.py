@@ -1558,7 +1558,7 @@ Double click to view waveform data")
             self.rampingMachineButton.setEnabled(True)
             return
         if eid == 'filter':
-            eid4Log = self.origID + '(filtered)'
+            eid4Log = self.origID + '(filtered with pattern %s)'%self.currentPvFilter
         else:
             eid4Log = eid                      
  
@@ -1738,9 +1738,9 @@ It may take a while to restore the machine. Do you want to continue?"
             for no_restorepv in no_restorepvs:
                 output += "\n  "+no_restorepv + ": Disconnected" 
 
-            logText = "Snapshot #%s was restored with Config %s, but failed to restore the following \
+            logText = "Snapshot #%s of Config %s was restored, but failed to restore the following \
 pvs which is caused by:\n"%(eid4Log,self.e2cDict[eid][2])+output+"\n"
-            print (logText)  
+            #print (logText)  
             
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
@@ -1768,17 +1768,31 @@ review the restored PV values by clicking the button Compare Live Machine")
                 str_no_restore = "\n"
                 for no_restorepv in no_restorepvs:
                     str_no_restore += '    %s' %no_restorepv + '\n'
-                logText = "successfully restore machine with the snapshot #%s and Conifg %s.\n\
+                logText = "successfully restore machine with the snapshot #%s of Conifg %s.\n\
 PS: these PVs are not restored because they are configured as 'Not Restore':%s" \
                         %(eid4Log, self.e2cDict[eid][2], str_no_restore)                
             else:
-                logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
+                logText = "successfully restore machine with the snapshot #%s of Conifg %s" \
                         %(eid4Log, self.e2cDict[eid][2])
         
         self.createLogEntry(logText)
         
-        #compare readback & setpoint after restoring machine 
         dirPath = os.path.dirname(os.path.abspath(__file__))
+        #keep a local log file logging restore actions    
+        try:
+            logFile = dirPath + '/masar.log'
+            #print(logFile)
+            userID =  os.popen('whoami').read()[:-1] 
+            fd = open(logFile,'a')
+            fd.write(str(userID)+' from '+str(platform.node())+' did a restore at %s:\n'\
+                     %datetime.datetime.now())
+            fd.write(logText+"\n\n")
+            fd.close()     
+        except:
+            pass
+            #traceback.print_exc()  
+            
+        #compare readback & setpoint after restoring machine                     
         configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
         if not os.path.isfile(configFile):
             return
@@ -1786,7 +1800,7 @@ PS: these PVs are not restored because they are configured as 'Not Restore':%s" 
         if not self.verifyWindowDict.has_key(configFile):
             verifyWin = VerifySetpoint(configFile, rowCount, self.verifyWindowDict, self)
             verifyWin.show()
-            self.verifyWindowDict[configFile] = verifyWin  
+            self.verifyWindowDict[configFile] = verifyWin                     
               
     def restoreSnapshotAction(self):
         """

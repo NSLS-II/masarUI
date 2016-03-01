@@ -1604,16 +1604,7 @@ Double click to view waveform data")
         # is_connected = data['isConnected']
         # data['PV Name']
         array_value = data['arrayValue']
-        
-        #print("%s: starting to get live machine data"%datetime.datetime.now())
-        liveData = self.getLiveMachineData(pvlist)
-        if not liveData:
-            self.restoreMachineButton.setEnabled(True)  
-            self.rampingMachineButton.setEnabled(True)
-            return
-        disConnectedPVs = liveData[8]#disconnected PV belongs to no_restorepvs
-        #print("%s: got live machine data"%datetime.datetime.now())
-        
+         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
         r_dbrtype = []
@@ -1665,7 +1656,15 @@ Double click to view waveform data")
             self.restoreMachineButton.setEnabled(True)
             self.rampingMachineButton.setEnabled(True)
             return
-        
+   
+        #print("%s: starting to get live machine data"%datetime.datetime.now())
+        liveData = self.getLiveMachineData(r_pvlist)
+        if not liveData:
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
+            return
+        disConnectedPVs = liveData[8]#disconnected PV belongs to no_restorepvs
+        #print("%s: got live machine data"%datetime.datetime.now())     
         for i in range(len(disConnectedPVs)):
             if disConnectedPVs[i] not in no_restorepvs:
                 no_restorepvs.append(disConnectedPVs[i])

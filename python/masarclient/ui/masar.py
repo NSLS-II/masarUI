@@ -1611,14 +1611,14 @@ Double click to view waveform data")
             self.restoreMachineButton.setEnabled(True)  
             self.rampingMachineButton.setEnabled(True)
             return
-        disConnectedPVs = liveData[8]
+        disConnectedPVs = liveData[8]#disconnected PV belongs to no_restorepvs
         #print("%s: got live machine data"%datetime.datetime.now())
         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
         r_dbrtype = []
         r_isArray = [] 
-        no_restorepvs = []  # no restore from those pvs
+        no_restorepvs = []  # either 'Not Restore' is checked or the PV is disconnected  
         ignoreall = False # Ignore all pv those do not have any value.
         for index in range(len(pvlist)):
             try:
@@ -1678,7 +1678,7 @@ Double click to view waveform data")
                 
         if ignoreall:        
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
-        elif len(disConnectedPVs) > 0:
+        elif len(disConnectedPVs) > 0:#pop up this warning only when there is a disconnected PV 
         #elif len(no_restorepvs) > 0:              
             msg = QMessageBox(self, windowTitle='Warning', 
 text="%d PVs will not be restored. Click Show Details... to see the disconnected / no-restore Pvs.\n\
@@ -1698,7 +1698,8 @@ It may take a while to restore the machine. Do you want to continue?"
  
     def simplePut(self, eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount):
         #print("one-step simple put eventID: %s %s"%(eid,eid4Log))
-        bad_pvs = []
+        bad_pvs = [] # bad pv does not mean disconnected; disconnected pv belongs to no_restorepvs
+        logText = '' # bad_pvs and no_restorepvs (Not Restore + disconnected) will be logged
         try:
             final_restorepv = []
             final_restorepvval = []
@@ -1729,25 +1730,25 @@ It may take a while to restore the machine. Do you want to continue?"
         #bad_pvs == [ca_nothing(), ca_nothing() ...]
         #bad_pvs = bad_pvs + no_restorepvs
         #print(bad_pvs)
-        if len(bad_pvs) > 0:
+        if len(bad_pvs) > 0:#show no_restorepvs in the pop-up message only when there are bad pvs
             #message = "Failed to restore some pvs. PLease check the terminal for a full list."
             #QMessageBox.warning(self, 'Warning', message)
             output = ""
             for bad_pv in bad_pvs:
                 output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
             for no_restorepv in no_restorepvs:
-                output += "\n  "+no_restorepv + ": Disconnected" 
+                output += "\n  "+no_restorepv + ": Disconnected or Not Restore" 
 
             logText = "Snapshot #%s of Config %s was restored, but failed to restore the following \
 pvs which is caused by:\n"%(eid4Log,self.e2cDict[eid][2])+output+"\n"
             #print (logText)  
             
-            totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
+            totalNotRestoredPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
-                              text="Not Very Successful: failed to restore %s PVs.\
+                              text="Not Very Successful: %d PVs are not restored.\
 Click Show Details... to see the failure details\n\You may take a moment to review \
 the restored PV values by clicking the button Compare Live Machine"
-                               %totalBadPVs)
+                               %totalNotRestoredPVs)
             #msg.setStandardButtons(QMessageBox.Ok)
             msg.setDetailedText(output)
             msg.setModal(False)
@@ -1758,7 +1759,7 @@ the restored PV values by clicking the button Compare Live Machine"
             continueButton.clicked.connect(self.ignore4RestoreMachine) 
             quitButton.clicked.connect(self.ignore4RestoreMachine) 
             #msg.exec_()   
-        else:
+        else:#DO NOT show no_restorepvs in the pop-up message; put no_restorepvs in logbook
             self.restoreMachineButton.setEnabled(True)
             self.rampingMachineButton.setEnabled(True)
             QMessageBox.information(self, "Congratulation", 
@@ -1769,7 +1770,7 @@ review the restored PV values by clicking the button Compare Live Machine")
                 for no_restorepv in no_restorepvs:
                     str_no_restore += '    %s' %no_restorepv + '\n'
                 logText = "successfully restore machine with the snapshot #%s of Conifg %s.\n\
-PS: these PVs are not restored because they are configured as 'Not Restore':%s" \
+PS: these PVs are not restored because they are 'Not Restore' or temporarily disconnected:%s" \
                         %(eid4Log, self.e2cDict[eid][2], str_no_restore)                
             else:
                 logText = "successfully restore machine with the snapshot #%s of Conifg %s" \
@@ -1782,6 +1783,8 @@ PS: these PVs are not restored because they are configured as 'Not Restore':%s" 
         try:
             logFile = dirPath + '/masar.log'
             #print(logFile)
+            if not os.path.isfile(logFile):
+                return
             userID =  os.popen('whoami').read()[:-1] 
             fd = open(logFile,'a')
             fd.write(str(userID)+' from '+str(platform.node())+' did a restore at %s:\n'\

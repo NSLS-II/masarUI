@@ -707,6 +707,10 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%(len(disConnecte
                                 "Except happened during getting machine preview.")
             return False
         if not rpcResult:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Failed to save a snapshot")
+            print("failed to save a snapshot for %s"%configName)
             return False
         eventid = rpcResult[0]
         pvnames = rpcResult[1]

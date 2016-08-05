@@ -29,12 +29,6 @@ else:
     print ('Python version 2.7 or higher is needed.')
     sys.exit()
 
-try:
-    imp.find_module('pyOlog')
-    pyOlogExisting = True
-except ImportError:
-    pyOlogExisting = False
-
 import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
@@ -45,6 +39,15 @@ from gradualput import GradualPut
 import getmasarconfig 
 masarConfigDict = getmasarconfig.getmasarconfig()
 #print(masarConfigDict)
+try:
+    imp.find_module('pyOlog')
+    if str(masarConfigDict["Olog"]["use"]) == 'True':
+        pyOlogExisting = True
+    else:
+        pyOlogExisting = False
+except ImportError:
+    pyOlogExisting = False
+
         
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
@@ -474,7 +477,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             else:#if dlg.isAccepted:
                 return False   
         
-        #return True#if pyOlogExisting: 
+        return True#masarConfigDict['LDAP']['existing'] == 'False'
     
         
     def createLogEntry(self, logText, logbookName = None):        

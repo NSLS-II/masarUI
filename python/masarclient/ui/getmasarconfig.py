@@ -33,16 +33,17 @@ def getmasarconfig():
     if system == 'Windows':
         raise RuntimeError("Does not support Windows platform yet.")
 
-    try:
+    #try:
         # try system config
-        config.readfp(open('/etc/masar/masar.cfg'))
-    except IOError:
-        pass
+        #config.readfp(open('/etc/masar/masar.cfg'))
+    #except IOError:
+        #pass
     try:
-        # whether current working directory or user home directory
-        #user home directory settings will overwrite the default masar.cfg
+        #user home directory settings will overwrite system config(/etc/...), 
+        #system config will overwrite the masar.cfg in the current working directory
         config.read([os.path.join(os.path.dirname(__file__), 'masar.cfg'), 
                     'masar.cfg', 
+                    os.path.expanduser('/etc/masar/masar.cfg'),
                     os.path.expanduser('~/.masar.cfg')])
     except IOError:
         pass
@@ -52,7 +53,7 @@ def getmasarconfig():
 
     for section in sections:
         masarconfig[section] = dict(config.items(section))
-
+    
     return masarconfig
 
 if __name__ == "__main__":

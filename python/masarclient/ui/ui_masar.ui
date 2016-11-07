@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1199</width>
-    <height>1265</height>
+    <width>1532</width>
+    <height>1168</height>
    </rect>
   </property>
   <property name="palette">
@@ -123,10 +123,16 @@
       </property>
       <widget class="QSplitter" name="configEventSplitter">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>600</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -135,13 +141,6 @@
         <layout class="QVBoxLayout" name="configVerticalLayout" stretch="0">
          <item>
           <layout class="QGridLayout" name="configGridLayout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="systemLabel">
-             <property name="text">
-              <string>System</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <widget class="QComboBox" name="systemCombox">
              <property name="cursor">
@@ -158,26 +157,17 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="systemLabel">
+             <property name="text">
+              <string>System</string>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="configFilterLabel">
              <property name="text">
               <string>Config Filter</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="configFilterLineEdit">
-             <property name="toolTip">
-              <string>using expression like *LN*</string>
-             </property>
-             <property name="text">
-              <string extracomment="such as LN*">*</string>
-             </property>
-             <property name="dragEnabled">
-              <bool>true</bool>
-             </property>
-             <property name="placeholderText">
-              <string/>
              </property>
             </widget>
            </item>
@@ -219,6 +209,22 @@
              </property>
             </widget>
            </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="configFilterLineEdit">
+             <property name="toolTip">
+              <string>using expression like *LN*</string>
+             </property>
+             <property name="text">
+              <string extracomment="such as LN*">*</string>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
+             <property name="placeholderText">
+              <string/>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
         </layout>
@@ -227,47 +233,7 @@
         <layout class="QVBoxLayout" name="eventVerticalLayout">
          <item>
           <layout class="QGridLayout" name="eventGridLayout">
-           <item row="2" column="0" colspan="3">
-            <widget class="QCheckBox" name="timeRangeCheckBox">
-             <property name="text">
-              <string>Use time range:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="eventStartLabel">
-             <property name="text">
-              <string>From:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2" colspan="2">
-            <widget class="QDateTimeEdit" name="eventStartDateTime">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="readOnly">
-              <bool>false</bool>
-             </property>
-             <property name="displayFormat">
-              <string>yyyy-MM-dd hh:mm:ss</string>
-             </property>
-             <property name="calendarPopup">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="eventEndLabel">
-             <property name="text">
-              <string>To:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="3">
+           <item row="5" column="0" colspan="2">
             <widget class="QPushButton" name="fetchEventButton">
              <property name="toolTip">
               <string>get a list of snapshot(s) or event(s)</string>
@@ -277,7 +243,14 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="2" colspan="2">
+           <item row="1" column="0">
+            <widget class="QLabel" name="ByWho">
+             <property name="text">
+              <string>Author</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1" colspan="2">
             <widget class="QDateTimeEdit" name="eventEndDateTime">
              <property name="enabled">
               <bool>false</bool>
@@ -306,23 +279,22 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="3">
-            <widget class="QLineEdit" name="eventFilterLineEdit">
-             <property name="toolTip">
-              <string>using expression like *BPM*</string>
+           <item row="3" column="1" colspan="2">
+            <widget class="QDateTimeEdit" name="eventStartDateTime">
+             <property name="enabled">
+              <bool>false</bool>
              </property>
-             <property name="text">
-              <string>*</string>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QLineEdit" name="authorTextEdit">
-             <property name="toolTip">
-              <string>using expression like *mei*</string>
+             <property name="readOnly">
+              <bool>false</bool>
              </property>
-             <property name="text">
-              <string>*</string>
+             <property name="displayFormat">
+              <string>yyyy-MM-dd hh:mm:ss</string>
+             </property>
+             <property name="calendarPopup">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -333,10 +305,44 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="ByWho">
+           <item row="4" column="0">
+            <widget class="QLabel" name="eventEndLabel">
              <property name="text">
-              <string>Author</string>
+              <string>To:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLineEdit" name="authorTextEdit">
+             <property name="toolTip">
+              <string>using expression like *mei*</string>
+             </property>
+             <property name="text">
+              <string>*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QCheckBox" name="timeRangeCheckBox">
+             <property name="text">
+              <string>Use time range:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLineEdit" name="eventFilterLineEdit">
+             <property name="toolTip">
+              <string>using expression like *BPM*</string>
+             </property>
+             <property name="text">
+              <string>*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="eventStartLabel">
+             <property name="text">
+              <string>From:</string>
              </property>
             </widget>
            </item>
@@ -372,7 +378,17 @@
          </item>
          <item>
           <layout class="QGridLayout" name="snapshotGridLayout">
-           <item row="3" column="0" colspan="2">
+           <item row="2" column="1">
+            <widget class="QPushButton" name="getGoldenButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;get the Golden snapshot for the selected Config above&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Dispaly Golden Snapshot</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
             <widget class="QPushButton" name="fetchSnapshotButton">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -388,7 +404,20 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
+           <item row="3" column="1">
+            <widget class="QPushButton" name="searchSnapshotButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;please enter a snapshot ID (one integer number, and only one) in the left box, then click this button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="text">
+              <string>search a snapshot by its ID</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
             <widget class="QLineEdit" name="snapshotIdLineEdit">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -401,16 +430,13 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="searchSnapshotButton">
+           <item row="2" column="0">
+            <widget class="QPushButton" name="setGoldenButton">
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;please enter a snapshot ID (one integer number, and only one) in the left box, then click this button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="statusTip">
-              <string/>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the selected snapshot above as golden snapshot&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
-              <string>search a snapshot by its ID</string>
+              <string>Set it As Golden</string>
              </property>
             </widget>
            </item>
@@ -702,7 +728,7 @@ More Info ...
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1199</width>
+     <width>1532</width>
      <height>19</height>
     </rect>
    </property>
@@ -736,7 +762,7 @@ More Info ...
    <hints>
     <hint type="sourcelabel">
      <x>364</x>
-     <y>535</y>
+     <y>515</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -752,7 +778,7 @@ More Info ...
    <hints>
     <hint type="sourcelabel">
      <x>364</x>
-     <y>561</y>
+     <y>541</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -767,8 +793,8 @@ More Info ...
    <slot>useTimeRange()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>64</x>
-     <y>575</y>
+     <x>75</x>
+     <y>566</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -783,8 +809,8 @@ More Info ...
    <slot>fetchEventAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>657</y>
+     <x>64</x>
+     <y>648</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -1048,6 +1074,38 @@ More Info ...
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>setGoldenButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>setGoldenSnapshot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>61</x>
+     <y>1162</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>59</x>
+     <y>1243</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>getGoldenButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>fetchGoldenSnapshotAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>230</x>
+     <y>1162</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>636</x>
+     <y>1239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>systemComboxChanged(QString)</slot>
@@ -1075,5 +1133,7 @@ More Info ...
   <slot>rampingMachine()</slot>
   <slot>snapshotIdChanged()</slot>
   <slot>retrieveSnapshotById()</slot>
+  <slot>setGoldenSnapshot()</slot>
+  <slot>fetchGoldenSnapshotAction()</slot>
  </slots>
 </ui>

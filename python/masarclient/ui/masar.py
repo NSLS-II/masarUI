@@ -10,7 +10,7 @@ from __future__ import division
 from __future__ import print_function
 #from __future__ import unicode_literals
 
-import os, sys, time, datetime, re, fnmatch, imp, traceback, platform
+import os, sys, time, datetime, re, fnmatch, imp, traceback, platform, errno
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                         QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence,
@@ -163,6 +163,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.epicsString = [0, 3]
         self.epicsDouble = [2, 6]
         self.epicsNoAccess = [7]
+        self.userID = os.popen('whoami').read()[:-1]  
         
         #automatically fetch all configs at startup. This action should be quick
         self.fetchConfigAction()
@@ -383,9 +384,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #h = int(self.eventTableWidget.height())
         #self.fetchSnapshotButton.resize(700,282)
         if tableID == 1:
-            self.splitter.setSizes([300,900])
+            self.splitter.setSizes([600,900])
         if tableID == 0:
-            self.splitter.setSizes([500,600])
+            self.splitter.setSizes([600,900])
 #********* End of Config Table ********************************************************************
 
     def createNewTableWidget(self, eventID, label):
@@ -434,7 +435,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             import ldap  
             from authendlg import AuthenDlg
 
-            userID =  os.popen('whoami').read() 
+            userID = self.userID
             #===================================================================
             # #print(os.path.realpath(__file__))
             # dirPath = os.path.dirname(os.path.abspath(__file__))
@@ -455,7 +456,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             dlg.exec_()
             if dlg.isAccepted:
                 self.passWd = dlg.result()      
-                user = userID[:-1]#remove trailing '\n' 
+                #user = userID[:-1]#remove trailing '\n' 
                 ldap.protocol_version = 3
                 ldap.set_option(ldap.OPT_REFERRALS, 0)
                 try:
@@ -463,7 +464,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     lp = ldap.initialize(masarConfigDict['LDAP']['url'])
                     #for NSLS2, cn is admin, must use uid instead
                     #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
-                    username = masarConfigDict['LDAP']['username']%user
+                    username = masarConfigDict['LDAP']['username']%userID
                     #print(username)
                     lp.simple_bind_s(username, self.passWd)
                     return True
@@ -486,7 +487,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return  # no authentication if no file for masar config
         
         if pyOlogExisting:        
-            userID =  os.popen('whoami').read() 
+            userID = self.userID
             try:    
                 #import requests
                 #print("requests version: %s"%requests.__version__) 
@@ -898,8 +899,8 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
     
     def fetchEventAction(self):
         """
-        click the button 'Select Snapshot(s)'
-        
+        click the button 'Select Snapshot(s)' or 'Display Golden Snapshot'
+        eventOrder is a list of numbers (not strings)
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.fetchEventButton,  
                     QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
@@ -933,16 +934,39 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             #return
         #print('\nsetEventTable')
         #print(data['Snapshot Id'])
-        eventOrder = []
-        eventOrderStr = ''
+        eventOrder = [] # a list of numbers (not strings)
+        #get golden snapshot ID first
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + str(configNames[0]) + ".data"
+        if os.path.isfile(goldenDataFile):
+            fd = open(goldenDataFile, 'r')
+            lines = fd.readlines()
+            fd.close() 
+            for line in lines:
+                eventOrder.append(int(line.split('#')[0].strip()))
+            eventOrder.reverse()        
+        if eventOrder != []: #add prefix G* to golden snapshot desc
+            #print(eventOrder)
+            for i in range(len(eventOrder)):
+                desc = " [G%i] "%(i+1)
+                desc += data['Description'][list(data['Snapshot Id']).index(eventOrder[i])]
+                data['Description'][list(data['Snapshot Id']).index(eventOrder[i])] = desc
+                #print(desc)
+        #get customzied snapshot ID from masar.cfg        
+        eventInConf = []
+        eventInConfStr = ''
         try:
             for cname in configNames:
-                eventOrderStr += str(masarConfigDict["Order"][str(cname).lower()]) + " "
-                eventOrder = [int(evt) for evt in eventOrderStr.split() if evt.isdigit()]
+                eventInConfStr += str(masarConfigDict["Order"][str(cname).lower()]) + " "
+                eventInConf = [int(evt) for evt in eventInConfStr.split() if evt.isdigit()]
         except:
             pass        
-        #print(eventOrder)
+        #print(str(eventOrder) + "in fetchEventAction")
+        eventOrder += eventInConf
         eventOrderSet = set(eventOrder)   
+        #print(str(eventOrderSet) + "set in fetchEventAction")
+        #print(eventOrderSet.issubset(set(data['Snapshot Id'])))
+        #print(set(data['Snapshot Id']))
         if eventOrderSet and eventOrderSet.issubset(set(data['Snapshot Id'])):
             #print("eventOrder is a subset") 
             for evt in eventOrder:
@@ -1065,17 +1089,18 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         QtCore.QObject.connect(self.snapshotIdLineEdit, 
                 QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.snapshotIdChanged)
         """
-        id = self.snapshotIdLineEdit.text()
-        #print(id)
+        snapshotID = self.snapshotIdLineEdit.text()
+        #print(snapshotID)
         
-    def retrieveSnapshotById(self):
+    def retrieveSnapshotById(self, eventId=" "):
         """
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.searchSnapshotButton, 
                 QtCore.SIGNAL(_fromUtf8("clicked()")), masar.retrieveSnapshotById)
         """
         #print("test")
-        eventId = str(self.snapshotIdLineEdit.text())
+        if eventId == " ": 
+            eventId = str(self.snapshotIdLineEdit.text())
         if not eventId.isdigit():
             QMessageBox.warning(self, 'Error', 'You have to enter one integer number and only one \
 in the left box. Try again if you want')
@@ -1791,7 +1816,7 @@ PS: these PVs are not restored because they are 'Not Restore' or temporarily dis
             #print(logFile)
             if not os.path.isfile(logFile):
                 return
-            userID =  os.popen('whoami').read()[:-1] 
+            userID =  self.userID 
             fd = open(logFile,'a')
             fd.write(str(userID)+' from '+str(platform.node())+' did a restore at %s:\n'\
                      %datetime.datetime.now())
@@ -2700,6 +2725,88 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')
         #tableWidget.resizeColumnsToContents()
+    
+    def setGoldenSnapshot(self):
+        if self.userID not in masarConfigDict["OperatorList"]["account"]:
+            QMessageBox.warning(self, "Warning", \
+                        "You DO NOT have the privilege to set golden snapshot")
+            return
+        selectedItems = self.eventTableWidget.selectionModel().selectedRows()
+        if len(selectedItems) != 1:
+            QMessageBox.warning(self, "Warning", \
+                "Please select one and only one snapshot to be set as Golden")
+            return          
+        #if not self.getAuthentication():
+        #    return  
+        eventID = str(self.eventTableWidget.item(selectedItems[0].row(), 1).text())    
+        configName = str(self.eventTableWidget.item(selectedItems[0].row(), 0).text())
+        #print(eventID)  
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + configName + ".data"
+        logText = eventID + " # " + configName + " marked as Golden snapshot at " + \
+                  str(datetime.datetime.now()) + " by " + self.userID + "\n"
+        try: 
+            umask_original = os.umask(0) #needed to solve permission issue
+            fdesc = os.open(goldenDataFile,os.O_WRONLY|os.O_CREAT|os.O_APPEND, 0o666)
+            os.umask(umask_original)
+            fd = os.fdopen(fdesc,'a')
+            fd.write(logText)
+            fd.close()
+            fd = open(goldenDataFile, 'r')
+            lines = fd.readlines()
+            fd.close()
+            for line in lines[:-1]:
+                if eventID in line:
+                    lines.remove(line) #remove dumplicated entries
+                    fd = open(goldenDataFile, 'w')
+                    fd.writelines(lines) 
+                    fd.close()                
+            if len(lines) > 10: # keep 10 golden snapshots
+                fd = open(goldenDataFile, 'w')
+                fd.writelines(lines[-10:]) 
+                fd.close()   
+        except:
+            traceback.print_exc()
+            QMessageBox.warning(self, "Warning", \
+                "Failed to tag the selected snapshot as golden")     
+            return
+        QMessageBox.warning(self, "Congrats", \
+"SnapshotID %s has been successfully marked as Gold. \
+You may click 'Display Golden Snapshot' to confirm this"%eventID)    
+            #self.createLogEntry(logText)         
+    
+    def fetchGoldenSnapshotAction(self):
+        try:
+            self._fetchGoldenSnapshotAction()
+        except:
+            traceback.print_exc()        
+    
+    def _fetchGoldenSnapshotAction(self):
+        selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
+        if len(selectedConfigs) != 1:
+            QMessageBox.warning(self, "Warning", \
+                "Please select one and only one Config to get a golden snapshot")
+            return         
+        configName = str(self.configTableWidget.item(selectedConfigs[0].row(), 0).text())
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + configName + ".data"
+        if not (os.path.isfile(goldenDataFile)):
+            QMessageBox.warning(self, "Warning", \
+                "No golden snapshot has been tagged yet. Please set one snapshot\
+ as Golden first")
+            return
+        fd = open(goldenDataFile, 'r')
+        lines = fd.readlines()
+        fd.close() 
+        goldenID = lines[-1].split('#')[0].strip()
+        #eventOrder = [] # a list of numbers (not strings)
+        #for line in lines:
+        #    eventOrder.append(int(line.split('#')[0].strip()))
+        #eventOrder.reverse()    
+        #print(eventOrder)
+        self.fetchEventAction()
+        self.retrieveSnapshotById(goldenID)
+        
  #end of class masarUI       
         
         

@@ -26,4 +26,7 @@ example/masar.db
 deployOnNFS.sh
 run-masar
 runserver
+./python/masarclient/ui/goldenSnapshotData/
+python/masarclient/ui/masar.py~
+logs.*
 syntax: regexp

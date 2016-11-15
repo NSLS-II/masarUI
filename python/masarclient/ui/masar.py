@@ -164,7 +164,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.epicsDouble = [2, 6]
         self.epicsNoAccess = [7]
         self.userID = os.popen('whoami').read()[:-1]  
-        
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        self.goldenDataFilePath = dirPath + '/goldenSnapshotData/'        
         #automatically fetch all configs at startup. This action should be quick
         self.fetchConfigAction()
         time.sleep(1.0)
@@ -227,13 +228,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         automatically get a list of snapshots if any config is selected by mouse or keyboard
         interesting: fetchEventAction() is called twice whenever config(s) is selected  
         """
-        reorderedData = odict([('Config Name', []), ('Config Id', []), ('Description', []), \
+        reorderedData = odict([('Config Name', []), ('CID', []), ('Description', []), \
                                ('Date', []), ('Status', []), ('Version', [])]) 
         data = self.retrieveConfigData()
         if not data:
             QMessageBox.warning(self, "Waring", "Can't get Configuration list")  
             return        
-        if len(data['Config Id']) == 0:
+        if len(data['CID']) == 0:
             return  
         #print("\nsetConfigTable")# this is printed twice if no "return" above, why?
         #print(data)
@@ -247,27 +248,27 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #print(confOrder)
         #print(data['Id'])
         confOrderSet = set(confOrder)
-        if confOrderSet and confOrderSet.issubset(set(data['Config Id'])):
+        if confOrderSet and confOrderSet.issubset(set(data['CID'])):
             #print("confOrder is a subset")
             for cf in confOrder:
-                reorderedData['Config Name'].append(data['Config Name'][list(data['Config Id']).index(cf)])
-                reorderedData['Config Id'].append(cf)
-                reorderedData['Description'].append(data['Description'][list(data['Config Id']).index(cf)])
-                reorderedData['Date'].append(data['Date'][list(data['Config Id']).index(cf)])
-                reorderedData['Status'].append(data['Status'][list(data['Config Id']).index(cf)])
-                reorderedData['Version'].append(data['Version'][list(data['Config Id']).index(cf)])               
-            confL = list(set(data['Config Id']).difference(confOrderSet))
+                reorderedData['Config Name'].append(data['Config Name'][list(data['CID']).index(cf)])
+                reorderedData['CID'].append(cf)
+                reorderedData['Description'].append(data['Description'][list(data['CID']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['CID']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['CID']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['CID']).index(cf)])               
+            confL = list(set(data['CID']).difference(confOrderSet))
             confL.sort(reverse=True)
             #print(confL)  
             for cf in confL:
-                reorderedData['Config Name'].append(data['Config Name'][list(data['Config Id']).index(cf)])
-                reorderedData['Config Id'].append(cf)
-                reorderedData['Description'].append(data['Description'][list(data['Config Id']).index(cf)])
-                reorderedData['Date'].append(data['Date'][list(data['Config Id']).index(cf)])
-                reorderedData['Status'].append(data['Status'][list(data['Config Id']).index(cf)])
-                reorderedData['Version'].append(data['Version'][list(data['Config Id']).index(cf)])              
+                reorderedData['Config Name'].append(data['Config Name'][list(data['CID']).index(cf)])
+                reorderedData['CID'].append(cf)
+                reorderedData['Description'].append(data['Description'][list(data['CID']).index(cf)])
+                reorderedData['Date'].append(data['Date'][list(data['CID']).index(cf)])
+                reorderedData['Status'].append(data['Status'][list(data['CID']).index(cf)])
+                reorderedData['Version'].append(data['Version'][list(data['CID']).index(cf)])              
             data = reorderedData
-            #print(data['Config Id'])
+            #print(data['CID'])
             #have to disable sorting, then enable sorting
             self.configTableWidget.setSortingEnabled(False)
             self.setTable(data, self.configTableWidget)
@@ -325,7 +326,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             return False
         
         data['Config Name'] = rpcResult[1]
-        data['Config Id'] = rpcResult[0]
+        data['CID'] = rpcResult[0]
         data['Description'] = rpcResult[2]
         data['Date'] = config_ts
         data['Status'] = rpcResult[5]
@@ -925,19 +926,18 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         
         #print(configIds)
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
-        reorderedData = odict([('Config Name', []), ('Snapshot Id', []), ('Description', []), \
+        reorderedData = odict([('Config Name', []), ('SID', []), ('Description', []), \
                                ('Time stamp', []), ('Author', [])]) 
         if not data: 
             QMessageBox.warning(self, "warning","Can't retrieve event list")
             return
-        #if not data['Snapshot Id']:
+        #if not data['SID']:
             #return
         #print('\nsetEventTable')
-        #print(data['Snapshot Id'])
+        #print(data['SID'])
         eventOrder = [] # a list of numbers (not strings)
-        #get golden snapshot ID first
-        dirPath = os.path.dirname(os.path.abspath(__file__))
-        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + str(configNames[0]) + ".data"
+        #get golden SID first
+        goldenDataFile = self.goldenDataFilePath + "goldenSnapshotOf" + str(configNames[0]) + ".data"
         if os.path.isfile(goldenDataFile):
             fd = open(goldenDataFile, 'r')
             lines = fd.readlines()
@@ -949,10 +949,10 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             #print(eventOrder)
             for i in range(len(eventOrder)):
                 desc = " [G%i] "%(i+1)
-                desc += data['Description'][list(data['Snapshot Id']).index(eventOrder[i])]
-                data['Description'][list(data['Snapshot Id']).index(eventOrder[i])] = desc
+                desc += data['Description'][list(data['SID']).index(eventOrder[i])]
+                data['Description'][list(data['SID']).index(eventOrder[i])] = desc
                 #print(desc)
-        #get customzied snapshot ID from masar.cfg        
+        #get customzied SID from masar.cfg        
         eventInConf = []
         eventInConfStr = ''
         try:
@@ -965,25 +965,25 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         eventOrder += eventInConf
         eventOrderSet = set(eventOrder)   
         #print(str(eventOrderSet) + "set in fetchEventAction")
-        #print(eventOrderSet.issubset(set(data['Snapshot Id'])))
-        #print(set(data['Snapshot Id']))
-        if eventOrderSet and eventOrderSet.issubset(set(data['Snapshot Id'])):
+        #print(eventOrderSet.issubset(set(data['SID'])))
+        #print(set(data['SID']))
+        if eventOrderSet and eventOrderSet.issubset(set(data['SID'])):
             #print("eventOrder is a subset") 
             for evt in eventOrder:
-                reorderedData['Config Name'].append(data['Config Name'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Snapshot Id'].append(evt)
-                reorderedData['Description'].append(data['Description'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Time stamp'].append(data['Time stamp'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Author'].append(data['Author'][list(data['Snapshot Id']).index(evt)])
-            evtL = list(set(data['Snapshot Id']).difference(eventOrderSet))  
+                reorderedData['Config Name'].append(data['Config Name'][list(data['SID']).index(evt)])
+                reorderedData['SID'].append(evt)
+                reorderedData['Description'].append(data['Description'][list(data['SID']).index(evt)])
+                reorderedData['Time stamp'].append(data['Time stamp'][list(data['SID']).index(evt)])
+                reorderedData['Author'].append(data['Author'][list(data['SID']).index(evt)])
+            evtL = list(set(data['SID']).difference(eventOrderSet))  
             evtL.sort(reverse=True)
             #print(evtL)
             for evt in evtL:
-                reorderedData['Config Name'].append(data['Config Name'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Snapshot Id'].append(evt)
-                reorderedData['Description'].append(data['Description'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Time stamp'].append(data['Time stamp'][list(data['Snapshot Id']).index(evt)])
-                reorderedData['Author'].append(data['Author'][list(data['Snapshot Id']).index(evt)])         
+                reorderedData['Config Name'].append(data['Config Name'][list(data['SID']).index(evt)])
+                reorderedData['SID'].append(evt)
+                reorderedData['Description'].append(data['Description'][list(data['SID']).index(evt)])
+                reorderedData['Time stamp'].append(data['Time stamp'][list(data['SID']).index(evt)])
+                reorderedData['Author'].append(data['Author'][list(data['SID']).index(evt)])         
             data =  reorderedData  
             self.eventTableWidget.setSortingEnabled(False) 
             self.setEventTable(data)
@@ -1060,7 +1060,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
                     
         data = odict()
         data['Config Name'] = c_names
-        data['Snapshot Id'] = event_ids        
+        data['SID'] = event_ids        
         data['Description'] = event_desc
         data['Time stamp'] = event_ts
         data['Author'] = event_author
@@ -2736,13 +2736,12 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
             QMessageBox.warning(self, "Warning", \
                 "Please select one and only one snapshot to be set as Golden")
             return          
-        #if not self.getAuthentication():
-        #    return  
+        if not self.getAuthentication():
+            return  
         eventID = str(self.eventTableWidget.item(selectedItems[0].row(), 1).text())    
         configName = str(self.eventTableWidget.item(selectedItems[0].row(), 0).text())
         #print(eventID)  
-        dirPath = os.path.dirname(os.path.abspath(__file__))
-        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + configName + ".data"
+        goldenDataFile = self.goldenDataFilePath + "goldenSnapshotOf" + configName + ".data"
         logText = eventID + " # " + configName + " marked as Golden snapshot at " + \
                   str(datetime.datetime.now()) + " by " + self.userID + "\n"
         try: 
@@ -2773,7 +2772,7 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
         QMessageBox.warning(self, "Congrats", \
 "SnapshotID %s has been successfully marked as Gold. \
 You may click 'Display Golden Snapshot' to confirm this"%eventID)    
-            #self.createLogEntry(logText)         
+        self.createLogEntry(logText)         
     
     def fetchGoldenSnapshotAction(self):
         try:
@@ -2788,8 +2787,7 @@ You may click 'Display Golden Snapshot' to confirm this"%eventID)
                 "Please select one and only one Config to get a golden snapshot")
             return         
         configName = str(self.configTableWidget.item(selectedConfigs[0].row(), 0).text())
-        dirPath = os.path.dirname(os.path.abspath(__file__))
-        goldenDataFile = dirPath + '/' + "goldenSnapshotOf" + configName + ".data"
+        goldenDataFile = self.goldenDataFilePath + "goldenSnapshotOf" + configName + ".data"
         if not (os.path.isfile(goldenDataFile)):
             QMessageBox.warning(self, "Warning", \
                 "No golden snapshot has been tagged yet. Please set one snapshot\

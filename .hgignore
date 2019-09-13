@@ -29,4 +29,6 @@ runserver
 ./python/masarclient/ui/goldenSnapshotData/
 python/masarclient/ui/masar.py~
 logs.*
+python/masarclient/*.py
+*~
 syntax: regexp

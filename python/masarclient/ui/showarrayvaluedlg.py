@@ -12,7 +12,15 @@ from PyQt4.QtGui import (QDialog, QTableView, QGridLayout, QLabel, QPushButton)
 from PyQt4.QtCore import (QString, SIGNAL, QAbstractTableModel, QVariant, Qt)
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+'''
+09/13/2019 (yhu):
+NavigationToolbar2QTAgg is changed to NavigationToolbar2QT in Debian 9 (python-matplotlib_2.0.0) 
+'''
+try:
+   from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+except ImportError:
+   from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar 
+    
 import matplotlib.pyplot as plt
 
 try:

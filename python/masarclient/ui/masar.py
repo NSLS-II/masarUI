@@ -470,6 +470,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     lp.simple_bind_s(username, self.passWd)
                     return True
                 except:
+                    if masarConfigDict['LDAP']['ignorepasswd'] == 'True':
+                        return True
+                    
                     self.passWd = ""
                     QMessageBox.warning(self, 'Warning', 
 'Failed to get anthentication, you may have typed wrong password, try again if you like')   
